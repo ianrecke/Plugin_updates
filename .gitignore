@@ -1,4 +1,8 @@
 .idea
 files_examples
-conda_test
-keras_pack
+docs/_build
+docs/_static
+docs/_templates
+docs/make.bat
+docs/Makefile
+__pycache__
