@@ -24,6 +24,61 @@ Usage
 
 The use of the package is focused on the :class:`~neurogenpy.models.bayesian_network.BayesianNetwork` class.
 
+#. If you already have a graph structure and the network parameters (or joint probability distribution) in the right formats, it is posible to use the constructor for building the network. See :func:`~neurogenpy.models.bayesian_network.BayesianNetwork.fit` and :func:`~neurogenpy.models.bayesian_network.BayesianNetwork.load` methods for other ways of creating Bayesian networks.
+
+   .. code-block:: py
+
+    from neurogenpy.models.bayesian_network import BayesianNetwork
+    from networkx import DiGraph
+    graph = DiGraph([1, 2])
+    ps = {1: GaussianNode(0, 1, [], []), 2: GaussianNode(0, 1, [1], [0.8])}
+    bn = BayesianNetwork(graph=graph, parameters=ps)
+
+#. Learning the structure and parameters of a Bayesian network from the data in a CSV file.
+
+    - Set the structure and parameter learning methods with arguments:
+
+      .. code-block:: py
+
+        import pandas as pd
+        from neurogenpy.models.bayesian_network import BayesianNetwork
+        df = pd.read_csv('file.csv')
+        bn = BayesianNetwork().fit(df, estimation='mle', algorithm='PC')
+
+    - Additional parameters for the structure learning or parameters estimation algorithm can be provided too:
+
+      .. code-block:: py
+
+        bn = BayesianNetwork()
+        bn = bn.fit(df, algorithm='FGESMerge', penalty=45)
+
+    - Instance a particular :class:`~neurogenpy.structure.learn_structure.LearnStructure` or :class:`~neurogenpy.parameters.learn_parameters.LearnParameters` subclass:
+
+      .. code-block:: py
+
+        from neurogenpy.models.bayesian_network import BayesianNetwork
+        from neurogenpy.structure.fges_merge import FGESMerge
+        from neurogenpy.parameters.gaussian_mle import GaussianMLE
+
+#. Loading an already saved Bayesian network:
+
+    - BIF file (pgmpy): it loads the graph structure and the parameters of the network.
+
+      .. code-block:: py
+
+        from neurogenpy.models.bayesian_network import BayesianNetwork
+        bn = BayesianNetwork().load('bn.bif')
+
+    - GEXF (graph stored with .gexf extension), CSV (adjacency matrix stored with '.csv') or parquet (adjacency matrix stored with '.gzip' extension) file, it only loads the graph structure of the network. The parameters can be learnt according to this graph and the initial data.
+
+      .. code-block:: py
+
+        import pandas as pd
+        from neurogenpy.models.bayesian_network import BayesianNetwork
+        bn = BayesianNetwork.load('bn.gexf')
+        df = pd.read_csv('file.csv')
+        bn = bn.fit(df, estimation='mle', skip_structure=True)
+
 .. usage-end
 
 Support
@@ -62,4 +117,4 @@ License
     :target: https://www.upm.es/
 
 .. |hbp| image:: imgs/logo_hbp.png
-   :target: https://www.humanbrainproject.eu/en/
+    :target: https://www.humanbrainproject.eu/en/
