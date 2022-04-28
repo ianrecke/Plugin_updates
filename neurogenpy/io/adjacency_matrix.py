@@ -1,3 +1,11 @@
+"""
+Adjacency matrix input/output module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from tempfile import NamedTemporaryFile
 
 import networkx

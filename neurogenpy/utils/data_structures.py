@@ -1,5 +1,5 @@
 """
-Data structures utilities.
+Data structures utilities module.
 """
 
 # Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.

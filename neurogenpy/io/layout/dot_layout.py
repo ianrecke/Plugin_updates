@@ -1,3 +1,11 @@
+"""
+Dot layout module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import networkx as nx
 
 from .graph_layout import GraphLayout

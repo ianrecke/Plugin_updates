@@ -1,5 +1,5 @@
 """
-Graph utilities.
+Graph utilities module.
 """
 
 # Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.

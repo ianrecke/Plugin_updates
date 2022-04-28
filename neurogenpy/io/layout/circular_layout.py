@@ -1,3 +1,11 @@
+"""
+Circular layout module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from .graph_layout import GraphLayout
 
 

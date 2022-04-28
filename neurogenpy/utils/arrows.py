@@ -1,5 +1,5 @@
 """
-FGES arrows utilities.
+FGES arrows utilities module.
 """
 
 # Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.

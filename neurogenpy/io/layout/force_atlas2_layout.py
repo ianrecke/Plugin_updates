@@ -1,3 +1,11 @@
+"""
+ForceAtlas2 layout module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import networkx
 from fa2 import ForceAtlas2
 

@@ -1,3 +1,11 @@
+"""
+Joint probability distribution base module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from abc import ABCMeta, abstractmethod
 
 

@@ -1,3 +1,11 @@
+"""
+Image layout module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import math
 from io import BytesIO
 

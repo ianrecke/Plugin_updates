@@ -1,7 +1,15 @@
+"""
+Gaussian joint probability distribution module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import numpy as np
 
 from .joint_distribution import JointDistribution
-from ..learn_parameters.gaussian_mle import GaussianNode
+from ..parameters.gaussian_mle import GaussianNode
 
 
 class GaussianJointDistribution(JointDistribution):

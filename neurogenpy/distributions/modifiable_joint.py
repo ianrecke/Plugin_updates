@@ -1,3 +1,12 @@
+"""
+Modifiable joint probability distribution module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
+
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 
 import numpy as np

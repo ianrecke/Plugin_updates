@@ -1,3 +1,11 @@
+"""
+GEXF input/output module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from datetime import datetime
 from xml.dom import minidom
 from xml.etree import ElementTree
@@ -110,20 +118,14 @@ class GEXF(BNIO):
 # TODO: Check BayesianNetwork attributes management in _edges_sizes() and
 #  _nodes_sizes()
 def _edges_sizes(bn):
-    """
-    Retrieves the size of each edge in the network.
-
-    Returns
-    -------
-    tuple
-        The size of each edge in the network.
-    """
+    """Retrieves the size of each edge in the network."""
 
     weight_edge_size = 1.1 if bn.num_nodes < 300 else 0.55
 
     edges_sizes = {}
+    sum_weights = bn.sum_weights()
     for (x, y, edge_data) in bn.graph.subgraph_edges(data=True):
-        w_normalized = edge_data['weight'] * bn.num_nodes / bn.sum_weights()
+        w_normalized = edge_data['weight'] * bn.num_nodes / sum_weights
         edge_size = w_normalized * weight_edge_size + EDGE_MIN_SIZE
         edges_sizes[(x, y)] = min(edge_size, EDGE_MAX_SIZE)
 
@@ -170,9 +172,7 @@ def _nodes_sizes(bn, method='mb'):
 
 
 def get_nodes_attr(nx_dict, layout, nodes_sizes):
-    """
-    Returns the attributes of a graph according to a particular layout.
-    """
+    """Returns the attributes of a graph according to a particular layout."""
 
     nodes = []
 
@@ -193,9 +193,7 @@ def get_nodes_attr(nx_dict, layout, nodes_sizes):
 
 
 def get_edges_attr(nx_dict, edges_sizes):
-    """
-    Returns the edges attributes.
-    """
+    """Returns the edges attributes."""
 
     edges = []
     for i, link in enumerate(nx_dict['links']):

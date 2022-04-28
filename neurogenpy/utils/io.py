@@ -1,3 +1,11 @@
+"""
+Input/output utilities module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import random
 
 import numpy as np

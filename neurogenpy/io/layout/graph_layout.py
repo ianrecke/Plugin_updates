@@ -1,3 +1,11 @@
+"""
+Graph layout module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from abc import ABCMeta, abstractmethod
 
 from ...utils.data_structures import nx2igraph
