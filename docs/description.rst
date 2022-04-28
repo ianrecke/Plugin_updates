@@ -1,5 +1,14 @@
 Description
 ===========
 
-NeurogenPy is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene
-regulatory networks, modeled as Bayesian networks. It has been developed from the already existing web framework  `NeuroSuites <https://neurosuites.com/>`_.
+.. include:: ../README.rst
+    :start-after: description-start
+    :end-before: description-end
+
+This project has been developed by the `Computer Intelligence Group (CIG) <http://cig.fi.upm.es/>`_ of Universidad Politécnica de Madrid (UPM).
+
+.. image:: ../imgs/cig.png
+    :target: http://cig.fi.upm.es/
+
+.. image:: ../imgs/upm.jpg
+    :target: https://www.upm.es/

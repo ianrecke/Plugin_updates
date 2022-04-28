@@ -1,5 +1,6 @@
 User guide
 ==========
 
-The use of the package is focused on the :class:`~neurogenpy.models.bayesian_network.BayesianNetwork` class.
-
+.. include:: ../README.rst
+    :start-after: usage-start
+    :end-before: usage-end
