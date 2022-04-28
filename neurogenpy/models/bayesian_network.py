@@ -20,9 +20,11 @@ from ..distributions.modifiable_joint import ModifiableJointDistribution
 from ..io.adjacency_matrix import AdjacencyMatrix
 from ..io.bif import BIF
 from ..io.gexf import GEXF
-from ..learn_parameters.discrete_be import DiscreteBE
-from ..learn_parameters.discrete_mle import DiscreteMLE
-from ..learn_parameters.gaussian_mle import GaussianNode, GaussianMLE
+from ..parameters.discrete_be import DiscreteBE
+from ..parameters.discrete_mle import DiscreteMLE
+from ..parameters.gaussian_mle import GaussianNode, GaussianMLE
+from ..parameters.learn_parameters import LearnParameters
+from ..structure.learn_structure import *
 from ..utils.data_structures import get_data_type
 from ..utils.score import confusion_matrix, accuracy, f1_score, mcc_score, \
     confusion_hubs
@@ -60,12 +62,28 @@ class BayesianNetwork:
         list of the nodes order used in the distribution.
         If `parameters` is set or `graph` is not set, this argument is ignored.
 
-    data_type : {'discrete', 'continuous', 'hybrid'}, default='continuous'
+    data_type : {'discrete', 'continuous', 'hybrid'}, optional
         The type of data we are dealing with.
+
+    Examples
+    --------
+    If you already have a graph structure and the network parameters (or
+    joint probability distribution) in the right formats, it is posible
+    to use the constructor for building the network. See
+    :func:`~neurogenpy.models.bayesian_network.BayesianNetwork.fit` and
+    :func:`~neurogenpy.models.bayesian_network.BayesianNetwork.load`
+    methods for other ways of creating Bayesian networks.
+
+    >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+    >>> from networkx import DiGraph
+    >>> graph = DiGraph([1, 2])
+    >>> ps = {1: GaussianNode(0, 1, [], []), 2: GaussianNode(0, 1, [1], [0.8])}
+    >>> bn = BayesianNetwork(graph=graph, parameters=ps)
+
     """
 
     def __init__(self, *, graph=None, parameters=None, joint_dist=None,
-                 data_type='continuous'):
+                 data_type=None):
 
         self.graph = graph
         self.num_nodes = 0 if self.graph is None else len(self.graph)
@@ -780,17 +798,17 @@ class BayesianNetwork:
                 graph.remove_edge(x, y)
         return graph
 
-    def fit(self, df, estimation='mle', algorithm='FGESMerge',
+    def fit(self, df=None, estimation='mle', algorithm='FGESMerge',
             skip_structure=False, **kwargs):
         """
         Builds a Bayesian network using the input data.
 
         Parameters
         ----------
-        df : pandas.DataFrame
+        df : pandas.DataFrame, optional
             Data set used to learn the network structure and parameters.
 
-        estimation : {'bayesian', 'mle', 'random'} default='mle'
+        estimation : str or LearnParameters, default='mle'
             Estimation type to be used for learning the parameters of the
             network.
             Supported estimation approaches are:
@@ -800,7 +818,7 @@ class BayesianNetwork:
                 - Gaussian maximum likelihood estimation
                 - Random parameters for the continuous case.
 
-        algorithm : str, default='FGESMerge'
+        algorithm : str or LearnStructure, default='FGESMerge'
             Algorithm to be used for learning the structure of the network.
             Supported structure learning algorithms are:
 
@@ -808,11 +826,11 @@ class BayesianNetwork:
                     - Pearson Correlation ('PC')
                     - Mutual information ('MiContinuous')
                     - Linear regression ('Lr')
-                    - Graphical lasso ('Glasso')
+                    - Graphical lasso ('GraphicalLasso')
                     - GENIE3 ('GENIE3')
                 2. Constraint based:
                     - PC ('PC')
-                    - Grow shrink ('Gs')
+                    - Grow shrink ('GrowShrink')
                     - iamb ('Iamb')
                     - Fast.iamb ('FastIamb')
                     - Inter.iamb ('InterIamb')
@@ -873,19 +891,40 @@ class BayesianNetwork:
         ValueError:
             If the structure learning algorithm or parameter estimation method
             is not supported.
-        """
-        # discrete_cols :
-        #     Numerical variables in the data set that are discrete. Any
-        #     numerical variable not explicitly specified is considered
-        #     continuous.
 
-        # TODO: Provide options: estimator and algorithm as objects or strings.
+        Examples
+        --------
+        Learning the structure and parameters of a Bayesian network from the
+        data in a CSV file.
+
+        - Set the structure and parameter learning methods with arguments:
+
+        >>> import pandas as pd
+        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> data = pd.read_csv('file.csv')
+        >>> bn = BayesianNetwork().fit(data, estimation='mle', algorithm='PC')
+
+        Additional parameters for the structure learning or parameters
+        estimation algorithm can be provided too:
+
+        >>> bn = BayesianNetwork()
+        >>> bn = bn.fit(df, algorithm='FGESMerge', penalty=45)
+
+        - Instance a particular
+            :class:`~neurogenpy.structure.learn_structure.LearnStructure`
+            or
+            :class:`~neurogenpy.parameters.learn_parameters.LearnParameters`
+            subclass:
+
+        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> from neurogenpy.structure.fges_merge import FGESMerge
+        >>> from neurogenpy.parameters.gaussian_mle import GaussianMLE
+        """
+
+        # FIXME: Algorithm and parameters estimation as objects.
         # TODO: Check df. Rethink data structure (numpy array, pandas
         #  DataFrame or what?)
 
-        # if discrete_cols is not None:
-        #     df[discrete_cols] = df[discrete_cols].apply(
-        #         lambda col: pd.Categorical(col))
         self.data_type, self.cont_nodes = get_data_type(df)
 
         # TODO: Check parameters and algorithm are OK in each case.
@@ -897,22 +936,29 @@ class BayesianNetwork:
         sl_kwargs = {k: v for k, v in kwargs.items() if k in sl_options}
 
         estimators = ['bayesian', 'mle']
-        algorithms = ['CL', 'FastIamb', 'FGES', 'FGESMerge', 'Genie', 'Glasso',
-                      'Gs', 'Hc', 'HcTabu', 'HitonPC', 'Iamb', 'InterIamb',
-                      'Lr', 'MBC', 'MiContinuous', 'MMHC', 'MMPC', 'NB', 'PC',
-                      'Pearson', 'SparseBn', 'Tan']
+        algorithms = ['CL', 'FastIamb', 'FGES', 'FGESMerge', 'GENIE3',
+                      'GraphicalLasso', 'GrowShrink', 'Hc', 'HcTabu',
+                      'HitonPC', 'Iamb', 'InterIamb', 'Lr', 'MBC',
+                      'MiContinuous', 'MMHC', 'MMPC', 'NB', 'PC', 'Pearson',
+                      'SparseBn', 'Tan']
 
         if not skip_structure:
+            if issubclass(algorithm, LearnStructure):
+                self.graph = algorithm.run()
+
             if algorithm in algorithms:
                 structure_learning = globals()[algorithm]
                 self.graph = structure_learning(df, self.data_type,
                                                 **sl_kwargs).run()
-                self.num_nodes = len(self.graph)
+
             else:
                 raise ValueError('Structure learning is only available for the'
                                  f' following methods: {*algorithms,}.')
+            self.num_nodes = len(self.graph)
 
-        if estimation in estimators:
+        if issubclass(estimation, LearnParameters):
+            self.parameters = estimation.run()
+        elif estimation in estimators:
             if self.graph is None:
                 raise Exception(
                     'The Bayesian Network does not have a structure.')
@@ -922,15 +968,12 @@ class BayesianNetwork:
                         'Bayesian estimation is not supported in the'
                         ' continuous case.')
                 else:
-                    params_learning = GaussianMLE(df, self.data_type,
-                                                  self.graph)
+                    params_learning = GaussianMLE(df, self.graph)
             else:
                 if estimation == 'mle':
-                    params_learning = DiscreteMLE(df, self.data_type,
-                                                  self.graph)
+                    params_learning = DiscreteMLE(df, self.graph)
                 else:
-                    params_learning = DiscreteBE(df, self.data_type,
-                                                 self.graph, **pl_kwargs)
+                    params_learning = DiscreteBE(df, self.graph, **pl_kwargs)
             self.parameters = params_learning.run()
         elif estimation == 'random':
             self.parameters = self._get_random_cont_params()
@@ -975,11 +1018,28 @@ class BayesianNetwork:
         ------
         ValueError
             If the extension of the file is not supported.
+
+        Examples
+        --------
+        Saving a model. The available formats are:
+            - BIF (pgmpy), which stores the full network.
+            - GEXF, for saving a visual representation of the graph structure.
+                In this case, it is posible to set the desired layout for the
+                graph.
+            - CSV and parquet, for saving the adjacency matrix of the graph.
+
+        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> import pandas as pd
+        >>> df = pd.read_csv('file.csv')
+        >>> bn = BayesianNetwork.fit(df)
+        >>> bn.save('bn.gexf', layout='circular')
+
         """
 
         file_path = file_path.lower()
 
         if file_path.endswith('.gexf'):
+            # TODO: Add layout arguments.
             GEXF().write_file(self, file_path, layout)
         elif file_path.endswith('.gzip') or file_path.endswith('csv'):
             AdjacencyMatrix().write_file(file_path, self)
@@ -1012,7 +1072,30 @@ class BayesianNetwork:
         ------
         ValueError
             If the extension of the file is not supported.
+
+        Examples
+        --------
+        Loading an already saved Bayesian network:
+
+        - BIF file (pgmpy): it loads the graph structure and the parameters of
+            the network.
+
+        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> bn = BayesianNetwork().load('bn.bif')
+
+        - GEXF (graph stored with .gexf extension), CSV (adjacency matrix
+            stored with '.csv') or parquet (adjacency matrix stored with
+            '.gzip' extension) file, it only loads the graph structure of the
+            network. The parameters can be learnt according to this graph and
+            the initial data.
+
+        >>> import pandas as pd
+        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> bn = BayesianNetwork.load('bn.gexf')
+        >>> df = pd.read_csv('file.csv')
+        >>> bn = bn.fit(df, estimation='mle', skip_structure=True)
         """
+
         file_path = file_path.lower()
 
         if file_path.endswith('.gexf'):
@@ -1085,6 +1168,23 @@ class BayesianNetwork:
         ------
         ValueError
             If the introduced configuration is not valid.
+
+        Examples
+        --------
+
+        >>> import numpy as np
+        >>> from networkx import DiGraph
+        >>> matrix = np.array([[0,0], [1,0]])
+        >>> graph = DiGraph([1, 2])
+        >>> parameters = {1: GaussianNode(0, 1, [], []),
+        ...                 2: GaussianNode(0, 1, [1], [0.8])}
+        >>> bn = BayesianNetwork(graph=graph, parameters=parameters)
+        >>> res = bn.compare(matrix, nodes_order=[1, 2], metric='all')
+        >>> acc = res['accuracy']
+        >>> print(f'Model accuracy: {acc}')
+        >>> conf_matrix = res['confusion']
+        >>> print(conf_matrix)
+
         """
 
         self._check_graph()
@@ -1145,8 +1245,7 @@ class BayesianNetwork:
 
         return result
 
-# TODO: Decide about get_parameters, _get_parameters_cont and
-#  _get_parameters_disc.
+# TODO: Decide about _get_parameters_cont and _get_parameters_disc.
 # def _get_parameters_cont(self, node):
 #     evidence_value = self.evidence[node]
 #     mean, std_dev = self.joint_dist.marginal(node)
@@ -1189,20 +1288,6 @@ class BayesianNetwork:
 #
 #     return node_parameters_states, node_parameters_values
 
-# def get_parameters(self, node):
-#     """
-#
-#     Parameters
-#     ----------
-#     node
-#     """
-#     self._check_node(node)
-#     if self.data_type == 'continuous' or (
-#             self.data_type == 'hybrid' and node in self.cont_nodes):
-#         self._get_parameters_cont(node)
-#     else:
-#         self._get_parameters_disc(node)
-
 # def get_probabilities_effect(self, group_categories=None):
 #     means, std_devs = self.marginal_params(
 #         group_categories=group_categories, evidences=self.evidence)
@@ -1210,289 +1295,3 @@ class BayesianNetwork:
 #     current_means, current_std_devs = means[1], std_devs[1]
 #
 #     return start_means, start_std_devs, current_means, current_std_devs
-
-# def groups(self):
-#     groups = []
-#
-#     if self.additional_parameters:
-#         groups = list(
-#             self.additional_parameters['discrete_features'].keys())
-#
-#     return groups
-
-# def get_info_nodes_by_group(self, group_id):
-#     info_nodes = {}
-#
-#     if self.additional_parameters:
-#         if group_id in self.additional_parameters['discrete_features']:
-#             categories_in_group = \
-#                 self.additional_parameters['discrete_features'][group_id]
-#             for node_key, node_val in self.additional_parameters[
-#                 'nodes'].items():
-#                 if group_id in node_val['discrete_features']:
-#                     category_node = \
-#                         node_val['discrete_features'][group_id][
-#                             0]  # Multiple elements not supported yet
-#                     category_color = categories_in_group[category_node][
-#                         'color']
-#                     info_nodes[node_key] = {
-#                         'category': category_node,
-#                         'color': category_color,
-#                     }
-#
-#     return info_nodes
-
-# def get_categories_in_group(self, group_id):
-#     categories_in_group = []
-#
-#     if self.additional_parameters:
-#         if group_id in self.additional_parameters['discrete_features']:
-#             categories_in_group = list(
-#                 self.additional_parameters['discrete_features'][
-#                     group_id].keys())
-#
-#     return categories_in_group
-
-# def get_category_node(self, group_id, node):
-#     category_id = None
-#     if self.additional_parameters:
-#         category_id = \
-#             self.additional_parameters['nodes'][node][
-#                 'discrete_features'][
-#                 group_id][0]
-#
-#     return category_id
-
-# def get_nodes_in_category(self, group_id, category_id, structure_id,
-#                           show_neighbors):
-#     nodes_in_category = []
-#     color_category = ''
-#     neighbors = set()
-#
-#     if self.additional_parameters:
-#         color_category = \
-#             self.additional_parameters['discrete_features'][group_id][
-#                 category_id]['color']
-#
-#         for node_key, node_val in self.additional_parameters[
-#             'nodes'].items():
-#             if group_id in node_val['discrete_features'].keys():
-#                 node_group = node_val['discrete_features'][group_id]
-#                 if category_id == node_group[0]:
-#                     nodes_in_category.append(node_key)
-#
-#     if show_neighbors:
-#         for node in nodes_in_category:
-#             neighbors_node = self.neighbors(node)
-#             neighbors_not_in_category = [nd for nd in neighbors_node
-#                                          if nd not in nodes_in_category]
-#             neighbors.update(neighbors_not_in_category)
-#
-#     neighbors = list(neighbors)
-#
-#     return nodes_in_category, color_category, neighbors
-
-# def get_nodes_in_categories(self, group_id, categories_ids):
-#     nodes_in_categories = []
-#
-#     if self.additional_parameters:
-#         for node_key, node_val in self.additional_parameters[
-#             'nodes'].items():
-#             if group_id in node_val['discrete_features'].keys():
-#                 node_categories = node_val['discrete_features'][group_id]
-#                 if any(x in categories_ids for x in node_categories):
-#                     nodes_in_categories.append(node_key)
-#
-#     return nodes_in_categories
-# @staticmethod
-# def get_saved_bn_by_model_name(data_client_json, session):
-#     if "model_name" in data_client_json:
-#         model_name = data_client_json["model_name"]
-#     else:
-#         model_name = "ml_bayesian_network"
-#     bn = session[model_name]
-#
-#     return bn
-
-# def feature_to_str(self, feature):
-#     str_result = feature
-#     if feature.isdigit():
-#         str_result = f'x_{feature}_'
-#
-#     return str_result
-
-# def set_additional_parameters(self, additional_parameters):
-#     mapping_alt_names = {}
-#     for group_key, group_val in additional_parameters[
-#         'discrete_features'].items():
-#         for category_key, category_val in group_val.items():
-#             if 'color' not in category_val:
-#                 random_color_hex = generate_random_color()
-#                 category_val['color'] = random_color_hex
-#
-#     additional_parameters_nodes = list(
-#         additional_parameters['nodes'].items())
-#
-#     for node_key, node_val in additional_parameters_nodes:
-#         if 'alternative_name' not in node_val:
-#             mapping_alt_names[node_key] = node_key
-#             continue
-#         alt_name = node_val['alternative_name']
-#
-#         if node_key in self.nodes:
-#             mapping_alt_names[node_key] = node_val['alternative_name']
-#             node_val['alternative_name'] = node_key
-#         elif node_val['alternative_name'] in self.nodes:
-#             mapping_alt_names[alt_name] = alt_name
-#
-#         del additional_parameters['nodes'][node_key]
-#         additional_parameters['nodes'][alt_name] = node_val
-#         if self.additional_parameters:
-#             self.additional_parameters['nodes'][alt_name][
-#                 'discrete_features'].update(node_val['discrete_features'])
-#
-#     if mapping_alt_names:
-#         self.graph = networkx.relabel_nodes(
-#         self.graph, mapping_alt_names)
-#
-#     if self.additional_parameters:
-#         self.additional_parameters['discrete_features'].update(
-#             additional_parameters['discrete_features'])
-#
-#     if not self.additional_parameters:
-#         self.additional_parameters = additional_parameters
-
-# def set_random_additional_parameters(self):
-#     discrete_features = {
-#         'brain_region': {
-#             'hippocampus': {
-#                 'color': '#14cb72'
-#             },
-#             'visual_cortex': {
-#                 'color': '#98ca12'
-#             },
-#             'hypothalamus': {
-#                 'color': '#511a85'
-#             }
-#         },
-#         'disease': {
-#             'parkinson': {
-#                 'color': '#401b72'
-#             },
-#             'alzheimer': {
-#                 'color': '#81ca12'
-#             }
-#         }
-#     }
-#     additional_parameters = {
-#         'miscellaneous_parameters': {
-#             'prob_params_type': 'continuous'
-#         },
-#         'discrete_features': discrete_features,
-#         'nodes': {
-#         },
-#     }
-#
-#     groups = list(discrete_features.keys())
-#
-#     for node in self.nodes:
-#         node_config = {
-#             'prob_params': {
-#                 'mean': 0.5,
-#                 'sd': 1.2
-#             },
-#             'discrete_features': {
-#             }
-#         }
-#         for group_i in groups:
-#             categories_group = list(discrete_features[group_i].keys())
-#             random_num_categories = random.randint(1,
-#                                                    len(categories_group))
-#             random_categories = random.sample(set(categories_group),
-#                                               random_num_categories)
-#
-#             node_config['discrete_features'][group_i] = random_categories
-#
-#         additional_parameters['nodes'][node] = node_config
-#
-#     self.set_additional_parameters(additional_parameters)
-# def get_additional_parameters(self):
-#     return self.additional_parameters
-
-# def add_new_additional_parameters(self, communities_nodes, com,
-#                                   custom_group_name='group ',
-#                                   group_color=None):
-#     communities_groups = {}
-#     communities_colors = {}
-#     groups_number = 1
-#
-#     for node in communities_nodes:
-#         if communities_nodes[node] not in communities_colors.values():
-#             if custom_group_name == 'group ':
-#                 communities_colors[
-#                     custom_group_name + str(groups_number)] = \
-#                     communities_nodes[node]
-#                 groups_number += 1
-#                 communities_groups[node] = custom_group_name + str(
-#                     len(communities_colors))
-#             else:
-#                 communities_colors[custom_group_name] = {
-#                     'color': group_color}
-#                 communities_groups[node] = custom_group_name
-#         else:
-#             communities_colors_values = list(communities_colors.values())
-#             group_index = 0
-#             found = False
-#             while not found:
-#                 if communities_colors_values[group_index] == \
-#                         communities_nodes[node]:
-#                     found = True
-#                 group_index += 1
-#             if custom_group_name == 'group ':
-#                 group_name = custom_group_name + str(group_index)
-#             else:
-#                 group_name = custom_group_name
-#             communities_groups[node] = group_name
-#
-#     additional_parameters = self.get_additional_parameters()
-#     if additional_parameters is None:
-#         additional_parameters = {'discrete_features': {}, 'nodes': {}}
-#         for node in communities_groups:
-#             additional_parameters['nodes'][node] = {
-#                 'discrete_features': {}}
-#     if com in additional_parameters['discrete_features']:
-#         additional_parameters['discrete_features'][com].update(
-#             communities_colors)
-#     else:
-#         additional_parameters['discrete_features'][
-#             com] = communities_colors
-#
-#     for node in communities_groups:
-#         if node in additional_parameters['nodes']:
-#             if com in additional_parameters['nodes'][node][
-#                 'discrete_features']:
-#                 variable = \
-#                     additional_parameters['nodes'][node][
-#                         'discrete_features'][
-#                         com]
-#                 variable.append(communities_groups[node])
-#             else:
-#                 additional_parameters['nodes'][node]['discrete_features'][
-#                     com] = [communities_groups[node]]
-#         else:
-#             additional_parameters['nodes'][node] = {
-#                 'discrete_features': {}}
-#             additional_parameters['nodes'][node]['discrete_features'][
-#                 com] = [communities_groups[node]]
-#
-#     return additional_parameters
-
-# def restore_additional_parameters(self, selection_option):
-#     additional_parameters = self.get_additional_parameters()
-#     print(additional_parameters['discrete_features'][selection_option])
-#     additional_parameters['discrete_features'].pop(selection_option)
-#     for node in additional_parameters['nodes']:
-#         additional_parameters['nodes'][node]['discrete_features'].pop(
-#             selection_option)
-#
-#     return additional_parameters
