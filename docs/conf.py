@@ -90,7 +90,7 @@ html_static_path = ['_static']
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
-html_logo = "../imgs/cig.png"
+# html_logo = "../imgs/cig.png"
 
 # -- Options for HTMLHelp output ---------------------------------------------
 

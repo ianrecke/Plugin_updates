@@ -1,6 +1,8 @@
 NeurogenPy
 ==========
 
+.. include:: imgs/images.rst
+
 ..
  TODO: add badges
 
@@ -32,14 +34,13 @@ Contributing
 
 Authors
 -------
-`Computer Intelligence Group (CIG) <http://cig.fi.upm.es/>`_, Universidad Politécnica de Madrid (UPM).
+.. authors-start
 
-.. image:: imgs/cig.png
-    :target: http://cig.fi.upm.es/
+This project has been developed by the `Computer Intelligence Group (CIG) <http://cig.fi.upm.es/>`_ of `Universidad Politécnica de Madrid (UPM) <https://www.upm.es/>`_.
 
-.. image:: imgs/upm.jpg
-    :target: https://www.upm.es/
+|cig| |upm|
 
+.. authors-end
 
 Acknowledgements
 ---------------
@@ -47,11 +48,18 @@ Acknowledgements
 
 This project has received funding from the European Union’s Horizon 2020 Framework Programme for Research and Innovation under the Specific Grant Agreement No. 945539 (Human Brain Project SGA3).
 
-.. image:: ../imgs/logo_hbp.png
-   :target: https://www.humanbrainproject.eu/en/
+|hbp|
 
 .. acknowledgements-end
 
 License
 -------
 
+.. |cig| image:: imgs/cig.png
+    :target: http://cig.fi.upm.es/
+
+.. |upm| image:: imgs/upm.jpg
+    :target: https://www.upm.es/
+
+.. |hbp| image:: imgs/logo_hbp.png
+   :target: https://www.humanbrainproject.eu/en/
