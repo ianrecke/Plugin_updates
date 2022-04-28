@@ -1,3 +1,11 @@
+"""
+Gaussian maximum likelihood estimation module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from collections import namedtuple
 
 import networkx as nx
@@ -11,22 +19,7 @@ from ..utils.graph import parents
 class GaussianMLE(LearnParameters):
     """
     Gaussian maximum likelihood estimation.
-
-    Parameters
-    ----------
-    data : pandas DataFrame
-        Input data used to learn the parameters from.
-
-    data_type : {'continuous', 'discrete', 'hybrid'}
-        Type of the data introduced.
-
-    graph : networkx.DiGraph
-        Structure of the Bayesian network.
     """
-
-    def __init__(self, data, data_type, graph):
-        super().__init__(data, data_type, graph)
-        self.graph = nx.to_numpy_matrix(graph)
 
     def run(self, env='neurogenpy'):
         """

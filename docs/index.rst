@@ -1,6 +1,8 @@
-neurogenpy
+NeurogenPy
 ======================================
 
+.. include:: description.rst
+    :start-line: 2
 
 .. toctree::
    :maxdepth: 2
@@ -12,10 +14,3 @@ neurogenpy
    acknowledgements
    autoapi/index
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

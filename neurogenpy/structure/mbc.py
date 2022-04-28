@@ -1,3 +1,11 @@
+"""
+Multidimensional Bayesian network classifier structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import numpy as np
 import pandas as pd
 from rpy2.robjects.packages import importr

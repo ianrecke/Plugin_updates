@@ -1,4 +1,14 @@
+"""
+Parameters learning base module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from abc import ABCMeta, abstractmethod
+
+from networkx import to_numpy_matrix
 
 
 class LearnParameters(metaclass=ABCMeta):
@@ -10,17 +20,13 @@ class LearnParameters(metaclass=ABCMeta):
     data : pandas DataFrame
         Input data used to learn the parameters from.
 
-    data_type : {'continuous', 'discrete', 'hybrid'}
-        Type of the data introduced.
-
     graph : networkx.DiGraph
         Structure of the Bayesian network.
     """
 
-    def __init__(self, data, data_type, graph):
+    def __init__(self, data, graph):
         self.data = data
-        self.data_type = data_type
-        self.graph = graph
+        self.graph = to_numpy_matrix(graph)
 
     @abstractmethod
     def run(self):

@@ -1,14 +1,44 @@
+"""
+Graphical lasso structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn import covariance as sk_learn_cov
 
 from .learn_structure import LearnStructure
 from ..utils.data_structures import matrix2nx
 
 
-class Lr(LearnStructure):
+class GraphicalLasso(LearnStructure):
     """
-    Linear regression structure learning class.
+    Graphical lasso structure learning class.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Data set with the learning sample from which to infer the network.
+
+    data_type : {'continuous', 'discrete' or 'hybrid'}
+        Type of the data introduced.
+
+    alpha : float, default=0.5
+
+    tol : float, default=1e-4
+
+    max_iter : int, default=100
     """
+
+    def __init__(self, df, data_type, *, alpha=0.5, tol=1e-4, max_iter=100,
+                 **_):
+
+        super().__init__(df, data_type)
+        self.alpha = alpha
+        self.tol = tol
+        self.max_iter = max_iter
 
     def run(self, env='scikit-learn'):
         """
@@ -26,8 +56,6 @@ class Lr(LearnStructure):
 
         Raises
         ------
-        Exception
-            If variables are not all continuous.
         ValueError
             If the environment is not supported.
         """
@@ -43,22 +71,16 @@ class Lr(LearnStructure):
     def _run_sklearn(self):
         """
 
-        Returns
-        -------
+        :return:
         """
 
         nodes_names = list(self.data.columns.values)
         data_np = np.array(self.data)
 
-        n, g = data_np.shape
-        adj_matrix = np.zeros((g, g))
-        for i in range(g):
-            x = data_np[:, np.array([j != i for j in range(g)])]
-            y = data_np[:, i]
-            regression = LinearRegression().fit(x, y)
-            adj_matrix[i] = np.concatenate(
-                (regression.coef_[:i], [0], regression.coef_[i:]))
-
+        cov_matrix = np.cov(data_np.T)
+        _, precision_matrix = sk_learn_cov.graphical_lasso(
+            cov_matrix, alpha=self.alpha, tol=self.tol, max_iter=self.max_iter)
+        adj_matrix = np.array(precision_matrix)
         np.fill_diagonal(adj_matrix, 0)
         adj_matrix = np.triu(adj_matrix)
         adj_matrix = np.square(adj_matrix)

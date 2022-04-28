@@ -3,8 +3,8 @@ from .fast_iamb import FastIamb
 from .fges import FGES
 from .fges_merge import FGESMerge
 from .genie3 import GENIE3
-from .glasso import Glasso
-from .gs import Gs
+from .graphical_lasso import GraphicalLasso
+from .grow_shrink import GrowShrink
 from .hc import Hc
 from .hc_tabu import HcTabu
 from .hiton_pc import HitonPC
@@ -20,6 +20,7 @@ from .pc import PC
 from .pearson import Pearson
 from .sparsebn import SparseBn
 from .tan import Tan
+from .learn_structure import LearnStructure
 
 __all__ = [
     'CL',
@@ -27,8 +28,8 @@ __all__ = [
     'FGES',
     'FGESMerge',
     'GENIE3',
-    'Glasso',
-    'Gs',
+    'GraphicalLasso',
+    'GrowShrink',
     'Hc',
     'HcTabu',
     'HitonPC',
@@ -43,5 +44,6 @@ __all__ = [
     'PC',
     'Pearson',
     'SparseBn',
-    'Tan'
+    'Tan',
+    'LearnStructure'
 ]

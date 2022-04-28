@@ -1,11 +1,19 @@
+"""
+Hiton parents and children structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from rpy2.robjects.packages import importr
 
 from .learn_structure import LearnStructure
 
 
-class MMHC(LearnStructure):
+class HitonPC(LearnStructure):
     """
-    MMHC structure learning class.
+    Hiton parents and children structure learning class.
     """
 
     def run(self, env='bnlearn'):
@@ -30,7 +38,7 @@ class MMHC(LearnStructure):
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':
-            return self._run_bnlearn(importr('bnlearn').mmhc)
+            return self._run_bnlearn(importr('bnlearn').si_hiton_pc)
         else:
             raise ValueError(f'{env} environment is not supported.')
 

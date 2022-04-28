@@ -1,27 +1,20 @@
+"""
+MMHC structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from rpy2.robjects.packages import importr
 
 from .learn_structure import LearnStructure
 
 
-class InterIamb(LearnStructure):
+class MMHC(LearnStructure):
     """
-    Inter.iamb structure learning class.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Data set with the learning sample from which to infer the network.
-
-    data_type : {'continuous', 'discrete' or 'hybrid'}
-        Type of the data introduced.
-
-    alpha : float, default=0.5
+    MMHC structure learning class.
     """
-
-    def __init__(self, df, data_type, *, alpha=0.5, **_):
-
-        super().__init__(df, data_type)
-        self.alpha = alpha
 
     def run(self, env='bnlearn'):
         """
@@ -29,7 +22,7 @@ class InterIamb(LearnStructure):
 
         Parameters
         ----------
-        env : str, optional
+        env : {'bnlearn', 'neurogenpy'}, default='bnlearn'
             Environment used to run the algorithm.
 
         Returns
@@ -45,8 +38,7 @@ class InterIamb(LearnStructure):
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':
-            return self._run_bnlearn(importr('bnlearn').inter_iamb,
-                                     alpha=self.alpha)
+            return self._run_bnlearn(importr('bnlearn').mmhc)
         else:
             raise ValueError(f'{env} environment is not supported.')
 

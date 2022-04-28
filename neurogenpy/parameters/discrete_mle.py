@@ -1,3 +1,11 @@
+"""
+Discrete maximum likelihood estimation module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from pgmpy.estimators import MaximumLikelihoodEstimator
 
 from .learn_parameters import LearnParameters

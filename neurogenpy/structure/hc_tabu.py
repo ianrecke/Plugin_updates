@@ -1,26 +1,38 @@
+"""
+Hill climbing with tabu search structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from rpy2.robjects.packages import importr
 
 from .learn_structure import LearnStructure
 
 
-class Iamb(LearnStructure):
+class HcTabu(LearnStructure):
     """
-    iamb structure learning class.
+    Hill climbing with tabu search structure learning class.
 
     Parameters
     ----------
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type: {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous', 'discrete' or 'hybrid'}
         Type of the data introduced.
 
+    maxp : int, default=100
+
+    max_iter : int, default=100
     """
 
-    def __init__(self, df, data_type, *, alpha=0.5, **_):
+    def __init__(self, df, data_type, *, maxp=100, max_iter=100, **_):
 
         super().__init__(df, data_type)
-        self.alpha = alpha
+        self.maxp = maxp
+        self.max_iter = max_iter
 
     def run(self, env='bnlearn'):
         """
@@ -28,7 +40,7 @@ class Iamb(LearnStructure):
 
         Parameters
         ----------
-        env : {'bnlearn', 'neurogenpy'}, default='bnlearn'
+        env : str, optional
             Environment used to run the algorithm.
 
         Returns
@@ -44,11 +56,11 @@ class Iamb(LearnStructure):
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':
-            return self._run_bnlearn(importr('bnlearn').iamb,
-                                     alpha=self.alpha)
+            return self._run_bnlearn(importr('bnlearn').tabu, maxp=self.maxp,
+                                     max_iter=self.max_iter)
         else:
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_neurogenpy(self):
 
-        return 0
+        return None

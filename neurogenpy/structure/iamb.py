@@ -1,12 +1,34 @@
+"""
+iamb structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from rpy2.robjects.packages import importr
 
 from .learn_structure import LearnStructure
 
 
-class HitonPC(LearnStructure):
+class Iamb(LearnStructure):
     """
-    Hiton parents and children structure learning class.
+    iamb structure learning class.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Data set with the learning sample from which to infer the network.
+
+    data_type: {'continuous', 'discrete' or 'hybrid'}
+        Type of the data introduced.
+
     """
+
+    def __init__(self, df, data_type, *, alpha=0.5, **_):
+
+        super().__init__(df, data_type)
+        self.alpha = alpha
 
     def run(self, env='bnlearn'):
         """
@@ -30,10 +52,11 @@ class HitonPC(LearnStructure):
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':
-            return self._run_bnlearn(importr('bnlearn').si_hiton_pc)
+            return self._run_bnlearn(importr('bnlearn').iamb,
+                                     alpha=self.alpha)
         else:
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_neurogenpy(self):
 
-        return None
+        return 0

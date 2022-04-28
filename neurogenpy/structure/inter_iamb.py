@@ -1,11 +1,19 @@
+"""
+Inter.iamb structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from rpy2.robjects.packages import importr
 
 from .learn_structure import LearnStructure
 
 
-class Gs(LearnStructure):
+class InterIamb(LearnStructure):
     """
-    Grow shrink structure learning class.
+    Inter.iamb structure learning class.
 
     Parameters
     ----------
@@ -15,15 +23,15 @@ class Gs(LearnStructure):
     data_type : {'continuous', 'discrete' or 'hybrid'}
         Type of the data introduced.
 
-    alpha: float, default=0.5
+    alpha : float, default=0.5
     """
 
-    def __init__(self, df, data_type=None, *, alpha=0.5, **_):
+    def __init__(self, df, data_type, *, alpha=0.5, **_):
 
         super().__init__(df, data_type)
         self.alpha = alpha
 
-    def run(self, env="bnlearn"):
+    def run(self, env='bnlearn'):
         """
         Learns the structure of the Bayesian network.
 
@@ -42,13 +50,13 @@ class Gs(LearnStructure):
         ValueError
             If the environment is not supported.
         """
-        if env == "neurogenpy":
+        if env == 'neurogenpy':
             return self._run_neurogenpy()
-        elif env == "bnlearn":
-            return self._run_bnlearn(importr("bnlearn").gs,
+        elif env == 'bnlearn':
+            return self._run_bnlearn(importr('bnlearn').inter_iamb,
                                      alpha=self.alpha)
         else:
-            raise ValueError(f"{env} environment is not supported.")
+            raise ValueError(f'{env} environment is not supported.')
 
     def _run_neurogenpy(self):
 

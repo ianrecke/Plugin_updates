@@ -1,3 +1,11 @@
+"""
+Mutual information structure learning module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
 

@@ -1,3 +1,11 @@
+"""
+Discrete Bayesian estimation module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from pgmpy.estimators import BayesianEstimator
 
 from .learn_parameters import LearnParameters
@@ -13,16 +21,13 @@ class DiscreteBE(LearnParameters):
     data : pandas DataFrame
         Input data used to learn the parameters from.
 
-    data_type : {'continuous', 'discrete', 'hybrid'}
-        Type of the data introduced.
-
     graph : networkx.DiGraph
         Structure of the Bayesian network.
     """
 
-    def __init__(self, data, data_type, graph, *, prior='BDeu',
+    def __init__(self, data, graph, *, prior='BDeu',
                  equivalent_size=5):
-        super().__init__(data, data_type, graph)
+        super().__init__(data, graph)
         self.prior = prior
         if self.prior == 'BDeu':
             self.eq_size = equivalent_size

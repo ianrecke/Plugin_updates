@@ -1,3 +1,11 @@
+"""
+Structure learning base module.
+"""
+
+# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# http://cig.fi.upm.es/
+# License:
+
 from abc import abstractmethod, ABCMeta
 
 from ..utils.data_structures import pd2r, bnlearn2nx
@@ -24,7 +32,7 @@ class LearnStructure(metaclass=ABCMeta):
         self.data_type = data_type
 
     @abstractmethod
-    def run(self, env):
+    def run(self, env=None):
         """
         Learns the structure of the Bayesian network.
 
