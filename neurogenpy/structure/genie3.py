@@ -153,7 +153,7 @@ def get_link_list(VIM, gene_names=None, regulators='all', maxcount='all',
                 'input argument gene_names must be a list of length p, where p'
                 ' is the number of columns/genes in the expression data')
 
-    if regulators is not 'all':
+    if regulators != 'all':
         if not isinstance(regulators, (list, tuple)):
             raise ValueError(
                 'input argument regulators must be a list of gene names')
@@ -168,7 +168,7 @@ def get_link_list(VIM, gene_names=None, regulators='all', maxcount='all',
                 raise ValueError(
                     'The genes must contain at least one candidate regulator')
 
-    if maxcount is not 'all' and not isinstance(maxcount, int):
+    if maxcount != 'all' and not isinstance(maxcount, int):
         raise ValueError(
             'input argument maxcount must be "all" or a positive integer')
 
@@ -315,7 +315,7 @@ def genie3(expr_data, gene_names=None, regulators='all', tree_method='RF',
                 'input argument gene_names must be a list of length p, where p'
                 ' is the number of columns/genes in the expr_data')
 
-    if regulators is not 'all':
+    if regulators != 'all':
         if not isinstance(regulators, (list, tuple)):
             raise ValueError(
                 'input argument regulators must be a list of gene names')
@@ -330,12 +330,12 @@ def genie3(expr_data, gene_names=None, regulators='all', tree_method='RF',
                 raise ValueError(
                     'the genes must contain at least one candidate regulator')
 
-    if tree_method is not 'RF' and tree_method is not 'ET':
+    if tree_method != 'RF' and tree_method != 'ET':
         raise ValueError(
             'input argument tree_method must be "RF" (Random Forests) or "ET" '
             '(Extra-Trees)')
 
-    if k is not 'sqrt' and k is not 'all' and not isinstance(k, int):
+    if k != 'sqrt' and k != 'all' and not isinstance(k, int):
         raise ValueError(
             'input argument K must be "sqrt", "all" or a strictly positive '
             'integer')

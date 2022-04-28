@@ -29,6 +29,7 @@ from ..utils.data_structures import get_data_type
 from ..utils.score import confusion_matrix, accuracy, f1_score, mcc_score, \
     confusion_hubs
 
+from networkx import DiGraph
 
 # TODO: Functions or attributes? Decide
 # TODO: Manage hybrid case.
@@ -74,9 +75,11 @@ class BayesianNetwork:
     :func:`~neurogenpy.models.bayesian_network.BayesianNetwork.load`
     methods for other ways of creating Bayesian networks.
 
-    >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+    >>> from neurogenpy import BayesianNetwork, GaussianNode
     >>> from networkx import DiGraph
-    >>> graph = DiGraph([1, 2])
+    >>> graph = DiGraph()
+    >>> graph.add_nodes_from([1, 2])
+    >>> graph.add_edges_from([(1, 2)])
     >>> ps = {1: GaussianNode(0, 1, [], []), 2: GaussianNode(0, 1, [1], [0.8])}
     >>> bn = BayesianNetwork(graph=graph, parameters=ps)
 
@@ -233,7 +236,7 @@ class BayesianNetwork:
             raise Exception('There is no network structure.')
 
     def _check_parameters(self, parameters):
-        if parameters is not None and set(parameters.keys) != set(
+        if parameters is not None and set(parameters.keys()) != set(
                 self.graph.nodes()):
             raise ValueError(
                 'Parameters and graph structure must have the same nodes.')
@@ -900,7 +903,7 @@ class BayesianNetwork:
         - Set the structure and parameter learning methods with arguments:
 
         >>> import pandas as pd
-        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> from neurogenpy import BayesianNetwork
         >>> data = pd.read_csv('file.csv')
         >>> bn = BayesianNetwork().fit(data, estimation='mle', algorithm='PC')
 
@@ -916,9 +919,8 @@ class BayesianNetwork:
             :class:`~neurogenpy.parameters.learn_parameters.LearnParameters`
             subclass:
 
-        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
-        >>> from neurogenpy.structure.fges_merge import FGESMerge
-        >>> from neurogenpy.parameters.gaussian_mle import GaussianMLE
+        >>> from neurogenpy import BayesianNetwork, FGESMerge, GaussianMLE
+
         """
 
         # FIXME: Algorithm and parameters estimation as objects.
@@ -1028,7 +1030,7 @@ class BayesianNetwork:
                 graph.
             - CSV and parquet, for saving the adjacency matrix of the graph.
 
-        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> from neurogenpy import BayesianNetwork
         >>> import pandas as pd
         >>> df = pd.read_csv('file.csv')
         >>> bn = BayesianNetwork.fit(df)
@@ -1080,7 +1082,7 @@ class BayesianNetwork:
         - BIF file (pgmpy): it loads the graph structure and the parameters of
             the network.
 
-        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> from neurogenpy import BayesianNetwork
         >>> bn = BayesianNetwork().load('bn.bif')
 
         - GEXF (graph stored with .gexf extension), CSV (adjacency matrix
@@ -1090,7 +1092,7 @@ class BayesianNetwork:
             the initial data.
 
         >>> import pandas as pd
-        >>> from neurogenpy.models.bayesian_network import BayesianNetwork
+        >>> from neurogenpy import BayesianNetwork
         >>> bn = BayesianNetwork.load('bn.gexf')
         >>> df = pd.read_csv('file.csv')
         >>> bn = bn.fit(df, estimation='mle', skip_structure=True)
@@ -1173,9 +1175,11 @@ class BayesianNetwork:
         --------
 
         >>> import numpy as np
-        >>> from networkx import DiGraph
+        >>> from networkx import DiGraph, GaussianNode
         >>> matrix = np.array([[0,0], [1,0]])
-        >>> graph = DiGraph([1, 2])
+        >>> graph = DiGraph()
+        >>> graph.add_nodes_from([1, 2])
+        >>> graph.add_edges_from([(1, 2)])
         >>> parameters = {1: GaussianNode(0, 1, [], []),
         ...                 2: GaussianNode(0, 1, [1], [0.8])}
         >>> bn = BayesianNetwork(graph=graph, parameters=parameters)
@@ -1205,41 +1209,42 @@ class BayesianNetwork:
                              'network are not the same.')
 
         adj_matrix = nx.to_numpy_matrix(self.graph, nodelist=nodes_order)
+        real_matrix = np.asmatrix(real_graph)
 
         result = {}
 
         confusion = None
         if 'confusion' in metric:
-            confusion = confusion_matrix(adj_matrix, real_graph,
+            confusion = confusion_matrix(adj_matrix, real_matrix,
                                          undirected=undirected,
                                          threshold=threshold)
             result = {'confusion': confusion}
         if 'accuracy' in metric:
-            result = {**result, 'accuracy': accuracy(adj_matrix, real_graph,
+            result = {**result, 'accuracy': accuracy(adj_matrix, real_matrix,
                                                      undirected=undirected,
                                                      threshold=threshold,
                                                      confusion=confusion)}
         if 'f1' in metric:
-            result = {**result, 'f1': f1_score(adj_matrix, real_graph,
+            result = {**result, 'f1': f1_score(adj_matrix, real_matrix,
                                                undirected=undirected,
                                                threshold=threshold,
                                                confusion=confusion)}
         if 'mcc' in metric:
             result = {**result,
-                      'mcc': mcc_score(adj_matrix, real_graph,
+                      'mcc': mcc_score(adj_matrix, real_matrix,
                                        undirected=undirected,
                                        threshold=threshold,
                                        confusion=confusion)}
         if 'roc_auc' in metric:
             result = {**result, 'roc_auc': roc_auc_score(adj_matrix.flatten(),
-                                                         real_graph.flatten())}
+                                                         real_graph)}
         if 'avg_precision' in metric:
             result = {**result, 'avg_precision': average_precision_score(
                 adj_matrix.flatten(),
-                adj_matrix.flatten())}
+                real_graph)}
         if 'confusion_hubs' in metric:
             result = {**result,
-                      'confusion_hubs': confusion_hubs(adj_matrix, real_graph,
+                      'confusion_hubs': confusion_hubs(adj_matrix, real_matrix,
                                                        method=h_method,
                                                        threshold=h_threshold)}
 

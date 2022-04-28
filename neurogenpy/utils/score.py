@@ -39,12 +39,13 @@ def _conf_matrix_directed(m_pred, m_true):
     n = m_pred.shape[0]
     m_pred = m_pred > 0
 
+    not_diagonal = ~np.eye(n, dtype=bool)
     score_matrix = np.equal(m_pred, m_true)
 
-    tp = np.sum(score_matrix[m_pred == 1])
-    tn = np.sum(score_matrix[m_pred == 0])
-    fp = np.sum(~score_matrix[m_pred == 1])
-    fn = n * n - tp - fp - tn
+    tp = np.sum(score_matrix[m_true == 1 & not_diagonal])
+    tn = np.sum(score_matrix[m_pred == 0 & not_diagonal])
+    fp = np.sum(~score_matrix[m_pred == 1 & not_diagonal])
+    fn = n * (n - 1) - tp - fp - tn
 
     confusion = np.array([[tp, fn], [fp, tn]])
     return confusion

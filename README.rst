@@ -28,9 +28,11 @@ The use of the package is focused on the :class:`~neurogenpy.models.bayesian_net
 
    .. code-block:: py
 
-    from neurogenpy.models.bayesian_network import BayesianNetwork
+    from neurogenpy import BayesianNetwork, GaussianNode
     from networkx import DiGraph
-    graph = DiGraph([1, 2])
+    graph = DiGraph()
+    graph.add_nodes_from([1, 2])
+    graph.add_edges_from([(1, 2)])
     ps = {1: GaussianNode(0, 1, [], []), 2: GaussianNode(0, 1, [1], [0.8])}
     bn = BayesianNetwork(graph=graph, parameters=ps)
 
@@ -41,7 +43,7 @@ The use of the package is focused on the :class:`~neurogenpy.models.bayesian_net
       .. code-block:: py
 
         import pandas as pd
-        from neurogenpy.models.bayesian_network import BayesianNetwork
+        from neurogenpy import BayesianNetwork
         df = pd.read_csv('file.csv')
         bn = BayesianNetwork().fit(df, estimation='mle', algorithm='PC')
 
@@ -56,9 +58,7 @@ The use of the package is focused on the :class:`~neurogenpy.models.bayesian_net
 
       .. code-block:: py
 
-        from neurogenpy.models.bayesian_network import BayesianNetwork
-        from neurogenpy.structure.fges_merge import FGESMerge
-        from neurogenpy.parameters.gaussian_mle import GaussianMLE
+        from neurogenpy import BayesianNetwork, FGESMerge, GaussianMLE
 
 #. Loading an already saved Bayesian network:
 
@@ -66,7 +66,7 @@ The use of the package is focused on the :class:`~neurogenpy.models.bayesian_net
 
       .. code-block:: py
 
-        from neurogenpy.models.bayesian_network import BayesianNetwork
+        from neurogenpy import BayesianNetwork
         bn = BayesianNetwork().load('bn.bif')
 
     - GEXF (graph stored with .gexf extension), CSV (adjacency matrix stored with '.csv') or parquet (adjacency matrix stored with '.gzip' extension) file, it only loads the graph structure of the network. The parameters can be learnt according to this graph and the initial data.
@@ -74,7 +74,7 @@ The use of the package is focused on the :class:`~neurogenpy.models.bayesian_net
       .. code-block:: py
 
         import pandas as pd
-        from neurogenpy.models.bayesian_network import BayesianNetwork
+        from neurogenpy import BayesianNetwork
         bn = BayesianNetwork.load('bn.gexf')
         df = pd.read_csv('file.csv')
         bn = bn.fit(df, estimation='mle', skip_structure=True)
