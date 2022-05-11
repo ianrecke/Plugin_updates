@@ -2,18 +2,16 @@
 Gaussian maximum likelihood estimation module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
 from collections import namedtuple
 
-import networkx as nx
 import numba
 import numpy as np
 
 from .learn_parameters import LearnParameters
-from ..utils.graph import parents
 
 
 class GaussianMLE(LearnParameters):
@@ -53,9 +51,7 @@ class GaussianMLE(LearnParameters):
         nodes = self.data.columns.values.tolist()
 
         for node in nodes:
-            node_idx = nodes.index(node)
-            parents_idx = parents(self.graph, node_idx)
-            node_parents = [nodes[i] for i in parents_idx]
+            node_parents = self.graph.predecessors(node)
 
             y = self.data.loc[:, node].values.reshape(self.data.shape[0], -1)
 

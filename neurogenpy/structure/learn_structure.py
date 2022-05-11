@@ -2,7 +2,7 @@
 Structure learning base module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -76,9 +76,10 @@ class LearnStructure(metaclass=ABCMeta):
             raise ValueError(
                 'This algorithm does not support hybrid Bayesian networks')
         dataframe = pd2r(self.data)
+
         nodes = list(self.data.columns.values)
 
-        output_raw_r = bnlearn_function(dataframe, kwargs)
+        output_raw_r = bnlearn_function(dataframe, **kwargs)
 
         graph = bnlearn2nx(nodes, output_raw_r)
 
