@@ -2,15 +2,16 @@
 Data structures utilities module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
 import networkx as nx
 import numpy as np
 from igraph import Graph
-from pgmpy.models import BayesianModel
-from rpy2.robjects import pandas2ri
+from pgmpy.models import BayesianNetwork as PGMPY_BN
+from rpy2.robjects import pandas2ri, default_converter, conversion
+from rpy2.robjects.conversion import localconverter
 
 
 def get_data_type(df):
@@ -32,7 +33,7 @@ def get_data_type(df):
     is_number = np.vectorize(lambda x: np.issubdtype(x, np.number))
     if all(is_number(df.dtypes)):
         return 'continuous', None
-    elif (not any(is_number(df.dstypes))) and (
+    elif (not any(is_number(df.dtypes))) and (
             any(df.dtypes == 'object') or any(df.dtypes == 'bool')):
         return 'discrete', None
     else:
@@ -40,24 +41,24 @@ def get_data_type(df):
         return 'hybrid', aux
 
 
-def pd2r(data):
+def pd2r(df):
     """
     Converts a pandas DataFrame into an R dataframe.
 
     Parameters
     ----------
-    data : pandas.DataFrame
+    df : pandas.DataFrame
         Data set to be transformed.
 
     Returns
     -------
         R dataframe with the same information as the input dataframe.
     """
-    # TODO: check pandas DataFrame to R dataframe conversion with activate
-    pandas2ri.activate()
-    dataframe = data
 
-    return dataframe
+    with localconverter(default_converter + pandas2ri.converter):
+        r_from_pd_df = conversion.py2rpy(df)
+
+    return r_from_pd_df
 
 
 def matrix2nx(graph, nodes):
@@ -100,7 +101,7 @@ def nx2pgmpy(graph, parameters):
     pgmpy.BayesianModel
     """
 
-    pgmpy_model = BayesianModel()
+    pgmpy_model = PGMPY_BN()
     pgmpy_model.add_nodes_from(graph.nodes())
     pgmpy_model.add_edges_from(graph.edges())
     if parameters:

@@ -2,7 +2,7 @@
 FGES-Merge structure learning module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -12,6 +12,8 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 from mpi4py.futures import MPIPoolExecutor
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from neurogenpy.utils.data_structures import matrix2nx
 from .fges import FGESStructure, FGESBase
@@ -99,16 +101,18 @@ class FGESMerge(FGESBase):
         #  network learning or arrows forward calculation, but it does not
         #  make sense to do both.
 
-        for node in self.nodes:
-            neighbors, ndata, nbics = self._neighborhood_candidates(node)
+        with logging_redirect_tqdm():
+            for node in tqdm(self.nodes):
+                neighbors, ndata, nbics = self._neighborhood_candidates(node)
 
-            # Construct local network with node and neighborhood candidates:
-            fges_structure = FGESStructure(ndata, nbics, neighbors,
-                                           self.penalty, self.n_jobs)
-            local_graph = fges_structure.run()
+                # Construct local network with node and neighborhood
+                # candidates:
+                fges_structure = FGESStructure(ndata, nbics, neighbors,
+                                               self.penalty, self.n_jobs)
+                local_graph = fges_structure.run()
 
-            self.graph_files[node] = save_tmp(local_graph, neighbors,
-                                              self.tmp_dir.name)
+                self.graph_files[node] = save_tmp(local_graph, neighbors,
+                                                  self.tmp_dir.name)
 
         config = {
             'combine_method': 'union',

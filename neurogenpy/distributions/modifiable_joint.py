@@ -2,7 +2,7 @@
 Modifiable joint probability distribution module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -190,6 +190,16 @@ class ModifiableJointDistribution:
         return marginal
 
     def relabel_nodes(self, mapping):
+        """
+        Relabel the nodes of the distribution according to a given mapping.
+
+        Parameters
+        ----------
+        mapping : dict
+            A dictionary with the old labels as keys and new labels as values.
+            It can be a partial mapping.
+        """
+
         self.nodes_order = [mapping[node] if node in mapping.keys() else node
                             for node in self.nodes_order]
 
