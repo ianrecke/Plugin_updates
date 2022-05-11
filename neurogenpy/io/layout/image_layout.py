@@ -2,7 +2,7 @@
 Image layout module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -22,7 +22,7 @@ class ImageLayout(GraphLayout):
     Image layout class.
     """
 
-    def __init__(self, graph, image_url, threshold=200):
+    def __init__(self, graph, *, image_url, threshold=200, **_):
         """
         Image layout class constructor.
 

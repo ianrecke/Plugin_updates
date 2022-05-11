@@ -2,13 +2,11 @@
 Graph layout module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
 from abc import ABCMeta, abstractmethod
-
-from ...utils.data_structures import nx2igraph
 
 
 class GraphLayout(metaclass=ABCMeta):
@@ -21,7 +19,7 @@ class GraphLayout(metaclass=ABCMeta):
         Graph whose layout has to be computed.
     """
 
-    def __init__(self, graph):
+    def __init__(self, graph, **_):
         self.graph = graph
 
     @abstractmethod
@@ -40,10 +38,3 @@ class GraphLayout(metaclass=ABCMeta):
             A dictionary with the nodes IDs as keys and their coordinates as
             values.
         """
-
-    def _run_igraph(self, layout_name):
-        graph = nx2igraph(self.graph)
-        nodes = list(self.graph.nodes())
-
-        layout = graph.layout(layout_name)
-        return {node: (layout[i][0]) for i, node in enumerate(nodes)}

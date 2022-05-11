@@ -2,7 +2,7 @@
 Dot layout module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -14,17 +14,9 @@ from .graph_layout import GraphLayout
 class DotLayout(GraphLayout):
     """
     Dot layout class.
-
-    Parameters
-    ----------
-    graph : networkx.DiGraph
-        Graph whose layout has to be computed.
     """
 
-    def __init__(self, graph):
-        super().__init__(graph)
-
-    def run(self, env='nx'):
+    def run(self, env='networkx'):
         """
         Calculates the layout for the graph with the dot algorithm.
 
@@ -45,7 +37,7 @@ class DotLayout(GraphLayout):
             If the environment selected is not supported.
         """
 
-        if env == 'nx':
+        if env == 'networkx':
             layout = nx.drawing.nx_agraph.graphviz_layout(self.graph,
                                                           prog='dot')
             return {k: (v[0], -v[1]) for k, v in layout.items()}
