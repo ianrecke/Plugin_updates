@@ -8,15 +8,15 @@ Dot layout module.
 
 import networkx as nx
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class DotLayout(GraphLayout):
+class DotLayout(Layout):
     """
     Dot layout class.
     """
 
-    def run(self, env='networkx'):
+    def run(self, env='networkx', **_):
         """
         Calculates the layout for the graph with the dot algorithm.
 

@@ -7,11 +7,19 @@ igraph layout module.
 # License:
 
 
+<<<<<<< HEAD
 from .graph_layout import GraphLayout
 from ...utils.data_structures import nx2igraph
 
 
 class IgraphLayout(GraphLayout):
+=======
+from .layout import Layout
+from ...utils.data_structures import nx2igraph
+
+
+class IgraphLayout(Layout):
+>>>>>>> dev
     """
     Class for igraph layouts. Any layout provided by igraph can be used.
 
@@ -28,7 +36,11 @@ class IgraphLayout(GraphLayout):
         super().__init__(graph)
         self.layout_name = layout_name
 
+<<<<<<< HEAD
     def run(self, env='igraph'):
+=======
+    def run(self, env='igraph', bbox=(60, 60), **_):
+>>>>>>> dev
         """
         Calculates the layout for the graph.
 
@@ -37,6 +49,12 @@ class IgraphLayout(GraphLayout):
         env : str
             Environment used to calculate the layout.
 
+<<<<<<< HEAD
+=======
+        bbox : (int, int), default=(600, 600)
+            Bounding box for the graph.
+
+>>>>>>> dev
         Returns
         -------
         dict
@@ -48,5 +66,9 @@ class IgraphLayout(GraphLayout):
         nodes = list(self.graph.nodes())
 
         layout = graph.layout(self.layout_name)
+<<<<<<< HEAD
+=======
+        layout.fit_into(bbox=bbox)
+>>>>>>> dev
         return {node: (layout[i][0], layout[i][1]) for i, node in
                 enumerate(nodes)}

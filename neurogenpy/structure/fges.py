@@ -41,7 +41,8 @@ class FGES(FGESBase):
     """
 
     def __init__(self, df, data_type, *, penalty=45, **_):
-        # TODO: Transform pandas DataFrame to numpy array?
+        # TODO: Transform pandas DataFrame to numpy array? Done in structure.
+        #  Check usage in FGESBase
         super().__init__(df, data_type, penalty=penalty)
 
     def run(self, env='neurogenpy'):

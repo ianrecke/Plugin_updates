@@ -14,10 +14,10 @@ import requests
 from PIL import Image
 from skimage.measure import find_contours
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class ImageLayout(GraphLayout):
+class ImageLayout(Layout):
     """
     Image layout class.
     """
@@ -43,7 +43,7 @@ class ImageLayout(GraphLayout):
         self.img = Image.open(BytesIO(response.content))
         self.threshold = threshold
 
-    def run(self, env='neurogenpy'):
+    def run(self, env='neurogenpy', **_):
         """
         Calculates the layout for the graph with the image algorithm.
 

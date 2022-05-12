@@ -9,15 +9,15 @@ ForceAtlas2 layout module.
 import networkx
 from fa2 import ForceAtlas2
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class ForceAtlas2Layout(GraphLayout):
+class ForceAtlas2Layout(Layout):
     """
     ForceAtlas2 layout class.
     """
 
-    def run(self, env='fa2'):
+    def run(self, env='fa2', **_):
         """
         Calculates the layout for the graph with the ForceAtlas2 algorithm.
 
