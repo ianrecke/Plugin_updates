@@ -10,10 +10,15 @@ Description
 -----------
 .. description-start
 
-NeurogenPy is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene
-regulatory networks, modeled as Bayesian networks. It has been developed from the already existing web framework  `NeuroSuites <https://neurosuites.com/>`_.
+NeurogenPy is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the continuous case is the only one that is fully provided. However, discrete inference will be implemented in the near future.
+
+The package provides different structure learning algorithms, parameters estimation and input/output formats. For some of them, already existing implementations have been used, being `bnlearn <https://www.bnlearn.com/>`_, `pgmpy <https://pgmpy.org/>`_, `networkx <https://networkx.org/>`_ and `igraph <https://igraph.org/python/>`_ the most used.
+
+This project has been conceived to be included as a plugin in the `EBRAINS interactive atlas viewer <https://interactive-viewer.apps.hbp.eu/>`_, but it may be used for other purposes.
 
 .. description-end
+
+NeurogenPy has been developed from the already existing web framework  `NeuroSuites <https://neurosuites.com/>`_.
 
 Installation
 ------------
@@ -91,7 +96,9 @@ Authors
 -------
 .. authors-start
 
-This project has been developed by the `Computer Intelligence Group (CIG) <http://cig.fi.upm.es/>`_ of `Universidad Politécnica de Madrid (UPM) <https://www.upm.es/>`_.
+This project has been developed by the `Computational Intelligence Group (CIG) <http://cig.fi.upm.es/>`_ of `Universidad Politécnica de Madrid (UPM) <https://www.upm.es/>`_.
+
+NeurogenPy has been developed by `Javier Gallego Gutiérrez <https://github.com/javiegal/>`_ based on `NeuroSuites <https://neurosuites.com/>`_, developed by `Mario Michiels Toquero <https://www.linkedin.com/in/mario-michiels-toquero-02ab9a137/>`_ and `Hugo Nugra <https://www.linkedin.com/in/hugonugramadero/>`_.
 
 |cig| |upm|
 

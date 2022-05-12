@@ -2,32 +2,14 @@
 Input/output utilities module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
-
-import random
 
 import numpy as np
 import plotly
 import plotly.graph_objs as plotly_graph
 import scipy.stats as scipy_stats
-
-
-def generate_random_color():
-    """
-    Generates a random RGB color with hexadecimal notation.
-
-    Returns
-    -------
-    str
-        A random color in hexadecimal notation.
-    """
-
-    hex_rgb = ('#%02X%02X%02X' % (
-        random.randint(0, 255), random.randint(0, 255),
-        random.randint(0, 255)))
-    return hex_rgb
 
 
 def set_layout(title='', column_x_name='', column_y_name='', all_x_labels=1,

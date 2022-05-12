@@ -2,7 +2,7 @@
 Image layout module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -14,15 +14,15 @@ import requests
 from PIL import Image
 from skimage.measure import find_contours
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class ImageLayout(GraphLayout):
+class ImageLayout(Layout):
     """
     Image layout class.
     """
 
-    def __init__(self, graph, image_url, threshold=200):
+    def __init__(self, graph, *, image_url, threshold=200, **_):
         """
         Image layout class constructor.
 
@@ -43,7 +43,7 @@ class ImageLayout(GraphLayout):
         self.img = Image.open(BytesIO(response.content))
         self.threshold = threshold
 
-    def run(self, env='neurogenpy'):
+    def run(self, env='neurogenpy', **_):
         """
         Calculates the layout for the graph with the image algorithm.
 

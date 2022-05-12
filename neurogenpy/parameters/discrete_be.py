@@ -2,7 +2,7 @@
 Discrete Bayesian estimation module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -25,8 +25,7 @@ class DiscreteBE(LearnParameters):
         Structure of the Bayesian network.
     """
 
-    def __init__(self, data, graph, *, prior='BDeu',
-                 equivalent_size=5):
+    def __init__(self, data, graph, *, prior='BDeu', equivalent_size=5):
         super().__init__(data, graph)
         self.prior = prior
         if self.prior == 'BDeu':

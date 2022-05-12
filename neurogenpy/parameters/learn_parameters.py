@@ -2,7 +2,7 @@
 Parameters learning base module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -24,9 +24,9 @@ class LearnParameters(metaclass=ABCMeta):
         Structure of the Bayesian network.
     """
 
-    def __init__(self, data, graph):
+    def __init__(self, data, graph, **_):
         self.data = data
-        self.graph = to_numpy_matrix(graph)
+        self.graph = graph
 
     @abstractmethod
     def run(self):

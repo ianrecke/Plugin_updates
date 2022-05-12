@@ -2,7 +2,7 @@
 GENIE3 structure learning module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -54,6 +54,7 @@ class GENIE3(LearnStructure):
         Exception
             If the data is not continuous
         """
+
         if self.data_type != 'continuous':
             raise Exception(
                 'Algorithm only supported for continuous datasets ')

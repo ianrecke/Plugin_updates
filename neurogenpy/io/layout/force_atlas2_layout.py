@@ -2,22 +2,22 @@
 ForceAtlas2 layout module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
 import networkx
 from fa2 import ForceAtlas2
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class ForceAtlas2Layout(GraphLayout):
+class ForceAtlas2Layout(Layout):
     """
     ForceAtlas2 layout class.
     """
 
-    def run(self, env='fa2'):
+    def run(self, env='fa2', **_):
         """
         Calculates the layout for the graph with the ForceAtlas2 algorithm.
 

@@ -2,7 +2,7 @@
 FGES base classes module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
 
@@ -15,7 +15,7 @@ from mpi4py import MPI
 from mpi4py.futures import MPIPoolExecutor
 
 from .learn_structure import LearnStructure
-from ..utils.arrows import create_arrow, get_nodes, get_dest, get_vals, \
+from ..utils.fges_arrows import create_arrow, get_nodes, get_dest, get_vals, \
     get_bic
 from ..utils.graph import add_edge, adjacencies, remove_undirected, \
     parents, children, undirected_neighbors, add_undirected, exists_sd_path, \
