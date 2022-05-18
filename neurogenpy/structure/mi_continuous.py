@@ -13,6 +13,7 @@ from .learn_structure import LearnStructure
 from ..utils.data_structures import matrix2nx
 
 
+# TODO: Check discrete case.
 class MiContinuous(LearnStructure):
     """
     Mutual information structure learning class.
@@ -50,10 +51,6 @@ class MiContinuous(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_sklearn(self):
-        """
-
-        """
-
         nodes_names = list(self.data.columns.values)
         mi_matrix = []
         data_np = np.array(self.data)

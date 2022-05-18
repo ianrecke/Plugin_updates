@@ -5,7 +5,7 @@ GEXF input/output module.
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
-
+import inspect
 import random
 
 import networkx.readwrite as networkx_io
@@ -33,7 +33,7 @@ class GEXF(BNIO):
     """
 
     def write_file(self, bn, file_path='bn.gexf', layout_name=None,
-                   communities=False):
+                   communities=False, sizes_method='mb'):
         """
         Exports a representation of the Bayesian network for the chosen layout
         in GEXF format.
@@ -53,6 +53,11 @@ class GEXF(BNIO):
         communities : bool, default=False
             Whether to assign different colors to the nodes and edges belonging
             to different communities of Louvain.
+
+        sizes_method : {'mb', 'neighbors'}, default='mb'
+            The method used to calculate the sizes of the nodes. It can be the
+            size of the Markov blanket of each node or the amount of neighbors
+            they have.
         """
 
         layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
@@ -68,14 +73,17 @@ class GEXF(BNIO):
             else:
                 network_size = 'large'
 
-            layout = layouts[layout_name](bn.graph,
-                                          layout_name=layout_name).run()
+            layout = layouts[layout_name]
+            params = {} if 'layout_name' not in inspect.getfullargspec(
+                layout).kwonlyargs else {'layout_name': layout_name}
+            layout = layout(bn.graph, **params).run()
 
             nx_dict = networkx_io.json_graph.node_link_data(bn.graph)
 
             nodes_colors = _nodes_colors(bn, communities)
             nodes = _get_nodes_attr(nx_dict, layout,
-                                    _nodes_sizes(bn, network_size),
+                                    _nodes_sizes(bn, network_size,
+                                                 method=sizes_method),
                                     nodes_colors)
             edges = _get_edges_attr(nx_dict, _edges_sizes(bn, network_size),
                                     _edges_colors(bn, nodes_colors))
@@ -100,7 +108,7 @@ class GEXF(BNIO):
                 x, y = edge['x'], edge['y']
                 bn.graph.edges[x, y]['weight'] = edge['weight']
                 bn.graph.edges[x, y]['type'] = edge['type']
-                bn.graph.edges[x, y]['label'] = edge['label']
+                # bn.graph.edges[x, y]['label'] = edge['label']
                 edge_color = rgb_colors[edge['color']]
                 bn.graph.edges[x, y]['viz'] = {
                     'color': {'r': edge_color[0], 'g': edge_color[1],
@@ -112,8 +120,6 @@ class GEXF(BNIO):
         return networkx_io.read_gexf(file_path)
 
 
-# TODO: Check BayesianNetwork attributes management in _edges_sizes() and
-#  _nodes_sizes()
 def _edges_sizes(bn, network_size):
     """Retrieves the size of each edge in the network."""
 
@@ -129,14 +135,14 @@ def _edges_sizes(bn, network_size):
     return edges_sizes
 
 
-def _nodes_sizes(bn, network_size, method='mb'):
+def _nodes_sizes(bn, network_size, method):
     """
     Retrieves the size of each node in the network according to the method
     provided.
 
     Parameters
     ----------
-    method : {'mb', 'neighbors'}, default='mb'
+    method : {'mb', 'neighbors'}
         The method used to calculate the sizes of the nodes.
 
     Returns
@@ -168,8 +174,6 @@ def _nodes_sizes(bn, network_size, method='mb'):
     return nodes_sizes
 
 
-# TODO: Add probabilistic clustering case where colors are determined by
-#  clusters.
 def _nodes_colors(bn, communities):
     """Returns a dictionary with nodes as keys and their colors as values."""
     if not communities:

@@ -12,7 +12,8 @@ from .learn_structure import LearnStructure
 
 
 class CL(LearnStructure):
-    """Chow Liu structure learning class.
+    """
+    Chow Liu structure learning class.
     """
 
     def run(self, env='bnlearn'):

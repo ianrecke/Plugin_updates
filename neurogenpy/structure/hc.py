@@ -24,11 +24,13 @@ class Hc(LearnStructure):
         Type of the data introduced.
 
     maxp : int, default=100
+        The maximum number of parents for a node.
 
     max_iter : int, default=100
+        The maximum number of iterations.
     """
 
-    def __init__(self, df, data_type, *, maxp=100, max_iter=100, **_):
+    def __init__(self, df, data_type, *, maxp=100, max_iter=100):
 
         super().__init__(df, data_type)
         self.maxp = maxp
@@ -53,6 +55,7 @@ class Hc(LearnStructure):
         ValueError
             If the environment is not supported.
         """
+
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':

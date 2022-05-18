@@ -19,7 +19,7 @@ class Layout(metaclass=ABCMeta):
         Graph whose layout has to be computed.
     """
 
-    def __init__(self, graph, **_):
+    def __init__(self, graph):
         self.graph = graph
 
     @abstractmethod

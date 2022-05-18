@@ -7,7 +7,7 @@ FGES structure learning module.
 # License:
 
 from ._fges_base import FGESBase, FGESStructure
-from neurogenpy.utils.data_structures import matrix2nx
+from ..utils.data_structures import matrix2nx
 
 
 class FGES(FGESBase):
@@ -40,9 +40,7 @@ class FGES(FGESBase):
        `<https://www.biorxiv.org/content/early/2020/02/05/2020.02.05.935007>`_.
     """
 
-    def __init__(self, df, data_type, *, penalty=45, **_):
-        # TODO: Transform pandas DataFrame to numpy array? Done in structure.
-        #  Check usage in FGESBase
+    def __init__(self, df, data_type, *, penalty=45):
         super().__init__(df, data_type, penalty=penalty)
 
     def run(self, env='neurogenpy'):
@@ -73,7 +71,7 @@ class FGES(FGESBase):
     def _run_neurogenpy(self):
         self._setup()
 
-        fges_structure = FGESStructure(self.data, self.bics, self.nodes,
-                                       self.penalty, self.n_jobs)
+        fges_structure = FGESStructure(self.data, self.bics, self.penalty,
+                                       self.n_jobs)
         self.graph = fges_structure.run()
         return matrix2nx(self.graph, self.nodes_ids)

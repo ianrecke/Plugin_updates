@@ -16,7 +16,7 @@ class DotLayout(Layout):
     Dot layout class.
     """
 
-    def run(self, env='networkx', **_):
+    def run(self, env='networkx'):
         """
         Calculates the layout for the graph with the dot algorithm.
 

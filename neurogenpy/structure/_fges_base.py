@@ -8,33 +8,33 @@ FGES base classes module.
 
 from abc import ABCMeta
 from itertools import permutations
+from multiprocessing import Pool
 
 import numba
 import numpy as np
-from mpi4py import MPI
-from mpi4py.futures import MPIPoolExecutor
+from numba import typed
 
 from .learn_structure import LearnStructure
-from ..utils.fges_arrows import create_arrow, get_nodes, get_dest, get_vals, \
-    get_bic
-from ..utils.graph import add_edge, adjacencies, remove_undirected, \
+from ..utils.fges_adjacency import add_edge, adjacencies, remove_undirected, \
     parents, children, undirected_neighbors, add_undirected, exists_sd_path, \
     is_undirected, remove_edge, has_edge
+from ..utils.fges_arrows import create_arrow, get_nodes, get_dest, get_vals, \
+    get_bic
 
 
 @numba.jit(nopython=True, fastmath=True)
-def _bic(y, X=None, penalty=45):
+def _bic(y, X, penalty=45):
     """
     Calculates the BIC score between the nodes in X and the node in y. It uses
     numba in order to speed up this computation.
 
     Parameters
     ----------
-    X :
+    X : numpy.array
         Data for the nodes.
-    y :
+    y : numpy.array
         Data for the node.
-    penalty :
+    penalty : int, default=45
         Penalty hyperparameter.
 
     Returns
@@ -42,14 +42,14 @@ def _bic(y, X=None, penalty=45):
     float
         BIC score.
     """
+
     n = y.shape[0]
 
-    if X is None:
+    if X.shape == ():
         return -n * np.log(np.sum(np.square(y - np.mean(y)) / n))
 
+    X = X.reshape(n, -1)
     k = X.shape[1]
-    X = np.ascontiguousarray(X).reshape(n, -1)
-    y = np.ascontiguousarray(y).reshape(n, -1)
 
     A = np.ones((n, k + 1), dtype=np.float64)
     A[:, :k] = X
@@ -60,19 +60,6 @@ def _bic(y, X=None, penalty=45):
 
 @numba.jit(nopython=True)
 def _parts_of(nodes, max_size=None):
-    """
-
-    Parameters
-    ----------
-    nodes
-
-    max_size : int, optional
-
-    Returns
-    -------
-
-    """
-
     max_size = len(nodes) if max_size is None else min(max_size, len(nodes))
 
     subsets = []
@@ -107,13 +94,12 @@ def _permutations(A, k):
 
 
 class FGESStructure:
-    """FGES structure class. It is used in `FGES` and `FGES-Merge` classes."""
+    """FGES structure class. It is used in `FGES` and `FGESMerge` classes."""
 
-    def __init__(self, data, bics, nodes, penalty, n_jobs):
-        self.data = np.array(data, dtype=np.float64)
+    def __init__(self, data, bics, penalty, n_jobs):
+        self.data = data
         self.bics = bics
-        self.num_nodes = len(nodes)
-        self.nodes = nodes
+        self.num_nodes = self.data.shape[1]
         self.graph = np.zeros((self.num_nodes, self.num_nodes), dtype=np.int64)
         self.arrows = []
         self.penalty = penalty
@@ -126,7 +112,7 @@ class FGESStructure:
 
         self._fes()
         self.arrows = []
-        self._reevaluate_backward(self.nodes)
+        self._reevaluate_backward(list(range(self.num_nodes)))
         self._bes()
         self._orient_graph()
         return self._get_final_graph()
@@ -162,13 +148,14 @@ class FGESStructure:
 
             NaYX_T = NaYX.union(T)
 
-            if self._check_arrow(best_edge) and self._check_clique(
-                    NaYX_T) and not exists_sd_path(self.graph, y, x,
-                                                   set(T).union(NaYX)):
+            if self._check_arrow(best_edge) and (not NaYX or _check_clique(
+                    self.graph, NaYX_T)) and not exists_sd_path(self.graph, y,
+                                                                x,
+                                                                set(T).union(
+                                                                    NaYX)):
                 self.bics[x, y] = 0
                 self.bics[y, x] = 0
 
-                # Add edge
                 self.graph = add_edge(self.graph, x, y)
                 if stochastic:
                     temperature = temperature - self.num_nodes if \
@@ -220,7 +207,7 @@ class FGESStructure:
             adj_y = adjacencies(self.graph, y)
             adj_x = adjacencies(self.graph, x)
             neighbors_y = undirected_neighbors(self.graph, y)
-            if self._check_clique(NaYX_S) and x in adj_y and NaYX == (
+            if _check_clique(self.graph, NaYX_S) and x in adj_y and NaYX == (
                     neighbors_y & adj_x):
                 if is_undirected(self.graph, x, y):
                     self.graph = remove_undirected(self.graph, x, y)
@@ -240,7 +227,7 @@ class FGESStructure:
     def _orient_graph(self):
         """Orients undirected edges to go from CPDAG to DAG."""
 
-        for node in self.nodes:
+        for node in range(self.num_nodes):
             for neighbor in undirected_neighbors(self.graph, node):
                 self.graph = remove_undirected(self.graph, node, neighbor)
                 if exists_sd_path(self.graph, node, neighbor, set(),
@@ -254,17 +241,17 @@ class FGESStructure:
         BIC score for each edge in the graph."""
 
         graph = np.zeros(self.graph.shape)
-        data_len = self.data.shape[0]
-        for node in self.nodes:
+        for node in range(self.num_nodes):
             node_parents = parents(self.graph, node)
-            node_data = self.data[:, node].reshape(data_len, -1)
-            X = self.data[:, list(node_parents)].reshape(data_len, -1)
-            bic_x = _bic(X, node_data, self.penalty)
-            for parent in node_parents:
-                S = list(node_parents - {parent})
-                X_0 = self.data[:, S].reshape(data_len, -1)
-                bic_x0 = _bic(X_0, node_data, self.penalty)
-                graph[parent, node] = bic_x - bic_x0
+            if node_parents:
+                node_data = self.data[:, node]
+                X = self.data[:, list(node_parents)]
+                bic_x = _bic(node_data, X, self.penalty)
+                for parent in node_parents:
+                    S = list(node_parents - {parent})
+                    X_0 = self.data[:, S] if S else np.empty(())
+                    bic_x0 = _bic(node_data, X_0, self.penalty)
+                    graph[parent, node] = bic_x - bic_x0
 
         return graph
 
@@ -339,20 +326,21 @@ class FGESStructure:
 
         arrows = []
         NaYX = undirected_neighbors(self.graph, y) & adjacencies(self.graph, x)
-        for subset in _parts_of(NaYX):
-            S = NaYX - subset
+        if NaYX:  # because of numba problems with empty sets
+            for subset in _parts_of(NaYX):
+                S = NaYX - subset
 
-            if self._check_clique(S):
-                S = list(S.union(parents(self.graph, y)) - {x})
-                data_y = self.data[:, y]
-                X_0 = self.data[:, S]
-                X = self.data[: S + [x]]
-                bic_x0 = _bic(X_0, data_y, self.penalty)
-                bic_x = _bic(X, data_y, self.penalty)
-                b = bic_x0 - bic_x
+                if _check_clique(self.graph, S):
+                    S = list(S.union(parents(self.graph, y)) - {x})
+                    data_y = self.data[:, y]
+                    X_0 = self.data[:, S]
+                    X = self.data[: S + [x]]
+                    bic_x0 = _bic(data_y, X_0, self.penalty)
+                    bic_x = _bic(data_y, X, self.penalty)
+                    b = bic_x0 - bic_x
 
-                if b > 0:
-                    arrows.append(create_arrow(x, y, NaYX, subset, b))
+                    if b > 0:
+                        arrows.append(create_arrow(x, y, NaYX, subset, b))
         return arrows
 
     def _cpdag(self, nodes):
@@ -465,12 +453,13 @@ class FGESStructure:
     def _calculate_arrows_forward(self, nodes):
 
         if self.n_jobs > 1:
-            arrows = self._caf_mpi(nodes)
+            arrows = self._caf_mpi(list(nodes))
         else:
-            nodes_pbs = {node: pbs for node in nodes if (
-                pbs := [j for j in self.nodes if self.bics[j, node] > 0])}
-
-            arrows = self._caf(nodes_pbs)
+            arrows = []
+            for node in nodes:
+                arrows.extend(self._caf(node,
+                                        [j for j in range(self.num_nodes) if
+                                         self.bics[j, node] > 0]))
 
         return [create_arrow(*arr) for arr in arrows]
 
@@ -499,121 +488,102 @@ class FGESStructure:
         """
         """
 
-        chunks_pbs = []
-        chunks = np.array_split(nodes, self.n_jobs)
-        for chunk in chunks:
-            pbs = {node: pbs for node in chunk if
-                   (pbs := [j for j in self.nodes if self.bics[j, node] > 0])}
-            chunks_pbs.append(pbs)
+        pbs = [[j for j in range(self.num_nodes) if self.bics[j, node] > 0] for
+               node in nodes]
 
         arrows = []
-        with MPIPoolExecutor() as executor:
-            for result in executor.map(self._caf, chunks_pbs):
+
+        input_data = [(node, pbs_node) for i, node in enumerate(nodes) if
+                      (pbs_node := pbs[i])]
+        with Pool(self.n_jobs) as pool:
+            for result in pool.starmap(self._caf, input_data):
                 arrows.extend(result)
 
         return arrows
 
-    def _caf(self, nodes_pbs):
-        """
+    def _caf(self, node, pbs):
 
-        Parameters
-        ----------
-        nodes_pbs :
+        return _caf_node(self.graph, self.data, self.penalty, node,
+                         typed.List(pbs))
 
-        Returns
-        -------
-        """
-        arrows = []
-        for node, positive_scores in nodes_pbs.items():
-            arrows.extend(self._caf_node(node, positive_scores))
-        return arrows
 
-    @numba.jit(nopython=True)
-    def _check_clique(self, nodes):
-        """
-        Checks if a set of nodes form a clique in the current graph, i.e., the
-        subgraph formed by them is complete. It uses numba in order to
-        speed up calculations.
+# Below methods are out of FGESStructure due to numba limitations
+@numba.jit(nopython=True)
+def _check_clique(graph, nodes):
+    """
+    Checks if a set of nodes form a clique in a graph, i.e., the subgraph
+    formed by them is complete. It uses numba in order to speed up
+    calculations.
+    """
 
-        Parameters
-        ----------
-        nodes :
-            A set of nodes in the graph.
-        """
-        # TODO: Check if flatten and reshape (redundant) are needed.
-        nodes = set(nodes.reshape(nodes.shape[0], -1).flatten())
-        for node in nodes:
-            if (adjacencies(self.graph, node).intersection(nodes)).union(
-                    {node}) < nodes:
-                return False
-        return True
+    for node in nodes:
+        if (adjacencies(graph, node).intersection(nodes)).union(
+                {node}) < nodes:
+            return False
+    return True
 
-    @numba.jit(nopython=True, parallel=True)
-    def _caf_node(self, node, positive_bics):
-        """
-        Calculates the arrows forward for a node given the positive BIC score
-        differences for it.
 
-        Parameters
-        ----------
-        node :
+# Numba parallel=True not set due to multiprocessing usage in the caller
+# function.
+@numba.jit(nopython=True)
+def _caf_node(graph, data, penalty, node, positive_bics):
+    """
+    Calculates the arrows forward for a node given the positive BIC score
+    differences for it.
+    """
 
-        positive_bics :
-        """
+    # TODO: Ask about max_size use.
+    max_size = 3
 
-        # TODO: Ask about max_size use.
-        max_size = 3
+    arrows = []
+    n = len(positive_bics)
+    for i in numba.prange(n):
+        x = positive_bics[i]
 
-        arrows = []
-        n = len(positive_bics)
-        for i in numba.prange(n):
-            x = positive_bics[i]
+        T = undirected_neighbors(graph, node) - adjacencies(graph, x)
 
-            T = undirected_neighbors(self.graph, node) - adjacencies(
-                self.graph, x)
+        NaYX = undirected_neighbors(graph, node) & adjacencies(graph, x)
 
-            NaYX = undirected_neighbors(self.graph, node) & adjacencies(
-                self.graph, x)
+        subsets = _parts_of(T, max_size)
+        for j in numba.prange(len(subsets)):
+            subset = subsets[j]
 
-            subsets = _parts_of(T, max_size)
-            for j in numba.prange(len(subsets)):
-                subset = subsets[j]
+            S = NaYX.union(subset)
 
-                S = NaYX.union(subset)
-                S_ = np.array(list(S), dtype=np.int64)
+            if _check_clique(graph, S):
+                S = S.union(parents(graph, node))
+                node_data = data[:, node]
 
-                if self._check_clique(S_):
-                    S = S.union(parents(self.graph, node))
-                    node_data = self.data[:, node]
+                array_S = np.array(list(S), dtype=np.int64)
+                array_S_X = np.array(list(S) + [x], dtype=np.int64)
 
-                    array_S = np.array(list(S), dtype=np.int64)
-                    array_S_X = np.array(list(S) + [x], dtype=np.int64)
+                X_0 = data[:, array_S]
+                X = data[:, array_S_X]
 
-                    X_0 = self.data[:, array_S]
-                    X = self.data[:, array_S_X]
+                bic_X = _bic(node_data, X, penalty)
+                bic_X_0 = _bic(node_data, X_0, penalty)
+                b = bic_X - bic_X_0
 
-                    bic_X = _bic(X, node_data, self.penalty)
-                    bic_X_0 = _bic(X_0, node_data, self.penalty)
-                    b = bic_X - bic_X_0
+                if b > 0:
+                    arrows.append((x, node, NaYX, subset, b))
 
-                    if b > 0:
-                        arrows.append((x, node, NaYX, subset, b))
-
-        return arrows
+    return arrows
 
 
 class FGESBase(LearnStructure, metaclass=ABCMeta):
-    """FGES base class. It is superclass of `FGES` and `FGES-Merge` classes."""
+    """FGES base class. It is the superclass of `FGES` and `FGES-Merge`
+    classes."""
 
-    def __init__(self, df, data_type, *, penalty=45, **_):
+    def __init__(self, df, data_type, *, penalty=45, n_jobs=1):
         super().__init__(df, data_type)
+        self.data = np.array(self.data, dtype=np.float64)
         self.penalty = penalty
         self.num_nodes = self.data.shape[1]
-        self.nodes = list(range(self.num_nodes))
         self.nodes_ids = list(df.columns.values)
         self.bics = np.empty((self.num_nodes, self.num_nodes),
                              dtype=np.float64)
-        self.n_jobs = MPI.UNIVERSE_SIZE
+
+        self.n_jobs = n_jobs
         self.graph = None
 
     def _init_bics_mpi(self):
@@ -626,74 +596,40 @@ class FGESBase(LearnStructure, metaclass=ABCMeta):
         # we assign nodes to a process until this amount is reached.
         ops_per_chunk = np.floor(
             (self.num_nodes ** 2 - self.num_nodes) / (2 * self.n_jobs))
-        nodes_chunks = []
-        running_count = 0
-        limiter = 0
-        for i in range(self.num_nodes):
-            running_count += self.num_nodes - 1 - i
-            if running_count >= ops_per_chunk:
-                nodes_chunks.append(list(range(limiter, i + 1)))
-                limiter = i + 1
-                running_count = 0
-        if limiter != self.num_nodes:
-            nodes_chunks.append(list(range(limiter, self.num_nodes)))
 
-        # TODO: set max_workers for MPIPoolExecutor.
-        with MPIPoolExecutor() as executor:
-            # TODO: check if the creation of chunks and use of map is needed or
-            #   we can just use submit.
-            for result in executor.map(self._init_bics, nodes_chunks):
-                result = np.append(
-                    np.zeros(len(result), self.num_nodes - result.shape[1]),
-                    result, axis=1)
+        input_data = []
+        running_count = 0
+        lower_bound = -1
+        for i in range(self.num_nodes):
+            running_count += self.num_nodes - (i + 1)
+            if running_count >= ops_per_chunk:
+                input_data.append((lower_bound + 1, i - lower_bound,
+                                   self.penalty,
+                                   self.data[:, lower_bound + 1:],
+                                   self.num_nodes))
+
+                lower_bound = i
+                running_count = 0
+        if lower_bound != self.num_nodes:
+            input_data.append(
+                (lower_bound + 1, self.num_nodes - (lower_bound + 1),
+                 self.penalty, self.data[:, lower_bound + 1:], self.num_nodes))
+
+        self.bics = np.zeros((0, self.num_nodes))
+
+        with Pool(self.n_jobs) as pool:
+            for result in pool.starmap(_init_bics, input_data, chunksize=1):
                 self.bics = np.append(self.bics, result, axis=0)
 
         self.bics = self.bics + np.triu(self.bics, k=1).T
 
-    @numba.jit(nopython=True, parallel=True)
-    def _init_bics(self, nodes):
-        """
-        Calculates the local BIC of adding each node from nodes_chunk to its
-        following nodes.
-
-        Parameters
-        ----------
-        nodes :
-            Nodes used for the computation.
-
-        Returns
-        -------
-        numpy.array
-            BIC scores matrix.
-        """
-
-        bics = np.zeros([len(nodes), (self.num_nodes - nodes[0])],
-                        dtype=np.float64)
-        for i in numba.prange(len(nodes)):
-            node_i = nodes[i]
-            X = self.data[:, node_i]
-            j = 0
-            for node_j in numba.prange(node_i + 1, self.num_nodes):
-                y = self.data[:, node_j]
-                bic_x = _bic(X, y, self.penalty)
-                bic_y = _bic(y)
-                bics[i, j] = bic_x - bic_y
-                j += 1
-
-        return bics
-
     def _setup(self):
-        """
-
-        """
 
         # Numba setup
         # https://numba.pydata.org/numba-doc/dev/reference/envvars.html
         # https://numba.pydata.org/numba-doc/dev/user/threading-layer.html#numba-threading-layer
         numba.config.THREADING_LAYER = 'omp'
         numba.config.NUMBA_WARNINGS = 1
-        # TODO: set the number of threads in a way we avoid
-        #  oversubscription.
         # env['NUMBA_NUM_THREADS'] = str(numba.config.NUMBA_DEFAULT_NUM_THREADS)
         # numba.config.reload_config()
 
@@ -701,4 +637,38 @@ class FGESBase(LearnStructure, metaclass=ABCMeta):
         if self.n_jobs > 1:
             self._init_bics_mpi()
         else:
-            self._init_bics(self.nodes)
+            self.bics = _init_bics(0, self.num_nodes, self.penalty, self.data,
+                                   self.num_nodes)
+
+
+# This method is out of FGESBase due to numba issues with inheritance.
+# Numba parallel=True not set due to multiprocessing usage in the caller
+# function.
+@numba.jit(nopython=True)
+def _init_bics(init_node, num_nodes, penalty, data, total_nodes):
+    """
+    Calculates the local BIC of adding each node from nodes_chunk to its
+    following nodes.
+
+    Parameters
+    ----------
+    num_nodes :
+        Nodes used for the computation.
+
+    Returns
+    -------
+    numpy.array
+        BIC scores matrix.
+    """
+
+    bics = np.zeros((num_nodes, total_nodes), dtype=np.float64)
+    for i in numba.prange(num_nodes):
+        X = data[:, i]
+        for j in numba.prange(i + 1, num_nodes):
+            y = data[:, j]
+            node_j = init_node + j
+            bic_x = _bic(y, X, penalty)
+            bic_y = _bic(y, np.empty(()))
+            bics[i, node_j] = bic_x - bic_y
+
+    return bics

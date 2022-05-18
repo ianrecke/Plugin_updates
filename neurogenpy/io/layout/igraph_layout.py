@@ -28,7 +28,7 @@ class IgraphLayout(Layout):
         super().__init__(graph)
         self.layout_name = layout_name
 
-    def run(self, env='igraph', bbox=(60, 60), **_):
+    def run(self, env='igraph', bbox=(60, 60)):
         """
         Calculates the layout for the graph.
 

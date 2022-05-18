@@ -1,5 +1,17 @@
 """
 GENIE3 structure learning module.
+
+Notes
+-----
+The algorithm implementation has been taken from
+https://github.com/vahuynh/GENIE3/. A detailed explanation of how it works can
+be seen in [1]_.
+
+References
+----------
+.. [1] Huynh-Thu, V. A., Irrthum, A., Wehenkel, L., & Geurts, P. (2010).
+    Inferring regulatory networks from expression data using tree-based
+    methods. PloS one, 5(9), e12776.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -16,21 +28,10 @@ from .learn_structure import LearnStructure
 from ..utils.data_structures import matrix2nx
 
 
+# TODO: Check algorithm
 class GENIE3(LearnStructure):
     """
     GENIE3 structure learning class.
-
-    Notes
-    -----
-    The algorithm implementation has been taken from
-    https://github.com/vahuynh/GENIE3/. A detailed explanation of how it
-    works can be seen in [1]_.
-
-    References
-    ----------
-    .. [1] Huynh-Thu, V. A., Irrthum, A., Wehenkel, L., & Geurts, P. (2010).
-        Inferring regulatory networks from expression data using tree-based
-        methods. PloS one, 5(9), e12776.
     """
 
     def run(self, env='genie3'):
@@ -60,26 +61,20 @@ class GENIE3(LearnStructure):
                 'Algorithm only supported for continuous datasets ')
 
         if env == 'genie3':
-            return self.run_genie()
+            return self._run_genie()
         else:
             raise ValueError(f'{env} environment is not supported.')
 
-    def run_genie(self):
-        """
+    def _run_genie(self):
 
+        nodes = list(self.data.columns.values)
 
-        """
+        adj_matrix = genie3(np.array(self.data), nthreads=1)
 
-        nodes_names = list(self.data.columns.values)
-        data_np = np.array(self.data)
-
-        vim = genie3(data_np, nthreads=1)
-
-        adj_matrix = vim
         np.fill_diagonal(adj_matrix, 0)
         adj_matrix = np.triu(adj_matrix)
 
-        graph = matrix2nx(adj_matrix, nodes_names)
+        graph = matrix2nx(adj_matrix, nodes)
 
         return graph
 
@@ -87,12 +82,13 @@ class GENIE3(LearnStructure):
 def compute_feature_importances(estimator):
     if isinstance(estimator, RandomForestRegressor) or \
             isinstance(estimator, ExtraTreesRegressor):
-        return estimator.tree_.compute_feature_importances(normalize=False)
+        return estimator.base_estimator.tree_.compute_feature_importances(
+            normalize=False)
     else:
         importances = [e.tree_.compute_feature_importances(normalize=False)
                        for e in estimator.estimators_]
         importances = np.asarray(importances)
-        return sum(importances, axis=0) / len(estimator)
+        return np.sum(importances, axis=0) / len(estimator)
 
 
 def get_link_list(VIM, gene_names=None, regulators='all', maxcount='all',
@@ -425,7 +421,7 @@ def genie3_single(expr_data, output_idx, input_idx, tree_method, K, ntrees):
     if tree_method == 'RF':
         tree_estimator = RandomForestRegressor(n_estimators=ntrees,
                                                max_features=max_features)
-    elif tree_method == 'ET':
+    else:
         tree_estimator = ExtraTreesRegressor(n_estimators=ntrees,
                                              max_features=max_features)
 
