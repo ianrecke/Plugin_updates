@@ -22,7 +22,7 @@ class ImageLayout(Layout):
     Image layout class.
     """
 
-    def __init__(self, graph, *, image_url, threshold=200, **_):
+    def __init__(self, graph, *, image_url, threshold=200):
         """
         Image layout class constructor.
 
@@ -43,7 +43,7 @@ class ImageLayout(Layout):
         self.img = Image.open(BytesIO(response.content))
         self.threshold = threshold
 
-    def run(self, env='neurogenpy', **_):
+    def run(self, env='neurogenpy'):
         """
         Calculates the layout for the graph with the image algorithm.
 

@@ -39,12 +39,17 @@ def adjs_by_axis(matrix, x, axis=0):
         A set with the parents or children of the node.
     """
 
-    matrix_filter = np.take(matrix, x, axis=axis) > 0
+    if axis == 0:
+        matrix_filter = matrix[:, x] > 0
+    else:
+        matrix_filter = matrix[x, :] > 0
+    # matrix_filter = np.take(matrix, x, axis=axis) > 0
     adjs = np.where(matrix_filter)[0]
 
     return set(adjs)
 
 
+@numba.jit(nopython=True)
 def adjacencies(matrix, x):
     """
     Returns all the adjacent elements of a node in a graph given its adjacency
@@ -72,6 +77,7 @@ def adjacencies(matrix, x):
     return all_adjs
 
 
+@numba.jit(nopython=True)
 def undirected_neighbors(matrix, x):
     """
     Returns the undirected neighbors of a node in the graph. They are supposed
@@ -122,6 +128,7 @@ def children(matrix, x):
     return adjs_by_axis(matrix, x, axis=0) - adjs_by_axis(matrix, x, axis=1)
 
 
+@numba.jit(nopython=True)
 def parents(matrix, x):
     """
     Returns the parents of a particular node in the graph. The parents of a
@@ -788,7 +795,7 @@ def _hubs_by_degree(matrix, percentile):
     """
 
     n = matrix.shape[0]
-    neighbors_counter = [adjacencies(matrix, node) for node in range(n)]
+    neighbors_counter = [len(adjacencies(matrix, node)) for node in range(n)]
 
     sorted_counter = np.sort(np.array(neighbors_counter, dtype=np.int64))
     threshold = np.percentile(sorted_counter, percentile)

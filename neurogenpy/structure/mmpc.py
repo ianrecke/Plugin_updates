@@ -14,7 +14,23 @@ from .learn_structure import LearnStructure
 class MMPC(LearnStructure):
     """
     MMPC structure learning class.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Data set with the learning sample from which to infer the network.
+
+    data_type: {'continuous', 'discrete' or 'hybrid'}
+        Type of the data introduced.
+
+    alpha: float, default=0.5
+        The target nominal type I error rate. See bnlearn documentation for
+        more information.
     """
+
+    def __init__(self, df, data_type, *, alpha=0.5):
+        super().__init__(df, data_type)
+        self.alpha = alpha
 
     def run(self, env='bnlearn'):
         """
@@ -35,10 +51,11 @@ class MMPC(LearnStructure):
         ValueError
             If the environment is not supported.
         """
+
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':
-            return self._run_bnlearn(importr('bnlearn').mmpc)
+            return self._run_bnlearn(importr('bnlearn').mmpc, alpha=self.alpha)
         else:
             raise ValueError(f'{env} environment is not supported.')
 

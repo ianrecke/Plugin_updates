@@ -8,7 +8,7 @@ Utilities to calculate prediction scores for structure learning methods.
 
 import numpy as np
 
-from .graph import undirect, get_hubs
+from .fges_adjacency import undirect, get_hubs
 
 
 # TODO: Decide what to do with the threshold.
@@ -82,7 +82,7 @@ def confusion_matrix(m_pred, m_true, undirected=False, threshold=0):
         return _conf_matrix_directed(m_pred, m_true)
 
 
-def confusion_hubs(m_pred, m_true, method='out_degree', threshold=0):
+def confusion_hubs(m_pred, m_true, method='out_degree', hubs_threshold=0):
     """
     Calculates the confusion matrix for the set of hubs obtained with the
     prediction matrix compared to the set of hubs obtained with the actual
@@ -98,7 +98,7 @@ def confusion_hubs(m_pred, m_true, method='out_degree', threshold=0):
 
     method : str, default='out_degree'
 
-    threshold : int, default = 0
+    hubs_threshold : int, default = 0
         If the selected method is 'out_degree', it represents the minimum
         amount of children needed for the hubs set.
 
@@ -108,9 +108,9 @@ def confusion_hubs(m_pred, m_true, method='out_degree', threshold=0):
         The confusion matrix for the sets of hubs.
     """
 
-    hubs_true = get_hubs(m_true, method=method, threshold=threshold)
+    hubs_true = get_hubs(m_true, method=method, threshold=hubs_threshold)
     non_hubs_true = set(range(m_true.shape[0])) - set(hubs_true)
-    hubs_pred = get_hubs(m_pred, method=method, threshold=threshold)
+    hubs_pred = get_hubs(m_pred, method=method, threshold=hubs_threshold)
     non_hubs_pred = set(range(m_pred.shape[0])) - set(hubs_pred)
     tp_hubs = len(set(hubs_true) & set(hubs_pred))
     fp_hubs = len(hubs_pred) - tp_hubs

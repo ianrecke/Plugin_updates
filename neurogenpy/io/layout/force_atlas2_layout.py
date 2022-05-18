@@ -17,7 +17,7 @@ class ForceAtlas2Layout(Layout):
     ForceAtlas2 layout class.
     """
 
-    def run(self, env='fa2', **_):
+    def run(self, env='fa2'):
         """
         Calculates the layout for the graph with the ForceAtlas2 algorithm.
 

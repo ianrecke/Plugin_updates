@@ -13,6 +13,7 @@ from rpy2.robjects.packages import importr
 from .learn_structure import LearnStructure
 
 
+# TODO: Check algorithm
 class MBC(LearnStructure):
     """
     Multidimensional Bayesian network classifier class.
@@ -25,14 +26,15 @@ class MBC(LearnStructure):
     data_type : {'continuous', 'discrete' or 'hybrid'}
         Type of the data introduced.
 
+    features_classes : list, optional
+
     Raises
     ------
     ValueError
         If `features_classes` is empty.
     """
 
-    def __init__(self, df, data_type, *, features_classes=None, **_):
-
+    def __init__(self, df, data_type, *, features_classes=None):
         super().__init__(df, data_type)
         self.features_classes = features_classes
         if len(self.features_classes) == 0:
@@ -68,9 +70,6 @@ class MBC(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_mbc_bnlearn(self):
-        """
-
-        """
         features = list(
             set(self.data.columns.values) - set(self.features_classes))
 

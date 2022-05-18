@@ -6,3 +6,4 @@ docs/_templates
 docs/make.bat
 docs/Makefile
 __pycache__
+probabilistic_clustering.py

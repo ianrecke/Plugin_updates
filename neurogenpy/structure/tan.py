@@ -24,7 +24,7 @@ class Tan(LearnStructure):
     data_type : {'continuous', 'discrete' or 'hybrid'}
         Type of the data introduced.
 
-    features_classes : Iterable
+    features_classes : list
 
     Raises
     ------
@@ -32,14 +32,13 @@ class Tan(LearnStructure):
         If `features_classes` is empty.
     """
 
-    def __init__(self, df, data_type, *, features_classes=None, **_):
+    def __init__(self, df, data_type, *, features_classes=None):
 
         super().__init__(df, data_type)
         self.features_classes = features_classes
         if len(self.features_classes) == 0:
             raise ValueError(
-                'To run this classifier, you must supply one class feature in '
-                'the previous section.')
+                'To run this classifier, you must supply one class feature.')
 
     def run(self, env='bnlearn'):
         """

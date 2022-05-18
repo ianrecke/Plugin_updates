@@ -57,9 +57,10 @@ class GaussianJointDistribution(JointDistribution):
         for i, node in enumerate(order):
             node_params = parameters[node]
             mean, var = node_params.mean, node_params.var
-            betas, parents = node_params.parents_coeffs, node_params.parents
+            betas = node_params.parents_coeffs
+            parents = [order.index(p) for p in node_params.parents]
             self.mu[i] = mean + sum(
-                [self.mu[i] * j for i, j in zip(parents, betas)])
+                [self.mu[p] * b for p, b in zip(parents, betas)])
             if parents:
                 cov_parents_involved = self.sigma[:, parents]
                 cov_parents = cov_parents_involved[parents, :]

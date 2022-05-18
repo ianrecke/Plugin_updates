@@ -24,7 +24,7 @@ class NB(LearnStructure):
     data_type : {'continuous', 'discrete' or 'hybrid'}
         Type of the data introduced.
 
-    features_classes :
+    features_classes : list
 
     Raises
     ------
@@ -32,14 +32,13 @@ class NB(LearnStructure):
         If `features_classes` is empty.
     """
 
-    def __init__(self, df, data_type, *, features_classes, **_):
+    def __init__(self, df, data_type, *, features_classes):
 
         super().__init__(df, data_type)
         self.features_classes = features_classes
-        if len(self.features_classes) == 0:
-            raise Exception(
-                'To run this classifier, you must supply one class feature in '
-                'the previous section.')
+        if not self.features_classes:
+            raise ValueError(
+                'To run this classifier, you must supply one class feature')
 
     def run(self, env='bnlearn'):
         """
@@ -60,6 +59,7 @@ class NB(LearnStructure):
         ValueError
             If the environment is not supported.
         """
+
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':
@@ -67,10 +67,8 @@ class NB(LearnStructure):
         else:
             raise ValueError(f'{env} environment is not supported.')
 
+    # TODO: Check explanatory variables.
     def _run_nb_bnlearn(self):
-        """
-
-        """
         explanatory = list(self.data.columns.values)
 
         try:

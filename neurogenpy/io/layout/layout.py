@@ -9,11 +9,7 @@ Graph layout module.
 from abc import ABCMeta, abstractmethod
 
 
-<<<<<<< HEAD:neurogenpy/io/layout/graph_layout.py
-class GraphLayout(metaclass=ABCMeta):
-=======
 class Layout(metaclass=ABCMeta):
->>>>>>> dev:neurogenpy/io/layout/layout.py
     """
     Base class for all layout classes.
 
@@ -23,7 +19,7 @@ class Layout(metaclass=ABCMeta):
         Graph whose layout has to be computed.
     """
 
-    def __init__(self, graph, **_):
+    def __init__(self, graph):
         self.graph = graph
 
     @abstractmethod
