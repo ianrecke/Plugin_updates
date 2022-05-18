@@ -5,17 +5,17 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-CHANNEL = os.getenv("NEUROGENPY_CELERY_CHANNEL", "neurogenpy_http")
+CHANNEL = os.getenv('NEUROGENPY_CELERY_CHANNEL', 'neurogenpy_http')
 
 logger = logging.getLogger(__name__)
 
 try:
     from celery import Celery
 except ImportError as e:
-    logger.critical(f"Importing celery error")
+    logger.critical(f'Importing celery error')
     raise e
 
-default_config = "conf.celeryconfig"
+default_config = 'conf.celeryconfig'
 app = Celery(CHANNEL)
 app.config_from_object(default_config)
 
@@ -28,10 +28,10 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
     import socket
 
     hostname = socket.gethostname()
-    logger.info(f"{hostname}:task:rec")
+    logger.info(f'{hostname}:task:rec')
     logger.debug(
-        f"{hostname}:task:rec_param {parcellation_id} {roi} , "
-        f"{','.join(genes)}")
+        f'{hostname}:task:rec_param {parcellation_id} {roi} , '
+        f'{",".join(genes)}')
 
     try:
         parcellation = siibra.parcellations[parcellation_id]
@@ -42,19 +42,22 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
 
         # FIXME: Too many requests raise an exception.
         samples = {gene_name: [np.mean(f.expression_levels) for f in
-                               siibra.get_features(region, "gene",
+                               siibra.get_features(region, 'gene',
                                                    gene=gene_name)] for
                    gene_name in genes}
 
         df = pd.DataFrame(samples)
 
-        result = BayesianNetwork().fit(df, algorithm=algorithm,
-                                       estimation=estimation)
+        bn = BayesianNetwork().fit(df, algorithm=algorithm,
+                                   estimation=estimation)
 
-        logger.info(f"{hostname}:task:success")
-        logger.debug(f"{hostname}:task:success_result {result}")
-        return {"result": result}
+        result = 'bn.gexf'
+        bn.save(file_path='bn.gexf')
+
+        logger.info(f'{hostname}:task:success')
+        logger.debug(f'{hostname}:task:success_result {result}')
+        return {'result': result}
 
     except Exception as exc:
-        logger.critical(f"{hostname}:task:failed {str(exc)}")
+        logger.critical(f'{hostname}:task:failed {str(exc)}')
         raise exc

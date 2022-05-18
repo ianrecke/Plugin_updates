@@ -5,8 +5,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from neurogenpy_logger import access_logger
-from routes.grn_learning import router as grn_router
+from .neurogenpy_logger import access_logger
+from .routes.grn_learning import router as grn_router
 
 path_to_static = path.join(
     path.dirname(__file__),

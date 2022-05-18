@@ -2,6 +2,7 @@
   "name": "neurogenpy",
   "version": "1.0.0",
   "dependencies": {
+    "@rollup/plugin-json": "^4.1.0",
     "@smui-extra/autocomplete": "^6.0.0-beta.16",
     "@smui/button": "^6.0.0-beta.16",
     "@smui/card": "^6.0.0-beta.16",

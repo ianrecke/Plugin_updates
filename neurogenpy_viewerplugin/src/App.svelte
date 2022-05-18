@@ -65,7 +65,7 @@
     import RoiSelection from "./RoiSelection.svelte"
     import StructureLearning from "./StructureLearning.svelte"
     import GeneSelection from "./GeneSelection.svelte"
-    import {hasDataSrc, getGeneNames, NEUROGENPY_ENDPOINT, parcellationId} from "./store.js"
+    import {hasDataSrc, getGeneNames, parcellationId, NEUROGENPY_ENDPOINT } from "./store.js"
     import Card, {Content} from "@smui/card"
     import Button, {Label, Icon} from "@smui/button"
     import CircularProgress from "@smui/circular-progress"

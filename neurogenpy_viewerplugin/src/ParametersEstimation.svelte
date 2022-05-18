@@ -46,12 +46,12 @@
     import Autocomplete from '@smui-extra/autocomplete';
     import Button, { Label } from "@smui/button"
     import Textfield from '@smui/textfield';
-    import { hasDataSrc, searchEstimation } from "./store.js"
+    import { hasDataSrc } from "./store.js"
     import { createEventDispatcher } from "svelte"
     import Chip, { Set as ChipsSet, Text, TrailingAction } from "@smui/chips"
+    import { estimation } from './estimation.json'
 
     let hasDataSrcFlag = false
-    let searchId = 1
     let currentAutocompleteList = []
     let scanning = false
     let abortSignal = undefined
@@ -90,11 +90,7 @@
         if (input === '' || !input) {
             return []
         }
-        searchId += 1
-        const thisSearchId = searchId
-        const returnArr = await searchEstimation(input)
-        if (thisSearchId !== searchId) return []
-        currentAutocompleteList = returnArr.map(r => r.name)
+        currentAutocompleteList = {estimation}
         return currentAutocompleteList
     }
 
