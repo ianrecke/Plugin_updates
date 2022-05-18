@@ -7,3 +7,4 @@ docs/make.bat
 docs/Makefile
 __pycache__
 node_modules
+probabilistic_clustering.py
