@@ -8,10 +8,10 @@ Dot layout module.
 
 import networkx as nx
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class DotLayout(GraphLayout):
+class DotLayout(Layout):
     """
     Dot layout class.
     """

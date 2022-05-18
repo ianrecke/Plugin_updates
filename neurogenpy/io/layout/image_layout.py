@@ -14,15 +14,15 @@ import requests
 from PIL import Image
 from skimage.measure import find_contours
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class ImageLayout(GraphLayout):
+class ImageLayout(Layout):
     """
     Image layout class.
     """
 
-    def __init__(self, graph, *, image_url, threshold=200, **_):
+    def __init__(self, graph, *, image_url, threshold=200):
         """
         Image layout class constructor.
 

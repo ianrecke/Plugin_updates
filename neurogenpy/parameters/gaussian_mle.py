@@ -51,9 +51,10 @@ class GaussianMLE(LearnParameters):
         nodes = self.data.columns.values.tolist()
 
         for node in nodes:
-            node_parents = self.graph.predecessors(node)
+            node_parents = [pred for pred in self.graph.predecessors(node)]
 
-            y = self.data.loc[:, node].values.reshape(self.data.shape[0], -1)
+            y = self.data.loc[:, node].values.reshape(self.data.shape[0],
+                                                      -1).astype(float)
 
             if not node_parents:
                 mean = y.mean()

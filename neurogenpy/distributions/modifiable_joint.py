@@ -44,7 +44,7 @@ class ModifiableJointDistribution:
         If `data_type` is not supported.
     """
 
-    def __init__(self, data_type, save_dist=False, initial=None,
+    def __init__(self, data_type='continuous', save_dist=False, initial=None,
                  nodes_order=None):
         self.save_dist = save_dist
         self.tmp_dir = TemporaryDirectory()

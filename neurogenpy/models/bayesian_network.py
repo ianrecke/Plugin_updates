@@ -2,15 +2,14 @@
 Bayesian network module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
-
+import inspect
 import warnings
 from operator import itemgetter
 
 import networkx
-import networkx as nx
 import numpy as np
 from community import best_partition
 from networkx.algorithms.centrality import betweenness
@@ -24,14 +23,33 @@ from ..parameters.discrete_be import DiscreteBE
 from ..parameters.discrete_mle import DiscreteMLE
 from ..parameters.gaussian_mle import GaussianNode, GaussianMLE
 from ..parameters.learn_parameters import LearnParameters
-from ..structure.learn_structure import *
-from ..utils.data_structures import get_data_type
+from ..structure.cl import CL
+from ..structure.fast_iamb import FastIamb
+from ..structure.fges import FGES
+from ..structure.fges_merge import FGESMerge
+from ..structure.genie3 import GENIE3
+from ..structure.graphical_lasso import GraphicalLasso
+from ..structure.grow_shrink import GrowShrink
+from ..structure.hc import Hc
+from ..structure.hc_tabu import HcTabu
+from ..structure.hiton_pc import HitonPC
+from ..structure.iamb import Iamb
+from ..structure.inter_iamb import InterIamb
+from ..structure.learn_structure import LearnStructure
+from ..structure.lr import Lr
+from ..structure.mbc import MBC
+from ..structure.mi_continuous import MiContinuous
+from ..structure.mmhc import MMHC
+from ..structure.mmpc import MMPC
+from ..structure.naive_bayes import NB
+from ..structure.pc import PC
+from ..structure.pearson import Pearson
+from ..structure.sparsebn import SparseBn
+from ..structure.tan import Tan
 from ..utils.score import confusion_matrix, accuracy, f1_score, mcc_score, \
     confusion_hubs
 
-from networkx import DiGraph
 
-# TODO: Functions or attributes? Decide
 # TODO: Manage hybrid case.
 
 
@@ -52,7 +70,7 @@ class BayesianNetwork:
 
             - Discrete case: the value of a node is a pgmpy.TabularCPD object.
 
-            - Hybrid case: mixture
+            - Hybrid case: mixture. Not yet implemented.
 
         If `graph` is not set, this argument is ignored.
 
@@ -114,8 +132,11 @@ class BayesianNetwork:
                     data_type=self.data_type,
                     nodes_order=self._topological_order())
 
+        else:
+            self.joint_dist = ModifiableJointDistribution(
+                data_type=self.data_type)
+
         self.evidence = {}
-        self.cont_nodes = None
 
     def _topological_order(self):
         """
@@ -232,7 +253,7 @@ class BayesianNetwork:
         return result
 
     def _check_graph(self):
-        if not isinstance(self.graph, nx.DiGraph):
+        if not isinstance(self.graph, networkx.DiGraph):
             raise Exception('There is no network structure.')
 
     def _check_parameters(self, parameters):
@@ -615,6 +636,7 @@ class BayesianNetwork:
         self._check_node(node)
         return node in self.evidence.keys()
 
+    # TODO: Check weights assignment for each algorithm and networkx.
     def sum_weights(self):
         """
         Retrieves the total sum of the edges in the network. If there is no
@@ -625,6 +647,7 @@ class BayesianNetwork:
         float
             Sum of the edges in the network.
         """
+
         self._check_graph()
 
         all_weights = []
@@ -801,8 +824,8 @@ class BayesianNetwork:
                 graph.remove_edge(x, y)
         return graph
 
-    def fit(self, df=None, estimation='mle', algorithm='FGESMerge',
-            skip_structure=False, **kwargs):
+    def fit(self, df=None, data_type='continuous', estimation='mle',
+            algorithm='FGESMerge', skip_structure=False, **kwargs):
         """
         Builds a Bayesian network using the input data.
 
@@ -810,6 +833,9 @@ class BayesianNetwork:
         ----------
         df : pandas.DataFrame, optional
             Data set used to learn the network structure and parameters.
+
+        data_type : {'continuous, 'discrete'}, default='continuous
+            Type of data in `df`.
 
         estimation : str or LearnParameters, default='mle'
             Estimation type to be used for learning the parameters of the
@@ -826,32 +852,32 @@ class BayesianNetwork:
             Supported structure learning algorithms are:
 
                 1. Statistical based:
-                    - Pearson Correlation ('PC')
-                    - Mutual information ('MiContinuous')
-                    - Linear regression ('Lr')
-                    - Graphical lasso ('GraphicalLasso')
-                    - GENIE3 ('GENIE3')
+                    - Pearson Correlation ('pearson_correlation')
+                    - Mutual information ('mutual_information')
+                    - Linear regression ('lr')
+                    - Graphical lasso ('graphical_lasso')
+                    - GENIE3 ('genie3')
                 2. Constraint based:
-                    - PC ('PC')
-                    - Grow shrink ('GrowShrink')
-                    - iamb ('Iamb')
-                    - Fast.iamb ('FastIamb')
-                    - Inter.iamb ('InterIamb')
+                    - PC ('pc')
+                    - Grow shrink ('grow_shrink')
+                    - iamb ('iamb')
+                    - Fast.iamb ('fast_iamb')
+                    - Inter.iamb ('inter_iamb')
                 3. Score and search:
-                    - Hill climbing ('Hc')
-                    - Hill climbing with tabu search ('HcTabu')
-                    - Chow-Liu tree ('CL')
-                    - Hiton Parents and Children ('HitonPC')
-                    - sparsebn ('SparseBn')
-                    - FGES ('FGES')
-                    - FGES-Merge ('FGES-Merge')
+                    - Hill climbing ('hc')
+                    - Hill climbing with tabu search ('hc_tabu')
+                    - Chow-Liu tree ('cl')
+                    - Hiton Parents and Children ('hiton_pc')
+                    - sparsebn ('sparsebn')
+                    - FGES ('fges')
+                    - FGES-Merge ('fges_merge')
                 4. Hybrid:
-                    - MMHC ('MMHC')
-                    - MMPC ('MMPC')
+                    - MMHC ('mmhc')
+                    - MMPC ('mmpc')
                 5. Tree structure:
-                    - Naive Bayes ('NB')
-                    - Tree augmented Naive Bayes ('Tan')
-                6. Multidimensional Bayesian network classifier ('MBC')
+                    - Naive Bayes ('nb')
+                    - Tree augmented Naive Bayes ('tan')
+                6. Multidimensional Bayesian network classifier ('mbc')
 
         skip_structure : bool, default=False
             Whether to skip the structure learning step. If it is set to
@@ -859,27 +885,45 @@ class BayesianNetwork:
 
         **kwargs :
 
-            Valid keyword arguments are:
+            Keyword arguments are used to set extra arguments for structure
+            learning algorithms and parameters estimation methods. They are
+            only taken into account if used with the appropriate algorithm or
+            estimation method. Valid keyword arguments are:
 
             prior : {'BDeu', 'K2'}, default='BDeu'
                 Prior distribution type used for Discrete Bayesian parameter
-                estimation. It is not taken into account if `algorithm` is not
-                'FGESMerge'.
+                estimation.
 
-            equivalent_size :
+            equivalent_size : int or dict
+                In Discrete Bayesian parameter estimation, if
+                `prior` is 'BDeu', `equivalent_size` must be specified. See
+                pgmpy documentation for more information.
 
             alpha : float, default=0.05
+                The target nominal type I error rate for some algorithms and
+                the regularization parameter in the Graphical lasso case.
 
             penalty : int, default=45
                 Penalty hyperparameter for the FGES and FGES-Merge structure
-                learning methods. It is not taken into account if `algorithm`
-                is not 'FGES' or 'FGESMerge'.
+                learning methods.
 
-            tol :
+            tol : float, default=1e-4
+                The tolerance to declare convergence in the Graphical lasso
+                case.
 
-            max_iter :
+            max_iter : int, default=100
+                The maximum number of iterations for some structure learning
+                algorithms.
 
-            maxp :
+            maxp : int, default=100
+                The maximum number of parents for a node in some structure
+                learning algorithms.
+
+            features_classes : list
+
+            n_jobs : int, default=1
+                Number of threads used for running an algorithm. It is only
+                available for GENIE3, FGES and FGES-Merge.
 
         Returns
         -------
@@ -923,65 +967,54 @@ class BayesianNetwork:
 
         """
 
-        # FIXME: Algorithm and parameters estimation as objects.
-        # TODO: Check df. Rethink data structure (numpy array, pandas
-        #  DataFrame or what?)
+        # self.data_type, self.cont_nodes = get_data_type(df)
+        self.data_type = data_type
 
-        self.data_type, self.cont_nodes = get_data_type(df)
+        if self.data_type == 'discrete':
+            df = df.apply(lambda x: x.astype('category'))
 
-        # TODO: Check parameters and algorithm are OK in each case.
-        # TODO: Check parameters are complete and OK for bnlearn.
-        pl_options = ['prior', 'equivalent_size']
-        sl_options = ['alpha', 'penalty', 'mode', 'tol', 'max_iter', 'maxp']
-
-        pl_kwargs = {k: v for k, v in kwargs.items() if k in pl_options}
-        sl_kwargs = {k: v for k, v in kwargs.items() if k in sl_options}
-
-        estimators = ['bayesian', 'mle']
-        algorithms = ['CL', 'FastIamb', 'FGES', 'FGESMerge', 'GENIE3',
-                      'GraphicalLasso', 'GrowShrink', 'Hc', 'HcTabu',
-                      'HitonPC', 'Iamb', 'InterIamb', 'Lr', 'MBC',
-                      'MiContinuous', 'MMHC', 'MMPC', 'NB', 'PC', 'Pearson',
-                      'SparseBn', 'Tan']
+        estimators = {'bayesian_discrete': DiscreteBE,
+                      'mle_discrete': DiscreteMLE,
+                      'mle_continuous': GaussianMLE}
+        algorithms = {'cl': CL, 'fast_iamb': FastIamb, 'fges': FGES,
+                      'fges_merge': FGESMerge, 'genie3': GENIE3,
+                      'graphical_lasso': GraphicalLasso,
+                      'grow_shrink': GrowShrink, 'hc': Hc, 'hc_tabu': HcTabu,
+                      'hiton_pc': HitonPC, 'iamb': Iamb,
+                      'inter_iamb': InterIamb, 'Lr': Lr, 'mbc': MBC,
+                      'mutual_information': MiContinuous, 'mmhc': MMHC,
+                      'mmpc': MMPC, 'nb': NB, 'pc': PC,
+                      'pearson_correlation': Pearson, 'sparsebn': SparseBn,
+                      'tan': Tan}
 
         if not skip_structure:
-            if issubclass(algorithm, LearnStructure):
+            if isinstance(algorithm, LearnStructure):
                 self.graph = algorithm.run()
 
-            if algorithm in algorithms:
-                structure_learning = globals()[algorithm]
-                self.graph = structure_learning(df, self.data_type,
-                                                **sl_kwargs).run()
+            if algorithm in algorithms.keys():
+                alg = algorithms[algorithm]
+                params = {k: v for k, v in kwargs.items() if
+                          k in inspect.getfullargspec(alg).kwonlyargs}
+                self.graph = alg(df, self.data_type, **params).run()
 
             else:
                 raise ValueError('Structure learning is only available for the'
-                                 f' following methods: {*algorithms,}.')
+                                 f' following methods: {*algorithms.keys(),}.')
             self.num_nodes = len(self.graph)
 
-        if issubclass(estimation, LearnParameters):
+        if self.graph is None:
+            raise Exception('The Bayesian Network does not have a structure.')
+        elif isinstance(estimation, LearnParameters):
             self.parameters = estimation.run()
-        elif estimation in estimators:
-            if self.graph is None:
-                raise Exception(
-                    'The Bayesian Network does not have a structure.')
-            if self.data_type == 'continuous':
-                if estimation == 'bayesian':
-                    raise ValueError(
-                        'Bayesian estimation is not supported in the'
-                        ' continuous case.')
-                else:
-                    params_learning = GaussianMLE(df, self.graph)
-            else:
-                if estimation == 'mle':
-                    params_learning = DiscreteMLE(df, self.graph)
-                else:
-                    params_learning = DiscreteBE(df, self.graph, **pl_kwargs)
-            self.parameters = params_learning.run()
-        elif estimation == 'random':
-            self.parameters = self._get_random_cont_params()
         else:
-            raise ValueError('Parameter learning is only available for the'
-                             f' following methods: {*estimators,}.')
+            try:
+                est = estimators[f'{estimation}_{self.data_type}']
+                params = {k: v for k, v in kwargs.items() if
+                          k in inspect.getfullargspec(est).kwonlyargs}
+                self.parameters = est(df, self.graph, **params).run()
+            except KeyError:
+                raise ValueError('Parameter learning is only available for the'
+                                 f' following methods: {*estimators.keys(),}.')
 
         if self.data_type == 'continuous':
             self.joint_dist.from_params(
@@ -990,7 +1023,7 @@ class BayesianNetwork:
                 nodes_order=self._topological_order())
         return self
 
-    def save(self, file_path='bn.gexf', layout=None):
+    def save(self, file_path='bn.gexf', **kwargs):
         """
         Exports the Bayesian network in a specific format.
 
@@ -1003,18 +1036,30 @@ class BayesianNetwork:
                 3. '.gzip'
                 4. '.bif'
 
-        layout: str, optional
-            A layout for the GEXF case. If the extension of file is not
-            '.gexf', this parameter is not considered. Supported `layout`
-            values are:
+        **kwargs :
+            Additional arguments for the layout. If the extension is no '.gexf'
+            they are not considered. Valid arguments are:
 
-                - 'Circular'
+            layout_name : str, optional
+                Layout used for calculating the positions of the nodes in the
+                graph.
+
+                - 'circular'
                 - 'Dot'
                 - 'ForceAtlas2'
                 - 'Grid'
                 - 'FruchtermanReingold'
                 - 'Image'
                 - 'Sugiyama'
+
+            communities : bool, default=False
+                Whether to assign different colors to the nodes and edges
+                belonging to different communities of Louvain.
+
+            sizes_method : {'mb', 'neighbors'}, default='mb'
+                The method used to calculate the sizes of the nodes. It can be
+                the size of the Markov blanket of each node or the amount of
+                neighbors they have.
 
         Raises
         ------
@@ -1034,16 +1079,15 @@ class BayesianNetwork:
         >>> import pandas as pd
         >>> df = pd.read_csv('file.csv')
         >>> bn = BayesianNetwork.fit(df)
-        >>> bn.save('bn.gexf', layout='circular')
+        >>> bn.save('bn.gexf', layout_name='circular')
 
         """
 
         file_path = file_path.lower()
 
         if file_path.endswith('.gexf'):
-            # TODO: Add layout arguments.
-            GEXF().write_file(self, file_path, layout)
-        elif file_path.endswith('.gzip') or file_path.endswith('csv'):
+            GEXF().write_file(self, file_path, **kwargs)
+        elif file_path.endswith('.gzip') or file_path.endswith('.csv'):
             AdjacencyMatrix().write_file(file_path, self)
         elif file_path.endswith('.bif'):
             BIF().write_file(file_path, self)
@@ -1117,9 +1161,9 @@ class BayesianNetwork:
 
         return self
 
-    def compare(self, real_graph, nodes_order=None, metric='all',
+    def compare(self, real_graph, nodes_order=None, metric='all', *,
                 undirected=False, threshold=0, h_method='out_degree',
-                h_threshold=2):
+                hubs_threshold=2):
         """
         Compares the Bayesian network graph structure with another one provided
         using some performance measures.
@@ -1157,7 +1201,7 @@ class BayesianNetwork:
         h_method : str, default='out_degree'
             Method used to calculate the hubs.
 
-        h_threshold : default=2
+        hubs_threshold : default=2
             Threshold associated to `h_method` used to calculate the hubs.
 
         Returns
@@ -1174,9 +1218,9 @@ class BayesianNetwork:
         Examples
         --------
 
-        >>> import numpy as np
+        >>> from numpy import array
         >>> from networkx import DiGraph, GaussianNode
-        >>> matrix = np.array([[0,0], [1,0]])
+        >>> matrix = array([[0,0], [1,0]])
         >>> graph = DiGraph()
         >>> graph.add_nodes_from([1, 2])
         >>> graph.add_edges_from([(1, 2)])
@@ -1193,12 +1237,15 @@ class BayesianNetwork:
 
         self._check_graph()
 
+        available_metrics = {'confusion': confusion_matrix,
+                             'confusion_hubs': confusion_hubs, 'acc': accuracy,
+                             'f1': f1_score, 'roc_auc': roc_auc_score,
+                             'avg_precision': average_precision_score,
+                             'mcc': mcc_score}
+
         if isinstance(metric, str):
-            if metric != 'all':
-                metric = [metric]
-            else:
-                metric = ['confusion', 'confusion_hubs', 'acc', 'f1',
-                          'roc_auc', 'avg_precision', 'mcc']
+            metric = [metric] if metric != 'all' else list(
+                available_metrics.keys())
 
         if real_graph.shape != (self.num_nodes, self.num_nodes):
             raise ValueError('\'real_graph\' does not have the right shape.')
@@ -1208,45 +1255,37 @@ class BayesianNetwork:
             raise ValueError('\'nodes_order\' and the nodes in the Bayesian '
                              'network are not the same.')
 
-        adj_matrix = nx.to_numpy_matrix(self.graph, nodelist=nodes_order)
-        real_matrix = np.asmatrix(real_graph)
+        adj_matrix = networkx.to_numpy_matrix(self.graph, nodelist=nodes_order)
 
-        result = {}
+        if {'roc_auc', 'avg_precision'}.intersection(metric):
+            flat_pred, flat_true = adj_matrix.flatten(), real_graph.flatten()
+        else:
+            flat_pred, flat_true = None, None
 
-        confusion = None
-        if 'confusion' in metric:
-            confusion = confusion_matrix(adj_matrix, real_matrix,
-                                         undirected=undirected,
-                                         threshold=threshold)
-            result = {'confusion': confusion}
-        if 'accuracy' in metric:
-            result = {**result, 'accuracy': accuracy(adj_matrix, real_matrix,
-                                                     undirected=undirected,
-                                                     threshold=threshold,
-                                                     confusion=confusion)}
-        if 'f1' in metric:
-            result = {**result, 'f1': f1_score(adj_matrix, real_matrix,
-                                               undirected=undirected,
-                                               threshold=threshold,
-                                               confusion=confusion)}
-        if 'mcc' in metric:
-            result = {**result,
-                      'mcc': mcc_score(adj_matrix, real_matrix,
-                                       undirected=undirected,
-                                       threshold=threshold,
-                                       confusion=confusion)}
-        if 'roc_auc' in metric:
-            result = {**result, 'roc_auc': roc_auc_score(adj_matrix.flatten(),
-                                                         real_graph)}
-        if 'avg_precision' in metric:
-            result = {**result, 'avg_precision': average_precision_score(
-                adj_matrix.flatten(),
-                real_graph)}
-        if 'confusion_hubs' in metric:
-            result = {**result,
-                      'confusion_hubs': confusion_hubs(adj_matrix, real_matrix,
-                                                       method=h_method,
-                                                       threshold=h_threshold)}
+        available_params = {'m_pred': adj_matrix, 'm_true': real_graph,
+                            'undirected': undirected, 'threshold': threshold,
+                            'method': h_method, 'y_true': flat_true,
+                            'y_pred': flat_pred,
+                            'hubs_threshold': hubs_threshold}
+
+        if set(metric) - {'roc_auc', 'avg_precision', 'confusion_hubs'}:
+            c = confusion_matrix(adj_matrix, real_graph, undirected=undirected,
+                                 threshold=threshold)
+            available_params['confusion'] = c
+
+        try:
+            metric.remove('confusion')
+        except ValueError:
+            result = {}
+        else:
+            result = {'confusion': available_params['confusion']}
+
+        for m in metric:
+            func = available_metrics[m]
+            argspec = inspect.getfullargspec(func)
+            params = {p: available_params[p] for p in
+                      argspec.args + argspec.kwonlyargs}
+            result = {**result, m: func(**params)}
 
         return result
 

@@ -6,28 +6,10 @@ Input/output utilities module.
 # http://cig.fi.upm.es/
 # License:
 
-import random
-
 import numpy as np
 import plotly
 import plotly.graph_objs as plotly_graph
 import scipy.stats as scipy_stats
-
-
-def generate_random_color():
-    """
-    Generates a random RGB color with hexadecimal notation.
-
-    Returns
-    -------
-    str
-        A random color in hexadecimal notation.
-    """
-
-    hex_rgb = ('#%02X%02X%02X' % (
-        random.randint(0, 255), random.randint(0, 255),
-        random.randint(0, 255)))
-    return hex_rgb
 
 
 def set_layout(title='', column_x_name='', column_y_name='', all_x_labels=1,
@@ -53,8 +35,8 @@ def set_layout(title='', column_x_name='', column_y_name='', all_x_labels=1,
     return layout
 
 
-# TODO: Decide where to place density_functions_bn. Out of the package?
-def density_functions_bn(mean=0, std_deviation=1, evidence_value=None):
+# TODO: Decide where to place plot_pdf. Out of the package?
+def plot_pdf(mean=0, std_deviation=1, evidence=None):
     pdfs_traces = []
     shapes = []
 
@@ -117,11 +99,7 @@ def density_functions_bn(mean=0, std_deviation=1, evidence_value=None):
                               mean + 3 * std_deviation, 500)
         pdf = scipy_stats.norm.pdf(x_range, mean, std_deviation)
 
-        trace_pdf = plotly_graph.Scattergl(
-            x=x_range,
-            y=pdf,
-            mode='lines',
-        )
+        trace_pdf = plotly_graph.Scattergl(x=x_range, y=pdf, mode='lines',)
         pdfs_traces.append(trace_pdf)
         layout = set_layout(all_x_labels=0, height=150, show_y_zero_line=False)
 
@@ -131,13 +109,13 @@ def density_functions_bn(mean=0, std_deviation=1, evidence_value=None):
         annotation_x_mean = x_max_min_vals[0]
         annotation_x_std = x_max_min_vals[1]
 
-        if evidence_value is not None:
-            if evidence_value < mean - 3 * std_deviation:
-                annotation_x_mean = evidence_value
-                annotation_x_margin = evidence_value / 10
-            elif evidence_value > mean + 3 * std_deviation:
-                annotation_x_std = evidence_value
-                annotation_x_margin = evidence_value / 10
+        if evidence is not None:
+            if evidence < mean - 3 * std_deviation:
+                annotation_x_mean = evidence
+                annotation_x_margin = evidence / 10
+            elif evidence > mean + 3 * std_deviation:
+                annotation_x_std = evidence
+                annotation_x_margin = evidence / 10
 
         annotation_x_mean -= annotation_x_margin
         annotation_x_std += annotation_x_margin
@@ -179,11 +157,11 @@ def density_functions_bn(mean=0, std_deviation=1, evidence_value=None):
             )
         ]
 
-    if evidence_value is not None:
+    if evidence is not None:
         plot_annotations += [
             dict(
-                text=f'({round(evidence_value, 2)}) <br> Evidence',
-                x=evidence_value,
+                text=f'({round(evidence, 2)}) <br> Evidence',
+                x=evidence,
                 y=0,
                 xref='x',
                 yref='y',
@@ -203,90 +181,6 @@ def density_functions_bn(mean=0, std_deviation=1, evidence_value=None):
     figure = plotly_graph.Figure(data=pdfs_traces, layout=layout)
     if isinstance(mean, list):
         figure['layout'].update(showlegend=True)
-    figure['layout']['margin'].update(l=0, r=10, b=0, t=0)
-    result = plotly.offline.plot(figure, include_plotlyjs=False,
-                                 show_link=False, output_type='div',
-                                 config={'displayModeBar': False})
-
-    return result
-
-
-def density_functions_multi(means=[0], std_devs=[1], mixture_weights=[0],
-                            evidence_value=None, structures_ids=[],
-                            structures_colors=[]):
-    pdfs_traces = []
-    plot_annotations = []
-    shapes = []
-    norm_params = []
-
-    for i, structure_id in enumerate(structures_ids):
-        mean = means[i]
-        std_dev = std_devs[i]
-        mixture_weight = mixture_weights[i]
-        norm_params.append([mean, std_dev, mixture_weight])
-
-        x_range = np.linspace(mean - 3 * std_dev, mean + 3 * std_dev,
-                              500)  # x axis points
-        pdf = scipy_stats.norm.pdf(x_range, mean, std_dev)
-
-        trace_pdf = plotly_graph.Scattergl(
-            x=x_range,
-            y=pdf,
-            mode='lines',
-            name=structure_id + f'({round(mean, 2)}, {round(std_dev, 2)})',
-            marker=dict(
-                color=structures_colors[i]
-            ),
-            # fill='tozeroy',
-        )
-        pdfs_traces.append(trace_pdf)
-
-        if i == 0:
-            x_min = np.min(x_range)
-            x_max = np.max(x_range)
-        else:
-            if np.min(x_range) < x_min:
-                x_min = np.min(x_range)
-            if np.max(x_range) > x_max:
-                x_max = np.max(x_range)
-
-        if evidence_value is not None:
-            plot_annotations += [
-                dict(
-                    text=f'({round(evidence_value, 2)}) <br> Evidence',
-                    x=evidence_value,
-                    y=0,
-                    xref='x',
-                    yref='y',
-                    showarrow=True,
-                    arrowhead=3,
-                    ax=0,
-                    ay=-30,
-                ),
-
-            ]
-
-    x_range = np.linspace(x_min, x_max, 500)
-    mixture_pdfs_traces = np.zeros_like(x_range)
-    for loc, scale, mixture_weight in norm_params:
-        mixture_pdfs_traces += scipy_stats.norm.pdf(x_range, loc=loc,
-                                                    scale=scale) * mixture_weight
-
-    trace_pdf = plotly_graph.Scattergl(
-        x=x_range,
-        y=mixture_pdfs_traces,
-        mode='lines',
-        name='Mixture all',
-        line=dict(width=4, color='rgb(0, 0, 0)')
-    )
-
-    layout = set_layout(all_x_labels=0, height=240, show_y_zero_line=False)
-    layout['annotations'] = plot_annotations
-    layout['shapes'] = shapes
-    layout['legend'] = dict(orientation='h')
-
-    figure = plotly_graph.Figure(data=pdfs_traces, layout=layout)
-    figure['layout'].update(showlegend=True)
     figure['layout']['margin'].update(l=0, r=10, b=0, t=0)
     result = plotly.offline.plot(figure, include_plotlyjs=False,
                                  show_link=False, output_type='div',

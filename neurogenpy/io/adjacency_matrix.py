@@ -29,7 +29,7 @@ def save_tmp(graph, nodes, directory, delete=False):
     nodes : list
         IDs of the nodes present in the graph.
 
-    directory :
+    directory : str
         The directory used to store the file.
 
     delete : bool, default=False

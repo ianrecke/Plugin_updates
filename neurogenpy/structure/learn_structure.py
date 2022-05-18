@@ -27,7 +27,7 @@ class LearnStructure(metaclass=ABCMeta):
 
     """
 
-    def __init__(self, df, data_type, **_):
+    def __init__(self, df, data_type):
         self.data = df
         self.data_type = data_type
 
@@ -47,6 +47,7 @@ class LearnStructure(metaclass=ABCMeta):
             Learnt graph structure.
         """
 
+    # TODO: Add bnlearn whitelist and blacklist
     def _run_bnlearn(self, bnlearn_function, **kwargs):
         """
         Run a structure learning algorithm using its implementation in R's

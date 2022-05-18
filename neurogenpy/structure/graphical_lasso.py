@@ -26,14 +26,18 @@ class GraphicalLasso(LearnStructure):
         Type of the data introduced.
 
     alpha : float, default=0.5
+        The regularization parameter. See sklearn documentation for more
+        information.
 
     tol : float, default=1e-4
+        The tolerance to declare convergence. See sklearn documentation for
+        more information.
 
     max_iter : int, default=100
+        The maximum number of iterations.
     """
 
-    def __init__(self, df, data_type, *, alpha=0.5, tol=1e-4, max_iter=100,
-                 **_):
+    def __init__(self, df, data_type, *, alpha=0.5, tol=1e-4, max_iter=100):
 
         super().__init__(df, data_type)
         self.alpha = alpha
@@ -69,11 +73,6 @@ class GraphicalLasso(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_sklearn(self):
-        """
-
-        :return:
-        """
-
         nodes_names = list(self.data.columns.values)
         data_np = np.array(self.data)
 

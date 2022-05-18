@@ -2,34 +2,38 @@
 GEXF input/output module.
 """
 
-# Computer Intelligence Group (CIG). Universidad Politécnica de Madrid.
+# Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
-
-from datetime import datetime
-from xml.dom import minidom
-from xml.etree import ElementTree
+import inspect
+import random
 
 import networkx.readwrite as networkx_io
 from PIL import ImageColor
 
 from .bnio import BNIO
-from .layout import *
+from .layout.dot_layout import DotLayout
+from .layout.force_atlas2_layout import ForceAtlas2Layout
+from .layout.igraph_layout import IgraphLayout
+from .layout.image_layout import ImageLayout
 
-EDGE_MIN_SIZE = 0.1
-EDGE_MAX_SIZE = 8
-NODES_MIN_SIZE = {'small': 3, 'large': 1}
-NODES_MAX_SIZE = {'small': 16, 'large': 6}
-NODES_WEIGHT = {'small': 0.55, 'large': 1.1}
+CONFIGS = {
+    'small': {'maxNodeSize': 12, 'minNodeSize': 2, 'maxEdgeSize': 8,
+              'minEdgeSize': 4, 'weight': 0.55, 'width': 1},
+    'medium': {'maxNodeSize': 5, 'minNodeSize': 1, 'maxEdgeSize': 1.5,
+               'minEdgeSize': .5, 'weight': 0.55, 'width': 1},
+    'large': {'maxNodeSize': 3, 'minNodeSize': 1, 'maxEdgeSize': 0.5,
+              'minEdgeSize': .1, 'weight': 1.1, 'width': 2},
+    'default_color': '#282c34'}
 
 
-# TODO: Adjust sigmajs configuration
 class GEXF(BNIO):
     """
     Bayesian network GEXF input/output class.
     """
 
-    def write_file(self, bn, file_path='bn.gexf', layout_name=None):
+    def write_file(self, bn, file_path='bn.gexf', layout_name=None,
+                   communities=False, sizes_method='mb'):
         """
         Exports a representation of the Bayesian network for the chosen layout
         in GEXF format.
@@ -45,101 +49,100 @@ class GEXF(BNIO):
         layout_name : str, optional
             Layout used for calculating the positions of the nodes in the
             graph.
+
+        communities : bool, default=False
+            Whether to assign different colors to the nodes and edges belonging
+            to different communities of Louvain.
+
+        sizes_method : {'mb', 'neighbors'}, default='mb'
+            The method used to calculate the sizes of the nodes. It can be the
+            size of the Markov blanket of each node or the amount of neighbors
+            they have.
         """
 
-        if layout_name is None:
-            networkx_io.write_gexf(bn.graph, file_path)
+        layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
+                   'ForceAtlas2': ForceAtlas2Layout, 'Grid': IgraphLayout,
+                   'FruchtermanReingold': IgraphLayout,
+                   'Image': ImageLayout, 'Sugiyama': IgraphLayout}
 
-        else:
-            layout_class = globals()[f'{layout_name}Layout']
-            layout = layout_class(bn.graph).run()
+        if layout_name is not None:
+            if bn.num_nodes < 100:
+                network_size = 'small'
+            elif bn.num_nodes < 300:
+                network_size = 'medium'
+            else:
+                network_size = 'large'
+
+            layout = layouts[layout_name]
+            params = {} if 'layout_name' not in inspect.getfullargspec(
+                layout).kwonlyargs else {'layout_name': layout_name}
+            layout = layout(bn.graph, **params).run()
 
             nx_dict = networkx_io.json_graph.node_link_data(bn.graph)
 
-            nodes = get_nodes_attr(nx_dict, layout, _nodes_sizes(bn))
-            edges = get_edges_attr(nx_dict, _edges_sizes(bn))
+            nodes_colors = _nodes_colors(bn, communities)
+            nodes = _get_nodes_attr(nx_dict, layout,
+                                    _nodes_sizes(bn, network_size,
+                                                 method=sizes_method),
+                                    nodes_colors)
+            edges = _get_edges_attr(nx_dict, _edges_sizes(bn, network_size),
+                                    _edges_colors(bn, nodes_colors))
 
-            gexf = ElementTree.Element('gexf')
-            gexf.set('xmlns', 'http://gexf.net/1.3')
-            gexf.set('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-            gexf.set('xsi:schemaLocation',
-                     'http://gexf.net/1.3\nhttp://gexf.net/1.3/gexf.xsd')
-            gexf.set('version', '1.3')
-            meta = ElementTree.SubElement(gexf, 'meta')
-            meta.set('lastmodifieddate', datetime.today().strftime('%Y-%m-%d'))
-            creator = ElementTree.SubElement(meta, 'creator')
-            creator.text = 'CIG UPM'
-            description = ElementTree.SubElement(meta, 'description')
-            description.text = 'Bayesian Network obtained with neurogenpy.'
-            keywords = ElementTree.SubElement(meta, 'keywords')
-            keywords.text = 'Bayesian network, neurogenpy'
-
-            graph = ElementTree.SubElement(gexf, 'graph')
-            nodes_entry = ElementTree.SubElement(graph, 'nodes')
+            rgb_colors = {color: ImageColor.getcolor(color, 'RGB') for
+                          color in set(nodes_colors.values())}
 
             for node in nodes:
-                node_entry = ElementTree.SubElement(nodes_entry, 'node')
-                node_entry.set('id', node['id'])
-                node_entry.set('label', node['label'])
-                color = ElementTree.SubElement(node_entry, 'viz:color')
-                node_color = ImageColor.getcolor(node['color'], 'RGB')
-                color.set('r', str(node_color[0]))
-                color.set('g', str(node_color[1]))
-                color.set('b', str(node_color[2]))
-                color.set('a', '0')
-                position = ElementTree.SubElement(node_entry, 'viz:position')
-                position.set('x', node['x'])
-                position.set('y', node['y'])
-                position.set('z', '0')
-                size = ElementTree.SubElement(node_entry, 'viz:size')
-                size.set('value', node['size'])
+                node_id = node['id']
+                bn.graph.nodes[node_id]["viz"] = {"size": node['size']}
+                bn.graph.nodes[node_id]['viz']['position'] = {
+                    'x': node['x'], 'y': node['y'], 'z': 0}
+                bn.graph.nodes[node_id]['viz']['color'] = {
+                    'hex': node['color'], 'alpha': 0}
+                node_color = rgb_colors[node['color']]
+                bn.graph.nodes[node_id]['viz']['color'] = {'r': node_color[0],
+                                                           'g': node_color[1],
+                                                           'b': node_color[2],
+                                                           'a': 0}
 
-            edges_entry = ElementTree.SubElement(graph, 'edges')
             for edge in edges:
-                edge_entry = ElementTree.SubElement(edges_entry, 'edge')
-                edge_entry.set('source', edge['source'])
-                edge_entry.set('target', edge['target'])
-                edge_entry.set('type', edge['type'])
+                x, y = edge['x'], edge['y']
+                bn.graph.edges[x, y]['weight'] = edge['weight']
+                bn.graph.edges[x, y]['type'] = edge['type']
+                # bn.graph.edges[x, y]['label'] = edge['label']
+                edge_color = rgb_colors[edge['color']]
+                bn.graph.edges[x, y]['viz'] = {
+                    'color': {'r': edge_color[0], 'g': edge_color[1],
+                              'b': edge_color[2], 'a': 0}}
 
-            et_string = ElementTree.tostring(gexf, 'utf-8')
-
-            if file_path is None:
-                file_path = f'bn_{layout_name}.gexf'
-            file = open(file_path, 'w')
-
-            dom_string = minidom.parseString(et_string)
-            data = dom_string.toprettyxml(indent='  ')
-            file.write(data)
+        networkx_io.write_gexf(bn.graph, file_path)
 
     def read_file(self, file_path):
         return networkx_io.read_gexf(file_path)
 
 
-# TODO: Check BayesianNetwork attributes management in _edges_sizes() and
-#  _nodes_sizes()
-def _edges_sizes(bn):
+def _edges_sizes(bn, network_size):
     """Retrieves the size of each edge in the network."""
-
-    weight_edge_size = 1.1 if bn.num_nodes < 300 else 0.55
 
     edges_sizes = {}
     sum_weights = bn.sum_weights()
-    for (x, y, edge_data) in bn.graph.subgraph_edges(data=True):
+    for (x, y, edge_data) in bn.graph.edges(data=True):
         w_normalized = edge_data['weight'] * bn.num_nodes / sum_weights
-        edge_size = w_normalized * weight_edge_size + EDGE_MIN_SIZE
-        edges_sizes[(x, y)] = min(edge_size, EDGE_MAX_SIZE)
+        edge_size = w_normalized * CONFIGS[network_size]['weight'] + \
+                    CONFIGS[network_size]['minEdgeSize']
+        edges_sizes[(x, y)] = min(edge_size,
+                                  CONFIGS[network_size]['maxEdgeSize'])
 
     return edges_sizes
 
 
-def _nodes_sizes(bn, method='mb'):
+def _nodes_sizes(bn, network_size, method):
     """
     Retrieves the size of each node in the network according to the method
     provided.
 
     Parameters
     ----------
-    method : {'mb', 'neighbors'}, default='mb'
+    method : {'mb', 'neighbors'}
         The method used to calculate the sizes of the nodes.
 
     Returns
@@ -153,7 +156,6 @@ def _nodes_sizes(bn, method='mb'):
         If the method provided is not supported.
     """
 
-    network_size = 'small' if bn.num_nodes < 300 else 'large'
     nodes_sizes = {}
     for node in list(bn.graph.nodes()):
         if method == 'mb':
@@ -163,26 +165,53 @@ def _nodes_sizes(bn, method='mb'):
         else:
             raise ValueError(f'{method} method is not supported.')
 
-        node_size = NODES_MIN_SIZE[network_size] + NODES_WEIGHT[
-            network_size] * method_len
+        node_size = CONFIGS[network_size]['minNodeSize'] + method_len * \
+                    CONFIGS[network_size]['weight']
 
-        nodes_sizes[node] = min(NODES_MAX_SIZE[network_size], node_size)
+        nodes_sizes[node] = min(CONFIGS[network_size]['maxNodeSize'],
+                                node_size)
 
     return nodes_sizes
 
 
-def get_nodes_attr(nx_dict, layout, nodes_sizes):
+def _nodes_colors(bn, communities):
+    """Returns a dictionary with nodes as keys and their colors as values."""
+    if not communities:
+        return {node: CONFIGS['default_color'] for node in bn.graph.nodes()}
+
+    else:
+        coms = bn.communities()
+        coms_colors = {com: _generate_random_color() for com in
+                       set(coms.values())}
+        return {node: coms_colors[coms[node]] for node in bn.graph.nodes()}
+
+
+def _edges_colors(bn, nodes_colors):
+    """Returns a dictionary with edges as keys and their colors as values."""
+
+    if len(set(nodes_colors.values())) == 1:
+        return {(x, y): CONFIGS['default_color'] for (x, y) in
+                bn.graph.edges()}
+
+    edges_colors = {}
+    for (x, y) in bn.graph.edges():
+        if nodes_colors[x] == nodes_colors[y]:
+            edges_colors[(x, y)] = nodes_colors[x]
+        else:
+            edges_colors[(x, y)] = CONFIGS['default_color']
+    return edges_colors
+
+
+def _get_nodes_attr(nx_dict, layout, nodes_sizes, nodes_colors):
     """Returns the attributes of a graph according to a particular layout."""
 
     nodes = []
 
-    # TODO: Set different sizes depending on the network size.
     for i, node in enumerate(nx_dict['nodes']):
         node_attributes = {
             'id': node['id'],
-            'label': node['id'],
-            'size': nodes_sizes[node],
-            'color': '#000066',
+            'size': nodes_sizes[node['id']],
+            'color': nodes_colors[node['id']],
             'x': layout[node['id']][0],
             'y': layout[node['id']][1],
         }
@@ -192,7 +221,7 @@ def get_nodes_attr(nx_dict, layout, nodes_sizes):
     return nodes
 
 
-def get_edges_attr(nx_dict, edges_sizes):
+def _get_edges_attr(nx_dict, edges_sizes, edges_colors):
     """Returns the edges attributes."""
 
     edges = []
@@ -200,193 +229,28 @@ def get_edges_attr(nx_dict, edges_sizes):
         x = link['source']
         y = link['target']
         edge_attributes = {
-            'id': f'e{i}',
-            'source': x,
-            'target': y,
+            'x': x,
+            'y': y,
             'type': 'directed',
-            'size': edges_sizes[(x, y)],
-            'color': '#282c34',
-            'label': str(link['weight']),
+            'weight': edges_sizes[(x, y)],
+            'color': edges_colors[(x, y)],
         }
         edges.append(edge_attributes)
 
     return edges
 
-    # def get_sigmajs(self):
-    #     self.structures_data = {}
-    #     if hasattr(bn, 'structures_data'):
-    #         self.structures_data = bn.structures_data
-    #     self.weights_info = None
-    #     if hasattr(bn, 'weights_info'):
-    #         self.weights_info = bn.weights_info
-    #
-    #     self.sigmajs_default_settings = {
-    #         # Camera options
-    #         "autoRescale": True,
-    #         "zoomingRatio": 1.6,
-    #         "zoomMin": 0,
-    #         "zoomMax": 10,
-    #         # Label options:
-    #         "labelAlignment": "center",  # Doesn't work
-    #         "labelThreshold": 0,
-    #         # Nodes, edges options:
-    #         "minEdgeSize": 0.01,
-    #         "edgeSizeStep": 0.01,
-    #         "minWeight": "",
-    #         "maxWeight": "",
-    #
-    #         # Edge labels (only canvas)
-    #         "edgeLabelSize": "proportional",
-    #         "defaultEdgeLabelSize": 14,
-    #
-    #         "minNodeSize": 0.01,
-    #         "nodeSizeStep": 0.05,
-    #         "nodeOriginalColor": '#000066',  # "#008cc2",
-    #         "highlightNodeColor": "#e4002b",
-    #         "color_hidden": '#eeeeee',
-    #         "color_common_edges": '#66ff33',
-    #         "color_structure_1": '#000000',  # "#282c34",
-    #         "color_structure_2": '#0066ff',  # "#669999",
-    #         "minArrowSize": 12,
-    #         "maxArrowSize": 12,
-    #         # Graph layout scale:
-    #         "width_original": 1,
-    #         "width_old": 1,
-    #         "width_step": 2,
-    #         "width_number_options": 5,
-    #         "width_max": 0,  # Selected later in this function
-    #         "height_original": 1,
-    #         "height_old": 1,
-    #         "height_step": 2,
-    #         "height_number_options": 5,
-    #         "height_max": 0,  # Selected later in this function
-    #         # Speed up options:
-    #     }
-    #     self.sigmajs_default_settings["width_max"] = \
-    #         self.sigmajs_default_settings["width_number_options"] * \
-    #         self.sigmajs_default_settings["width_step"]
-    #     self.sigmajs_width_options = np.arange(
-    #         self.sigmajs_default_settings["width_original"],
-    #         self.sigmajs_default_settings["width_max"],
-    #         self.sigmajs_default_settings["width_step"])
-    #     self.sigmajs_default_settings["height_max"] = \
-    #         self.sigmajs_default_settings["height_number_options"] * \
-    #         self.sigmajs_default_settings["height_step"]
-    #     self.sigmajs_height_options = np.arange(
-    #         self.sigmajs_default_settings["height_original"],
-    #         self.sigmajs_default_settings["height_max"],
-    #         self.sigmajs_default_settings["height_step"])
-    #     self.edge_config = {
-    #         "type": "arrow",
-    #         "size": 1,
-    #         "color": "#282c34",
-    #     }
-    #
-    #     self.sigmajs_default_settings["structures_info"] = {}
-    #     for structure_id, structure_data, in self.structures_data.items():
-    #         self.sigmajs_default_settings["structures_info"][structure_id] = {
-    #             "color": structure_data["color"],
-    #             "percentage_instances": round(
-    #                 structure_data["percentage_instances"], 2)
-    #         }
-    #
-    #     configs = {
-    #         'small': {'maxNodeSize': 12, 'maxEdgeSize': 4, 'drawLabels': True,
-    #                   'hideEdgesOnMove': False,
-    #                   'width': self.sigmajs_width_options[0]},
-    #         'medium': {'maxNodeSize': 5, 'maxEdgeSize': 1.5,
-    #                    'drawLabels': False, 'hideEdgesOnMove': False,
-    #                    'width': self.sigmajs_width_options[0]},
-    #         'large': {'maxNodeSize': 3, 'maxEdgeSize': 0.5,
-    #                   'drawLabels': False, 'hideEdgesOnMove': True,
-    #                   'width': self.sigmajs_width_options[3]}}
-    #
-    #     self.graph_size = list(configs.keys())[
-    #         min(2, -1 * (- ((len(self.graph.nodes()) - 1) // 100) // 2))]
-    #
-    #     self.graph_initial_width = configs[self.graph_size]['width']
-    #     self.sigmajs_default_settings["drawLabels"] = configs[self.graph_size][
-    #         'drawLabels']
-    #     self.sigmajs_default_settings["hideEdgesOnMove"] = \
-    #         configs[self.graph_size]['drawLabels']
-    #     self.sigmajs_default_settings["maxNodeSize"] = \
-    #         configs[self.graph_size]['maxNodeSize']
-    #     self.sigmajs_default_settings["maxEdgeSize"] = \
-    #         configs[self.graph_size]['maxEdgeSize']
-    #
-    #     self.node_feature_config = {
-    #         "size": self.sigmajs_default_settings["maxNodeSize"],
-    #         "color": self.sigmajs_default_settings["nodeOriginalColor"],
-    #     }
-    #
-    #     self.node_class_config = {
-    #         "size": self.sigmajs_default_settings["maxNodeSize"],
-    #         "color": "#00cc66",
-    #     }
-    #
-    #     result = {}
-    #
-    #     graph_sigmajs = {
-    #         "nodes": self.nodes,
-    #         "edges": self.edges,
-    #     }
-    #
-    #     if self.additional_parameters is not None:
-    #         result["additional_discrete_features"] = list(
-    #             self.additional_parameters["discrete_features"].keys())
-    #     result["nodes"] = list(self.graph.nodes())
-    #     result["nodes"].sort()
-    #
-    #     if self.weights_info is not None:
-    #         self.sigmajs_default_settings["minWeight"] = round(
-    #             self.weights_info["min"], 3)
-    #         self.sigmajs_default_settings["maxWeight"] = round(
-    #             self.weights_info["max"], 3)
-    #
-    #     self.sigmajs_default_settings["num_nodes"] = len(self.graph.nodes())
-    #     self.sigmajs_default_settings[
-    #         "num_edges"] = self.graph.number_of_edges()
-    #
-    #     result["sigmajs_default_settings"] = self.sigmajs_default_settings
-    #     result["graph_sigmajs"] = graph_sigmajs
-    #
-    #     return result
-    #
-    # def get_nodes_pos(self):
-    #     graph_networkx_dict = networkx_io.json_graph.node_link_data(self.graph)
-    #
-    #     edges = {}
-    #     for i, link in enumerate(graph_networkx_dict["links"]):
-    #         try:
-    #             structure_id = \
-    #                 self.graph.get_edge_data(link['source'], link['target'])[
-    #                     'structure_id']
-    #             if isinstance(structure_id, list):
-    #                 edge_color = self.edge_config["color"]
-    #             else:
-    #                 if structure_id == 0:
-    #                     color_structure_number = "color_common_edges"
-    #                 else:
-    #                     color_structure_number = \
-    #                         f"color_structure_{structure_id}"
-    #                 edge_color = self.sigmajs_default_settings[
-    #                     color_structure_number]
-    #
-    #         except TypeError as _:
-    #             structure_id = -1
-    #             edge_color = self.edge_config["color"]
-    #
-    #         edge_id = f"e{i}"
-    #         edge_sigmajs = {
-    #             "id": edge_id,
-    #             "source": link['source'],
-    #             "target": link['target'],
-    #             "type": self.edge_config["type"],
-    #             "size": self.edge_config["size"],
-    #             "color": edge_color,
-    #             "label": str(link["weight"]),
-    #             "structure_id": structure_id,
-    #         }
-    #         edges[edge_id] = edge_sigmajs
-    #
-    #     return self.layout, edges
+
+def _generate_random_color():
+    """
+    Generates a random RGB color with hexadecimal notation.
+
+    Returns
+    -------
+    str
+        A random color in hexadecimal notation.
+    """
+
+    hex_rgb = ('#%02X%02X%02X' % (
+        random.randint(0, 255), random.randint(0, 255),
+        random.randint(0, 255)))
+    return hex_rgb

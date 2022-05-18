@@ -23,10 +23,12 @@ class Iamb(LearnStructure):
     data_type: {'continuous', 'discrete' or 'hybrid'}
         Type of the data introduced.
 
+    alpha: float, default=0.5
+        The target nominal type I error rate. See bnlearn documentation for
+        more information.
     """
 
-    def __init__(self, df, data_type, *, alpha=0.5, **_):
-
+    def __init__(self, df, data_type, *, alpha=0.5):
         super().__init__(df, data_type)
         self.alpha = alpha
 

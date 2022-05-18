@@ -9,7 +9,7 @@ Graph layout module.
 from abc import ABCMeta, abstractmethod
 
 
-class GraphLayout(metaclass=ABCMeta):
+class Layout(metaclass=ABCMeta):
     """
     Base class for all layout classes.
 
@@ -19,7 +19,7 @@ class GraphLayout(metaclass=ABCMeta):
         Graph whose layout has to be computed.
     """
 
-    def __init__(self, graph, **_):
+    def __init__(self, graph):
         self.graph = graph
 
     @abstractmethod

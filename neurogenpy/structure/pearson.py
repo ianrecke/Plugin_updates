@@ -49,10 +49,6 @@ class Pearson(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_neurogenpy(self):
-        """
-
-        """
-
         nodes_names = list(self.data.columns.values)
         corr_matrix = self.data.corr()
 

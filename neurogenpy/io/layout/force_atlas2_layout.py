@@ -9,10 +9,10 @@ ForceAtlas2 layout module.
 import networkx
 from fa2 import ForceAtlas2
 
-from .graph_layout import GraphLayout
+from .layout import Layout
 
 
-class ForceAtlas2Layout(GraphLayout):
+class ForceAtlas2Layout(Layout):
     """
     ForceAtlas2 layout class.
     """
