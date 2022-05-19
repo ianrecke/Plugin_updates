@@ -105,7 +105,7 @@ class GEXF(BNIO):
                 bn.graph.nodes[node_id]['viz']['color'] = {'r': node_color[0],
                                                            'g': node_color[1],
                                                            'b': node_color[2],
-                                                           'a': 0}
+                                                           'a': 1.0}
 
             for edge in edges:
                 x, y = edge['x'], edge['y']
@@ -115,7 +115,7 @@ class GEXF(BNIO):
                 edge_color = rgb_colors[edge['color']]
                 bn.graph.edges[x, y]['viz'] = {
                     'color': {'r': edge_color[0], 'g': edge_color[1],
-                              'b': edge_color[2], 'a': 0}}
+                              'b': edge_color[2], 'a': 1.0}}
 
         networkx_io.write_gexf(bn.graph, file_path)
 
