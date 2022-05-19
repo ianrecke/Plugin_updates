@@ -11,7 +11,7 @@ from rpy2.robjects.packages import importr
 from .learn_structure import LearnStructure
 
 
-class Hc(LearnStructure):
+class HillClimbing(LearnStructure):
     """
     Hill climbing structure learning class.
 
