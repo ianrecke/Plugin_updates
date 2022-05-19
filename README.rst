@@ -24,7 +24,7 @@ NeurogenPy has been developed from **BayeSuites** :cite:`bayesuites`, which is i
 
 Installation
 ------------
-``neurogenpy`` can be installed with ``pip``using the following command:
+``neurogenpy`` can be installed with ``pip`` using the following command:
 ``pip install git+https://github.com/javiegal/neurogenpy.git@main``
 As it makes use of R's package ``bnlearn`` via `rpy2 <https://rpy2.github.io/>`_, you should have installed an R compatible version. For any installation issues related to this, we recommend to check `rpy2 documentation <https://rpy2.github.io/doc.html>`_.
 If ``bnlearn`` is not installed, the package does it via ``rpy2``.
