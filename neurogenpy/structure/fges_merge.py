@@ -24,7 +24,7 @@ from ..util.statistics import hypothesis_test_related_genes
 
 class FGESMerge(FGESBase):
     """
-    FGES-Merge structure learning class.
+    FGES-Merge structure learning class :cite:`fges_merge`.
 
     Parameters
     ----------
@@ -36,14 +36,6 @@ class FGESMerge(FGESBase):
 
     penalty : int, default=45
         Penalty hyperparameter of the FGES algorithm.
-
-    References
-    ----------
-    .. [1] N. Bernaola, M. Michiels, P. Larrañaga, C. Bielza, Learning massive
-       interpretable gene regulatory networks of the human brain by merging
-       Bayesian Networks, bioRxiv
-       `<https://doi.org/10.1101/2020.02.05.935007>`_.
-       `<https://www.biorxiv.org/content/early/2020/02/05/2020.02.05.935007>`_.
     """
 
     def __init__(self, df, data_type, *, penalty=45, n_jobs=1):

@@ -33,8 +33,12 @@ extensions = [
     'sphinx.ext.viewcode',
     'autoapi.extension',
     'numpydoc',
-    "sphinx_rtd_theme"
+    "sphinx_rtd_theme",
+    'sphinxcontrib.bibtex'
 ]
+
+bibtex_bibfiles = ['references.bib']
+bibtex_default_style = 'plain'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

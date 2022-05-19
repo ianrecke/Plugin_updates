@@ -101,7 +101,6 @@ class BayesianNetwork:
     >>> graph.add_edges_from([(1, 2)])
     >>> ps = {1: GaussianNode(0, 1, [], []), 2: GaussianNode(0, 1, [1], [0.8])}
     >>> bn = BayesianNetwork(graph=graph, parameters=ps)
-
     """
 
     def __init__(self, *, graph=None, parameters=None, joint_dist=None,
@@ -187,8 +186,9 @@ class BayesianNetwork:
     def _reachable(self, start, observed, end=None):
         """
         Algorithm for finding nodes reachable from `start` given `observed` via
-        active trails described in [1]_. If `end` is provided, this function
-        returns whether `start` and `end` are d-separated given `observed`.
+        active trails described in :code:`koller`. If `end` is provided, this
+        function returns whether `start` and `end` are d-separated given
+        `observed`.
 
         Parameters
         ----------
@@ -202,12 +202,8 @@ class BayesianNetwork:
         -------
         list
             All the reachable nodes.
-
-        References
-        ----------
-        .. [1] Koller, Daphne, and Nir Friedman. "Probabilistic graphical
-           models: principles and techniques". MIT press, 2009, pp. 75.
         """
+
         # Phase I: Insert ancestors of observations on a list
         visit_nodes = observed.copy()
         obs_ancestors = set()
@@ -730,7 +726,8 @@ class BayesianNetwork:
     def is_dseparated(self, start, end, observed):
         """
         Checks if two sets of nodes (`start` and `end`) are D-separated given
-        another one (`observed`).
+        another one (`observed`). It follows the algorithm proposed in
+        :cite:`koller`, page 75.
 
         Parameters
         ----------
@@ -745,10 +742,6 @@ class BayesianNetwork:
         bool
             Whether `start` and `end` are D-separated by `observed` or not.
 
-        References
-        ----------
-        .. [1] Koller, Daphne, and Nir Friedman. "Probabilistic graphical
-           models: principles and techniques". MIT press, 2009, pp. 75.
         """
 
         start -= self._check_nodes_warn(start)
@@ -760,7 +753,8 @@ class BayesianNetwork:
     def reachable_nodes(self, start):
         """
         Returns the reachable nodes from `start_nodes` given the current
-        evidence via active trails.
+        evidence via active trails. It follows the algorithm proposed in
+        :cite:`koller`, page 75.
 
         Parameters
         ----------
@@ -771,12 +765,8 @@ class BayesianNetwork:
         -------
         list
             All the reachable nodes.
-
-        References
-        ----------
-        .. [1] Koller, Daphne, and Nir Friedman. "Probabilistic graphical
-           models: principles and techniques". MIT press, 2009, pp. 75.
         """
+
         self._check_nodes_warn(start)
 
         return self._reachable(start, list(self.evidence.keys()))

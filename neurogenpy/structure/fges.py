@@ -13,6 +13,8 @@ from ..util.data_structures import matrix2nx
 class FGES(FGESBase):
     """
     FGES algorithm class.
+    It follows :cite:`fges`, but using the Bayesian Information Criteria rather
+    than mutual information as described in :cite:`fges_merge`.
 
     Parameters
     ----------
@@ -24,20 +26,6 @@ class FGES(FGESBase):
 
     penalty : int, default=45
         Penalty hyperparameter of the FGES algorithm.
-
-    References
-    ----------
-    .. [1] Ramsey J., Glymour M., Sanchez-Romero R., Glymour C. A million
-        variables and more: The fast greedy equivalence search algorithm for
-        learning high-dimensional graphical causal models, with an application
-        to functional magnetic resonance images. International Journal of Data
-        Science and Analytics. 2017;3:121–129.
-
-    .. [2] N. Bernaola, M. Michiels, P. Larrañaga, C. Bielza. Learning massive
-       interpretable gene regulatory networks of the human brain by merging
-       Bayesian Networks, bioRxiv
-       `<https://doi.org/10.1101/2020.02.05.935007>`_.
-       `<https://www.biorxiv.org/content/early/2020/02/05/2020.02.05.935007>`_.
     """
 
     def __init__(self, df, data_type, *, penalty=45):

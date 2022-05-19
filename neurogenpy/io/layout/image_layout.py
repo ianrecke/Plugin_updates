@@ -19,15 +19,9 @@ from .layout import Layout
 
 class ImageLayout(Layout):
     """
-    Image layout class. It creates a layout by detecting the edges from an
-    image. It is described in [1]_.
-
-    References
-    ----------
-    .. [1] Michiels, M., Larrañaga, P., & Bielza, C. (2021). BayeSuites: An
-        open web framework for massive Bayesian networks focused on
-        neuroscience. Neurocomputing, 428, 166–181.
-        doi:10.1016/j.neucom.2020.11.066
+    Image layout class.
+    It creates a layout by detecting the edges from an image. It is described
+    in :cite:`bayesuites`.
     """
 
     def __init__(self, graph, *, image_url, threshold=200):
