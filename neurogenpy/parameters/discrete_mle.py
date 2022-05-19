@@ -9,7 +9,7 @@ Discrete maximum likelihood estimation module.
 from pgmpy.estimators import MaximumLikelihoodEstimator
 
 from .learn_parameters import LearnParameters
-from ..utils.data_structures import nx2pgmpy
+from ..util.data_structures import nx2pgmpy
 
 
 class DiscreteMLE(LearnParameters):

@@ -9,7 +9,7 @@ Discrete Bayesian estimation module.
 from pgmpy.estimators import BayesianEstimator
 
 from .learn_parameters import LearnParameters
-from ..utils.data_structures import nx2pgmpy
+from ..util.data_structures import nx2pgmpy
 
 
 class DiscreteBE(LearnParameters):

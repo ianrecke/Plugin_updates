@@ -7,7 +7,7 @@ FGES structure learning module.
 # License:
 
 from ._fges_base import FGESBase, FGESStructure
-from ..utils.data_structures import matrix2nx
+from ..util.data_structures import matrix2nx
 
 
 class FGES(FGESBase):

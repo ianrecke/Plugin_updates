@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 from .bnio import BNIO
-from ..utils.data_structures import matrix2nx
+from ..util.data_structures import matrix2nx
 
 
 def save_tmp(graph, nodes, directory, delete=False):

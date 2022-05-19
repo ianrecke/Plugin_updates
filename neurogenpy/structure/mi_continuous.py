@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.feature_selection import mutual_info_regression
 
 from .learn_structure import LearnStructure
-from ..utils.data_structures import matrix2nx
+from ..util.data_structures import matrix2nx
 
 
 # TODO: Check discrete case.

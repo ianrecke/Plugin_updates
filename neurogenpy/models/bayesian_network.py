@@ -30,8 +30,8 @@ from ..structure.fges_merge import FGESMerge
 from ..structure.genie3 import GENIE3
 from ..structure.graphical_lasso import GraphicalLasso
 from ..structure.grow_shrink import GrowShrink
-from ..structure.hc import Hc
 from ..structure.hc_tabu import HcTabu
+from ..structure.hill_climbing import HillClimbing
 from ..structure.hiton_pc import HitonPC
 from ..structure.iamb import Iamb
 from ..structure.inter_iamb import InterIamb
@@ -46,7 +46,7 @@ from ..structure.pc import PC
 from ..structure.pearson import Pearson
 from ..structure.sparsebn import SparseBn
 from ..structure.tan import Tan
-from ..utils.score import confusion_matrix, accuracy, f1_score, mcc_score, \
+from ..util.score import confusion_matrix, accuracy, f1_score, mcc_score, \
     confusion_hubs
 
 
@@ -68,7 +68,8 @@ class BayesianNetwork:
 
             - Continuous case: the value of a node is a GaussianNode object.
 
-            - Discrete case: the value of a node is a pgmpy.TabularCPD object.
+            - Discrete case: the value of a node is a
+                :class:`~pgmpy.TabularCPD` object.
 
             - Hybrid case: mixture. Not yet implemented.
 
@@ -979,7 +980,8 @@ class BayesianNetwork:
         algorithms = {'cl': CL, 'fast_iamb': FastIamb, 'fges': FGES,
                       'fges_merge': FGESMerge, 'genie3': GENIE3,
                       'graphical_lasso': GraphicalLasso,
-                      'grow_shrink': GrowShrink, 'hc': Hc, 'hc_tabu': HcTabu,
+                      'grow_shrink': GrowShrink, 'hc': HillClimbing,
+                      'hc_tabu': HcTabu,
                       'hiton_pc': HitonPC, 'iamb': Iamb,
                       'inter_iamb': InterIamb, 'Lr': Lr, 'mbc': MBC,
                       'mutual_information': MiContinuous, 'mmhc': MMHC,

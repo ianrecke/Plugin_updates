@@ -5,11 +5,12 @@ from .fges_merge import FGESMerge
 from .genie3 import GENIE3
 from .graphical_lasso import GraphicalLasso
 from .grow_shrink import GrowShrink
-from .hc import Hc
 from .hc_tabu import HcTabu
+from .hill_climbing import HillClimbing
 from .hiton_pc import HitonPC
 from .iamb import Iamb
 from .inter_iamb import InterIamb
+from .learn_structure import LearnStructure
 from .lr import Lr
 from .mbc import MBC
 from .mi_continuous import MiContinuous
@@ -20,7 +21,6 @@ from .pc import PC
 from .pearson import Pearson
 from .sparsebn import SparseBn
 from .tan import Tan
-from .learn_structure import LearnStructure
 
 __all__ = [
     'CL',
@@ -30,7 +30,7 @@ __all__ = [
     'GENIE3',
     'GraphicalLasso',
     'GrowShrink',
-    'Hc',
+    'HillClimbing',
     'HcTabu',
     'HitonPC',
     'Iamb',

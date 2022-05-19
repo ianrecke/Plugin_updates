@@ -1,7 +1,7 @@
 import unittest
 
 
-class TestFGES(unittest.TestCase):
+class TestFGESMerge(unittest.TestCase):
     pass
 
 

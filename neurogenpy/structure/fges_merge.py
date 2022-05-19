@@ -5,6 +5,7 @@ FGES-Merge structure learning module.
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
+
 from multiprocessing import Pool
 from operator import itemgetter
 from tempfile import TemporaryDirectory
@@ -13,12 +14,12 @@ import numpy as np
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from neurogenpy.utils.data_structures import matrix2nx
+from neurogenpy.util.data_structures import matrix2nx
 from .fges import FGESStructure, FGESBase
 from ..io.adjacency_matrix import save_tmp
-from ..utils.fges_adjacency import get_hubs, force_directions, union, \
+from ..util.fges_adjacency import get_hubs, force_directions, union, \
     remove_unrelated, remove_children_edges, intersect, remove_local_unrelated
-from ..utils.statistics import hypothesis_test_related_genes
+from ..util.statistics import hypothesis_test_related_genes
 
 
 class FGESMerge(FGESBase):

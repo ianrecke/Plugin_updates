@@ -8,8 +8,6 @@ Parameters learning base module.
 
 from abc import ABCMeta, abstractmethod
 
-from networkx import to_numpy_matrix
-
 
 class LearnParameters(metaclass=ABCMeta):
     """

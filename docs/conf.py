@@ -98,10 +98,8 @@ html_static_path = ['_static']
 htmlhelp_basename = 'neurogenpydoc'
 
 html_context = {
-  'display_github': True,
-  'github_user': 'javiegal',
-  'github_repo': 'neurogenpy',
-  'github_version': 'master/docs/',
+    'display_github': True,
+    'github_url': 'https://github.com/javiegal/neurogenpy'
 }
 
 # -- Extension configuration -------------------------------------------------
@@ -111,3 +109,14 @@ autoapi_options = ['members', 'undoc-members', 'show-inheritance',
                    'show-module-summary', 'imported-members',
                    'inherited-members', 'special-members']
 numpydoc_validation_checks = {"PR01"}
+
+
+def setup(sphinx):
+    sphinx.connect("autoapi-skip-member", skip_util_classes)
+
+
+def skip_util_classes(app, what, name, obj, skip, options):
+    if what == "package" and "util" in name \
+            or name == 'ProbabilisticClustering':
+        skip = True
+    return skip

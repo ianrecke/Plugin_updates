@@ -25,7 +25,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 
 from .learn_structure import LearnStructure
-from ..utils.data_structures import matrix2nx
+from ..util.data_structures import matrix2nx
 
 
 # TODO: Check algorithm

@@ -10,7 +10,7 @@ from pgmpy.estimators.PC import PC as PGMPY_PC
 from rpy2.robjects.packages import importr
 
 from .learn_structure import LearnStructure
-from ..utils.data_structures import pgmpy2nx
+from ..util.data_structures import pgmpy2nx
 
 
 class PC(LearnStructure):

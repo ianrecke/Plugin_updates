@@ -6,7 +6,6 @@ Modifiable joint probability distribution module.
 # http://cig.fi.upm.es/
 # License:
 
-
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 
 import numpy as np
@@ -17,14 +16,15 @@ from .gaussian_joint import GaussianJointDistribution
 
 class ModifiableJointDistribution:
     """
-    Distribution class for the Bayesian network. It keeps the initial and
-    current distributions.
+    Distribution class for the Bayesian network. It saves the initial joint
+    distribution in order to recover it if the user wants to. It is also
+    posible to decide whether to keep the distribution in memory or save it in
+    a file and load it when it is needed.
 
     Parameters
     ----------
-    initial : JointDistribution, optional
-        The initial joint probability distribution. If `params` is set, this
-        parameter is ignored.
+    dist : JointDistribution, optional
+        The current joint probability distribution.
 
     save_dist : bool, default='False'
         Whether to load and save the distribution in a file each time it is
@@ -44,7 +44,7 @@ class ModifiableJointDistribution:
         If `data_type` is not supported.
     """
 
-    def __init__(self, data_type='continuous', save_dist=False, initial=None,
+    def __init__(self, data_type='continuous', save_dist=False, dist=None,
                  nodes_order=None):
         self.save_dist = save_dist
         self.tmp_dir = TemporaryDirectory()
@@ -52,8 +52,8 @@ class ModifiableJointDistribution:
         self.path = None
         self.nodes_order = nodes_order
         self.type = data_type
-        self.dist = initial
-        self.loaded = initial is not None
+        self.dist = dist
+        self.loaded = dist is not None
 
         if self.save_dist:
             self.save()
@@ -65,12 +65,10 @@ class ModifiableJointDistribution:
         self.save_dist = save_dist
         if self.type == 'discrete':
             self.dist = DiscreteJointDistribution().from_parameters(
-                params,
-                self.nodes_order)
+                params, self.nodes_order)
         elif self.type == 'continuous':
             self.dist = GaussianJointDistribution().from_parameters(
-                params,
-                self.nodes_order)
+                params, self.nodes_order)
         else:
             raise ValueError(f'{data_type} data type is not supported.')
 
@@ -113,6 +111,7 @@ class ModifiableJointDistribution:
         initial : bool, default=False
             Whether the distribution to load is the initial distribution.
         """
+
         if initial:
             config = np.load(self.initial_path)
             self.initial_path = None
@@ -204,4 +203,9 @@ class ModifiableJointDistribution:
                             for node in self.nodes_order]
 
     def is_set(self):
+        """
+        Whether the joint probability distribution has been calculated or
+        not yet.
+        """
+
         return self.loaded
