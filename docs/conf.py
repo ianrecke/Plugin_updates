@@ -101,10 +101,12 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'neurogenpydoc'
 
-html_context = {
-    'display_github': True,
-    'github_url': 'https://github.com/javiegal/neurogenpy'
-}
+# html_context = {
+#     'display_github': True,
+#     'github_user': 'javiegal',
+#     'github_repo': 'neurogenpy',
+#     'github_version': 'master',
+# }
 
 # -- Extension configuration -------------------------------------------------
 autoapi_type = "python"
