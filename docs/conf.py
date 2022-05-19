@@ -114,6 +114,13 @@ autoapi_options = ['members', 'undoc-members', 'show-inheritance',
                    'inherited-members', 'special-members']
 numpydoc_validation_checks = {"PR01"}
 
+# Grouping the document tree into LaTeX files. List of tuples# (source start
+# file, target name, title, author, documentclass [howto/manual]).
+# latex_documents = [
+#     ('index', 'yourdoc.tex', u'NeurogenPy', u'Javier Gallego Gutiérrez',
+#      'manual'),
+# ]
+
 
 def setup(sphinx):
     sphinx.connect("autoapi-skip-member", skip_util_classes)

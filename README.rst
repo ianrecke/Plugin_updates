@@ -6,9 +6,11 @@ NeurogenPy
 ..
  TODO: add badges
 
-Description
------------
 .. description-start
+
+.. image:: https://readthedocs.org/projects/neurogenpy/badge/?version=latest
+:target: https://neurogenpy.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
 
 **NeurogenPy** is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the continuous case is the only one that is fully provided. However, discrete inference will be implemented in the near future.
 
