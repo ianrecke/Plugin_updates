@@ -10,7 +10,7 @@ Description
 -----------
 .. description-start
 
-NeurogenPy is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the continuous case is the only one that is fully provided. However, discrete inference will be implemented in the near future.
+**NeurogenPy** is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the continuous case is the only one that is fully provided. However, discrete inference will be implemented in the near future.
 
 The package provides different structure learning algorithms, parameters estimation and input/output formats. For some of them, already existing implementations have been used, being `bnlearn <https://www.bnlearn.com/>`_, `pgmpy <https://pgmpy.org/>`_, `networkx <https://networkx.org/>`_ and `igraph <https://igraph.org/python/>`_ the most relevant used packages. Particularly, we provide an implementation of the **FGES-Merge** algorithm :cite:`fges_merge`.
 
@@ -24,6 +24,10 @@ NeurogenPy has been developed from **BayeSuites** :cite:`bayesuites`, which is i
 
 Installation
 ------------
+``neurogenpy`` can be installed with ``pip``using the following command:
+``pip install git+https://github.com/javiegal/neurogenpy.git@main``
+As it makes use of R's package ``bnlearn`` via `rpy2 <https://rpy2.github.io/>`_, you should have installed an R compatible version. For any installation issues related to this, we recommend to check `rpy2 documentation <https://rpy2.github.io/doc.html>`_.
+If ``bnlearn`` is not installed, the package does it via ``rpy2``.
 
 Usage
 -----

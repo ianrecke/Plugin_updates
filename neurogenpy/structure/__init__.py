@@ -1,3 +1,5 @@
+from rpy2.robjects.packages import importr, isinstalled
+
 from .cl import CL
 from .fast_iamb import FastIamb
 from .fges import FGES
@@ -47,3 +49,9 @@ __all__ = [
     'Tan',
     'LearnStructure'
 ]
+
+utils = importr('utils')
+utils.chooseCRANmirror(ind=1)  # select the first mirror in the list
+
+if not isinstalled('bnlearn'):
+    utils.install_packages('bnlearn')
