@@ -20,6 +20,8 @@ from .layout import Layout
 class ImageLayout(Layout):
     """
     Image layout class.
+    It creates a layout by detecting the edges from an image. It is described
+    in :cite:`bayesuites`.
     """
 
     def __init__(self, graph, *, image_url, threshold=200):

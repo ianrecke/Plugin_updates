@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from .learn_structure import LearnStructure
-from ..utils.data_structures import matrix2nx
+from ..util.data_structures import matrix2nx
 
 
 class Lr(LearnStructure):

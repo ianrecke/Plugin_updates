@@ -8,7 +8,7 @@ Structure learning base module.
 
 from abc import abstractmethod, ABCMeta
 
-from ..utils.data_structures import pd2r, bnlearn2nx
+from ..util.data_structures import pd2r, bnlearn2nx
 
 
 # TODO: Inherit parameters part of docstring in those subclasses that use

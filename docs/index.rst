@@ -11,6 +11,7 @@ NeurogenPy
    getting-started
    user-guide
    development
+   references
    acknowledgements
    autoapi/index
 

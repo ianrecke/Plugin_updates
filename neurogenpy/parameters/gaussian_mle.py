@@ -32,7 +32,7 @@ class GaussianMLE(LearnParameters):
         Returns
         -------
         dict
-            A dictionary with the nodes IDS as keys and GaussianNode objects
+            A dictionary with the nodes IDs as keys and GaussianNode objects
             as values.
 
         Raises
@@ -63,7 +63,7 @@ class GaussianMLE(LearnParameters):
             else:
                 x = self.data.loc[:, node_parents].values.reshape(
                     self.data.shape[0], -1)
-                variance, coeffs = linear_gaussian(x, y)
+                variance, coeffs = _linear_gaussian(x, y)
                 mean, parents_coeffs = coeffs[0], coeffs[1:]
 
             parameters[node] = GaussianNode(mean, variance, node_parents,
@@ -77,23 +77,9 @@ GaussianNode = namedtuple('GaussianNode',
 
 
 @numba.jit(nopython=True, fastmath=True)
-def linear_gaussian(x, y):
+def _linear_gaussian(x, y):
     """
     Computes the linear regression of a variable `y` on a set of variables `x`.
-
-    Parameters
-    ----------
-    x :
-        Training data.
-
-    y :
-        Target value.
-
-    Returns
-    -------
-    (float, list)
-        Variable `y` variance and the coefficients of the variables in `x` in
-        the regression.
     """
 
     n = x.shape[0]

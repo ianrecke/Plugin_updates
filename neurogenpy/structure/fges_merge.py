@@ -5,6 +5,7 @@ FGES-Merge structure learning module.
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
+
 from multiprocessing import Pool
 from operator import itemgetter
 from tempfile import TemporaryDirectory
@@ -13,17 +14,17 @@ import numpy as np
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from neurogenpy.utils.data_structures import matrix2nx
+from neurogenpy.util.data_structures import matrix2nx
 from .fges import FGESStructure, FGESBase
 from ..io.adjacency_matrix import save_tmp
-from ..utils.fges_adjacency import get_hubs, force_directions, union, \
+from ..util.fges_adjacency import get_hubs, force_directions, union, \
     remove_unrelated, remove_children_edges, intersect, remove_local_unrelated
-from ..utils.statistics import hypothesis_test_related_genes
+from ..util.statistics import hypothesis_test_related_genes
 
 
 class FGESMerge(FGESBase):
     """
-    FGES-Merge structure learning class.
+    FGES-Merge structure learning class :cite:`fges_merge`.
 
     Parameters
     ----------
@@ -35,14 +36,6 @@ class FGESMerge(FGESBase):
 
     penalty : int, default=45
         Penalty hyperparameter of the FGES algorithm.
-
-    References
-    ----------
-    .. [1] N. Bernaola, M. Michiels, P. Larrañaga, C. Bielza, Learning massive
-       interpretable gene regulatory networks of the human brain by merging
-       Bayesian Networks, bioRxiv
-       `<https://doi.org/10.1101/2020.02.05.935007>`_.
-       `<https://www.biorxiv.org/content/early/2020/02/05/2020.02.05.935007>`_.
     """
 
     def __init__(self, df, data_type, *, penalty=45, n_jobs=1):

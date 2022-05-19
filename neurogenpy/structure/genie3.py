@@ -5,13 +5,7 @@ Notes
 -----
 The algorithm implementation has been taken from
 https://github.com/vahuynh/GENIE3/. A detailed explanation of how it works can
-be seen in [1]_.
-
-References
-----------
-.. [1] Huynh-Thu, V. A., Irrthum, A., Wehenkel, L., & Geurts, P. (2010).
-    Inferring regulatory networks from expression data using tree-based
-    methods. PloS one, 5(9), e12776.
+be seen in :code:`genie`.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -25,7 +19,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 
 from .learn_structure import LearnStructure
-from ..utils.data_structures import matrix2nx
+from ..util.data_structures import matrix2nx
 
 
 # TODO: Check algorithm

@@ -12,17 +12,15 @@ Description
 
 NeurogenPy is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the continuous case is the only one that is fully provided. However, discrete inference will be implemented in the near future.
 
-The package provides different structure learning algorithms, parameters estimation and input/output formats. For some of them, already existing implementations have been used, being `bnlearn <https://www.bnlearn.com/>`_, `pgmpy <https://pgmpy.org/>`_, `networkx <https://networkx.org/>`_ and `igraph <https://igraph.org/python/>`_ the most used. Particularly, we provide an implementation of the **FGES-Merge** algorithm [2]_.
+The package provides different structure learning algorithms, parameters estimation and input/output formats. For some of them, already existing implementations have been used, being `bnlearn <https://www.bnlearn.com/>`_, `pgmpy <https://pgmpy.org/>`_, `networkx <https://networkx.org/>`_ and `igraph <https://igraph.org/python/>`_ the most relevant used packages. Particularly, we provide an implementation of the **FGES-Merge** algorithm :cite:`fges_merge`.
 
 This project has been conceived to be included as a plugin in the `EBRAINS interactive atlas viewer <https://interactive-viewer.apps.hbp.eu/>`_, but it may be used for other purposes.
 
-NeurogenPy has been developed from **BayeSuites** [1]_, which is included in the already existing web framework `NeuroSuites <https://neurosuites.com/>`_.
-
-.. [1] Michiels, M., Larrañaga, P., & Bielza, C. (2021). BayeSuites: An open web framework for massive Bayesian networks focused on neuroscience. Neurocomputing, 428, 166–181. doi:10.1016/j.neucom.2020.11.066
-
-.. [2] Bernaola, N., Michiels, M., Larrañaga, P., & Bielza, C. (2020). Learning massive interpretable gene regulatory networks of the human brain by merging Bayesian Networks. bioRxiv.
+NeurogenPy has been developed from **BayeSuites** :cite:`bayesuites`, which is included in the already existing web framework `NeuroSuites <https://neurosuites.com/>`_.
 
 .. description-end
+
+`The documentation <https://neurogenpy.readthedocs.io/en/latest/>`_ is available in Read the Docs.
 
 Installation
 ------------
@@ -100,9 +98,7 @@ Authors
 -------
 .. authors-start
 
-This project has been developed by the `Computational Intelligence Group (CIG) <http://cig.fi.upm.es/>`_ of `Universidad Politécnica de Madrid (UPM) <https://www.upm.es/>`_.
-
-NeurogenPy has been developed by `Javier Gallego Gutiérrez <https://github.com/javiegal/>`_ based on `NeuroSuites <https://neurosuites.com/>`_, developed by `Mario Michiels Toquero <https://www.linkedin.com/in/mario-michiels-toquero-02ab9a137/>`_ and `Hugo Nugra <https://www.linkedin.com/in/hugonugramadero/>`_.
+This project has been developed by the `Computational Intelligence Group (CIG) <http://cig.fi.upm.es/>`_ of `Universidad Politécnica de Madrid (UPM) <https://www.upm.es/>`_. `Javier Gallego Gutiérrez <https://github.com/javiegal/>`_ has developed the package based on `NeuroSuites <https://neurosuites.com/>`_, done by `Mario Michiels Toquero <https://www.linkedin.com/in/mario-michiels-toquero-02ab9a137/>`_ and `Hugo Nugra <https://www.linkedin.com/in/hugonugramadero/>`_.
 
 |cig| |upm|
 

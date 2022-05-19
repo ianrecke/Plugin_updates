@@ -1,5 +1,5 @@
 """
-Utilities to compute hypothesis tests.
+Utilities to compute hypothesis test.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -12,7 +12,7 @@ from scipy.stats import norm
 
 def hypothesis_test_related_genes(max_candidates, positive_bics):
     """
-    Given a sorted list of BIC scores (decreasing order), it tests the
+    Given a sorted list of BIC scores (decreasing order), it test the
     likelihood that the first n nodes belong to one distribution and the
     rest belong to another one. Finally, it returns the value of n that
     maximizes the likelihood.

@@ -33,8 +33,12 @@ extensions = [
     'sphinx.ext.viewcode',
     'autoapi.extension',
     'numpydoc',
-    "sphinx_rtd_theme"
+    "sphinx_rtd_theme",
+    'sphinxcontrib.bibtex'
 ]
+
+bibtex_bibfiles = ['references.bib']
+bibtex_default_style = 'plain'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -74,7 +78,8 @@ html_theme = 'sphinx_rtd_theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'display_version': False}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -98,10 +103,7 @@ html_static_path = ['_static']
 htmlhelp_basename = 'neurogenpydoc'
 
 html_context = {
-  'display_github': True,
-  'github_user': 'javiegal',
-  'github_repo': 'neurogenpy',
-  'github_version': 'master/docs/',
+    'display_github': False
 }
 
 # -- Extension configuration -------------------------------------------------
@@ -111,3 +113,14 @@ autoapi_options = ['members', 'undoc-members', 'show-inheritance',
                    'show-module-summary', 'imported-members',
                    'inherited-members', 'special-members']
 numpydoc_validation_checks = {"PR01"}
+
+
+def setup(sphinx):
+    sphinx.connect("autoapi-skip-member", skip_util_classes)
+
+
+def skip_util_classes(app, what, name, obj, skip, options):
+    if what == "package" and "util" in name \
+            or name == 'ProbabilisticClustering':
+        skip = True
+    return skip

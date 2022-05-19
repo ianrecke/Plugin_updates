@@ -14,3 +14,5 @@ Description
 .. include:: ../README.rst
     :start-after: authors-start
     :end-before: authors-end
+
+The repository of the project can be seen on `Github <https://github.com/javiegal/neurogenpy/>`_.

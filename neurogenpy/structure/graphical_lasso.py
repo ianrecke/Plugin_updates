@@ -10,7 +10,7 @@ import numpy as np
 from sklearn import covariance as sk_learn_cov
 
 from .learn_structure import LearnStructure
-from ..utils.data_structures import matrix2nx
+from ..util.data_structures import matrix2nx
 
 
 class GraphicalLasso(LearnStructure):

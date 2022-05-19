@@ -9,12 +9,13 @@ BIF input/output module.
 from pgmpy.readwrite import BIFReader, BIFWriter
 
 from .bnio import BNIO
-from ..utils.data_structures import pgmpy2nx, nx2pgmpy
+from ..util.data_structures import pgmpy2nx, nx2pgmpy
 
 
 class BIF(BNIO):
     """
-    BIF input/output class.
+    BIF (Bayesian Interchange Format) input/output class.
+    It uses `pgmpy` BIF reading and writing capabilities :cite:`bif`.
     """
 
     def read_file(self, file_path):

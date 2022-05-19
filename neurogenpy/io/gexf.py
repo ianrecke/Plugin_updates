@@ -5,6 +5,7 @@ GEXF input/output module.
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
+
 import inspect
 import random
 
@@ -17,7 +18,7 @@ from .layout.force_atlas2_layout import ForceAtlas2Layout
 from .layout.igraph_layout import IgraphLayout
 from .layout.image_layout import ImageLayout
 
-CONFIGS = {
+_CONFIGS = {
     'small': {'maxNodeSize': 12, 'minNodeSize': 2, 'maxEdgeSize': 8,
               'minEdgeSize': 4, 'weight': 0.55, 'width': 1},
     'medium': {'maxNodeSize': 5, 'minNodeSize': 1, 'maxEdgeSize': 1.5,
@@ -35,8 +36,10 @@ class GEXF(BNIO):
     def write_file(self, bn, file_path='bn.gexf', layout_name=None,
                    communities=False, sizes_method='mb'):
         """
-        Exports a representation of the Bayesian network for the chosen layout
-        in GEXF format.
+        Exports a representation of the Bayesian network structure for the
+        chosen layout in GEXF format. It also calculates the sizes and colors
+        of the nodes and edges of the graph according to some different
+        methods.
 
         Parameters
         ----------
@@ -127,10 +130,10 @@ def _edges_sizes(bn, network_size):
     sum_weights = bn.sum_weights()
     for (x, y, edge_data) in bn.graph.edges(data=True):
         w_normalized = edge_data['weight'] * bn.num_nodes / sum_weights
-        edge_size = w_normalized * CONFIGS[network_size]['weight'] + \
-                    CONFIGS[network_size]['minEdgeSize']
+        edge_size = w_normalized * _CONFIGS[network_size]['weight'] + \
+                    _CONFIGS[network_size]['minEdgeSize']
         edges_sizes[(x, y)] = min(edge_size,
-                                  CONFIGS[network_size]['maxEdgeSize'])
+                                  _CONFIGS[network_size]['maxEdgeSize'])
 
     return edges_sizes
 
@@ -165,10 +168,10 @@ def _nodes_sizes(bn, network_size, method):
         else:
             raise ValueError(f'{method} method is not supported.')
 
-        node_size = CONFIGS[network_size]['minNodeSize'] + method_len * \
-                    CONFIGS[network_size]['weight']
+        node_size = _CONFIGS[network_size]['minNodeSize'] + method_len * \
+                    _CONFIGS[network_size]['weight']
 
-        nodes_sizes[node] = min(CONFIGS[network_size]['maxNodeSize'],
+        nodes_sizes[node] = min(_CONFIGS[network_size]['maxNodeSize'],
                                 node_size)
 
     return nodes_sizes
@@ -177,7 +180,7 @@ def _nodes_sizes(bn, network_size, method):
 def _nodes_colors(bn, communities):
     """Returns a dictionary with nodes as keys and their colors as values."""
     if not communities:
-        return {node: CONFIGS['default_color'] for node in bn.graph.nodes()}
+        return {node: _CONFIGS['default_color'] for node in bn.graph.nodes()}
 
     else:
         coms = bn.communities()
@@ -190,7 +193,7 @@ def _edges_colors(bn, nodes_colors):
     """Returns a dictionary with edges as keys and their colors as values."""
 
     if len(set(nodes_colors.values())) == 1:
-        return {(x, y): CONFIGS['default_color'] for (x, y) in
+        return {(x, y): _CONFIGS['default_color'] for (x, y) in
                 bn.graph.edges()}
 
     edges_colors = {}
@@ -198,7 +201,7 @@ def _edges_colors(bn, nodes_colors):
         if nodes_colors[x] == nodes_colors[y]:
             edges_colors[(x, y)] = nodes_colors[x]
         else:
-            edges_colors[(x, y)] = CONFIGS['default_color']
+            edges_colors[(x, y)] = _CONFIGS['default_color']
     return edges_colors
 
 

@@ -8,7 +8,7 @@ igraph layout module.
 
 
 from .layout import Layout
-from ...utils.data_structures import nx2igraph
+from ...util.data_structures import nx2igraph
 
 
 class IgraphLayout(Layout):

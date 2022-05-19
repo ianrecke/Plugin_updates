@@ -99,7 +99,7 @@ def plot_pdf(mean=0, std_deviation=1, evidence=None):
                               mean + 3 * std_deviation, 500)
         pdf = scipy_stats.norm.pdf(x_range, mean, std_deviation)
 
-        trace_pdf = plotly_graph.Scattergl(x=x_range, y=pdf, mode='lines',)
+        trace_pdf = plotly_graph.Scattergl(x=x_range, y=pdf, mode='lines', )
         pdfs_traces.append(trace_pdf)
         layout = set_layout(all_x_labels=0, height=150, show_y_zero_line=False)
 
