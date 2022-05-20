@@ -11,6 +11,10 @@
     "@smui/form-field": "^6.0.0-beta.16",
     "@smui/switch": "^6.0.0-beta.16",
     "@smui/textfield": "^6.0.0-beta.16",
+    "graphology": "^0.24.1",
+    "graphology-gexf": "^0.10.2",
+    "graphology-types": "^0.24.4",
+    "sigma": "^2.3.0",
     "svelte": "^3.48.0"
   }
 }

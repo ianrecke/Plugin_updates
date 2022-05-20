@@ -35,7 +35,7 @@ class ResultStatus(str, Enum):
 
 
 class NeurogenPyResult(BModel):
-    pass
+    bn_path: str
 
 
 class ResultModel(BModel):

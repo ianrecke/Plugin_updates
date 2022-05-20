@@ -51,7 +51,7 @@
             {/if}
 
             {#if result && hasDataSrcFlag}
-                <ShowResult {postMessage} {result}/>
+                <ShowGraph {result}/>
             {/if}
 
             {#if errorText}
@@ -69,7 +69,7 @@
     import Card, {Content} from "@smui/card"
     import Button, {Label, Icon} from "@smui/button"
     import CircularProgress from "@smui/circular-progress"
-    import ShowResult from "./ShowResult.svelte"
+    import ShowGraph from "./ShowGraph.svelte"
     import {onDestroy, tick} from "svelte"
     import ParametersEstimation from "./ParametersEstimation.svelte";
 
