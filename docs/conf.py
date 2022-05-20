@@ -33,7 +33,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'autoapi.extension',
     'numpydoc',
-    "sphinx_rtd_theme",
+    'sphinx_rtd_theme',
     'sphinxcontrib.bibtex'
 ]
 
@@ -56,7 +56,7 @@ master_doc = 'index'
 # for a list of supported languages.
 #
 # This is also used if you do content translation via gettext catalogs.
-# Usually you set "language" from the command line for these cases.
+# Usually you set 'language' from the command line for these cases.
 language = None
 
 # List of patterns, relative to source directory, that match files and
@@ -79,11 +79,12 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 #
 html_theme_options = {
+    'navigation_depth': 4,
     'display_version': False}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+# so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
@@ -95,7 +96,7 @@ html_static_path = ['_static']
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
-# html_logo = "../imgs/cig.png"
+# html_logo = '../imgs/cig.png'
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -107,12 +108,13 @@ html_context = {
 }
 
 # -- Extension configuration -------------------------------------------------
-autoapi_type = "python"
+autoapi_type = 'python'
 autoapi_dirs = ['../neurogenpy']
 autoapi_options = ['members', 'undoc-members', 'show-inheritance',
                    'show-module-summary', 'imported-members',
                    'inherited-members', 'special-members']
-numpydoc_validation_checks = {"PR01"}
+numpydoc_validation_checks = {'all', 'GL08'}
+
 
 # Grouping the document tree into LaTeX files. List of tuples# (source start
 # file, target name, title, author, documentclass [howto/manual]).
@@ -121,13 +123,12 @@ numpydoc_validation_checks = {"PR01"}
 #      'manual'),
 # ]
 
-
 def setup(sphinx):
-    sphinx.connect("autoapi-skip-member", skip_util_classes)
+    sphinx.connect('autoapi-skip-member', skip_util_classes)
 
 
 def skip_util_classes(app, what, name, obj, skip, options):
-    if what == "package" and "util" in name \
+    if what == 'package' and 'util' in name \
             or name == 'ProbabilisticClustering':
         skip = True
     return skip

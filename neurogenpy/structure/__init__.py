@@ -1,4 +1,5 @@
 from rpy2.robjects.packages import importr, isinstalled
+from rpy2.robjects.vectors import StrVector
 
 from .cl import CL
 from .fast_iamb import FastIamb
@@ -50,8 +51,12 @@ __all__ = [
     'LearnStructure'
 ]
 
+# Install R packages sparsebn and bnlearn
 utils = importr('utils')
-utils.chooseCRANmirror(ind=1)  # select the first mirror in the list
+utils.chooseCRANmirror(ind=1)
 
-if not isinstalled('bnlearn'):
-    utils.install_packages('bnlearn')
+packnames = ('sparsebn', 'bnlearn')
+names_to_install = [x for x in packnames if not isinstalled(x)]
+
+if names_to_install:
+    utils.install_packages(StrVector(names_to_install))
