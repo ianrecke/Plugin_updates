@@ -3,6 +3,7 @@ files_examples
 docs/_build
 docs/_static
 docs/make.bat
+docs/latex
 docs/Makefile
 __pycache__
 node_modules
