@@ -34,8 +34,10 @@ class GENIE3(LearnStructure):
 
         Parameters
         ----------
-        env : {'genie3'}, default='genie3'
-            Environment used to run the algorithm.
+        env : str, default='genie3'
+            Environment used to run the algorithm. Supported environments:
+
+                - 'genie3': https://github.com/vahuynh/GENIE3/
 
         Returns
         -------

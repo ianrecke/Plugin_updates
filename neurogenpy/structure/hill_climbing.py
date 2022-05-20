@@ -42,8 +42,10 @@ class HillClimbing(LearnStructure):
 
         Parameters
         ----------
-        env : str, optional
-            Environment used to run the algorithm.
+        env : str, default='bnlearn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'bnlearn': :cite:`hc`
 
         Returns
         -------

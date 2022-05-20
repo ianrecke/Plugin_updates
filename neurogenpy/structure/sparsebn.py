@@ -24,8 +24,10 @@ class SparseBn(LearnStructure):
 
         Parameters
         ----------
-        env : {'sparsebn'}, default='sparsebn'
-            Environment used to run the algorithm.
+        env : str, default='sparsebn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'sparsebn': :cite:`sparsebn`
 
         Returns
         -------

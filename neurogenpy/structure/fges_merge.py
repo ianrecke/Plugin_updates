@@ -50,8 +50,10 @@ class FGESMerge(FGESBase):
 
         Parameters
         ----------
-        env : {'neurogenpy'}, default='neurogenpy'
-            Environment used to run the algorithm.
+        env : str, default='neurogenpy'
+            Environment used to run the algorithm. Supported environments:
+
+                - 'neurogenpy'
 
         Returns
         -------
@@ -63,6 +65,7 @@ class FGESMerge(FGESBase):
         ValueError
             If the environment is not supported.
         """
+
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         else:

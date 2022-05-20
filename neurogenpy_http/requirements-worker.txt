@@ -1,0 +1,2 @@
+celery[redis]==5.2.6
+siibra==0.3a14

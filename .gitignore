@@ -4,6 +4,8 @@ docs/_build
 docs/_static
 docs/latex
 docs/make.bat
+docs/latex
 docs/Makefile
 __pycache__
+node_modules
 probabilistic_clustering.py

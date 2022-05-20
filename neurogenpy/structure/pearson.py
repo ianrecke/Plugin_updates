@@ -23,8 +23,10 @@ class Pearson(LearnStructure):
 
         Parameters
         ----------
-        env : str, optional
-            Environment used to run the algorithm.
+        env : str, default='neurogenpy'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'neurogenpy'
 
         Returns
         -------

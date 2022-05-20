@@ -1,0 +1,6 @@
+{
+  "estimation": [
+    "bayesian",
+    "mle"
+  ]
+}

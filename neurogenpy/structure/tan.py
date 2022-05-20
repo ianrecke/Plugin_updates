@@ -46,8 +46,10 @@ class Tan(LearnStructure):
 
         Parameters
         ----------
-        env : {'bnlearn', 'neurogenpy'}, default='bnlearn'
-            Environment used to run the algorithm.
+        env : str, default='bnlearn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'bnlearn': :cite:`naive_bayes`
 
         Returns
         -------
