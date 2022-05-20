@@ -48,8 +48,10 @@ class MBC(LearnStructure):
 
         Parameters
         ----------
-        env : {'bnlearn', 'neurogenpy'}, default='bnlearn'
-            Environment used to run the algorithm.
+        env : str, default='bnlearn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'bnlearn': :cite:`hc`
 
         Returns
         -------

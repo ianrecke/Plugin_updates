@@ -33,14 +33,16 @@ class GrowShrink(LearnStructure):
         super().__init__(df, data_type)
         self.alpha = alpha
 
-    def run(self, env="bnlearn"):
+    def run(self, env='bnlearn'):
         """
         Learns the structure of the Bayesian network.
 
         Parameters
         ----------
-        env : str, optional
-            Environment used to run the algorithm.
+        env : str, default='bnlearn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'bnlearn': :cite:`constraint`
 
         Returns
         -------

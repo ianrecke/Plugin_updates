@@ -40,8 +40,11 @@ class PC(LearnStructure):
 
         Parameters
         ----------
-        env : {'bnlearn', 'pgmpy'}, default='bnlearn'
-            Environment used to run the algorithm.
+        env : str, default='bnlearn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'bnlearn': :cite:`constraint`
+                - 'pgmpy': :cite:`pgmpy_pc`
 
         Returns
         -------

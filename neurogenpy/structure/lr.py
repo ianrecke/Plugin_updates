@@ -24,8 +24,10 @@ class Lr(LearnStructure):
 
         Parameters
         ----------
-        env : {'scikit-learn'}, default='scikit-learn'
-            Environment used to run the algorithm.
+        env : str, default='scikit-learn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'scikit-learn': :cite:`lr`
 
         Returns
         -------
@@ -39,6 +41,7 @@ class Lr(LearnStructure):
         ValueError
             If the environment is not supported.
         """
+
         if self.data_type != 'continuous':
             raise Exception(
                 'Algorithm only supported for continuous datasets ')
@@ -49,11 +52,6 @@ class Lr(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_sklearn(self):
-        """
-
-        Returns
-        -------
-        """
 
         nodes_names = list(self.data.columns.values)
         data_np = np.array(self.data)

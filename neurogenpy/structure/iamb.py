@@ -38,8 +38,10 @@ class Iamb(LearnStructure):
 
         Parameters
         ----------
-        env : {'bnlearn', 'neurogenpy'}, default='bnlearn'
-            Environment used to run the algorithm.
+        env : str, default='bnlearn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'bnlearn': :cite:`constraint`
 
         Returns
         -------
@@ -51,6 +53,7 @@ class Iamb(LearnStructure):
         ValueError
             If the environment is not supported.
         """
+
         if env == 'neurogenpy':
             return self._run_neurogenpy()
         elif env == 'bnlearn':

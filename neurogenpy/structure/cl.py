@@ -22,8 +22,10 @@ class CL(LearnStructure):
 
         Parameters
         ----------
-        env : {'bnlearn', 'neurogenpy'}, default='bnlearn'
-            Environment used to run the algorithm.
+        env : str, default='bnlearn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'bnlearn' :cite:`mi_matrix`
 
         Returns
         -------

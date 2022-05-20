@@ -37,8 +37,10 @@ class FGES(FGESBase):
 
         Parameters
         ----------
-        env : {'neurogenpy'}, default='neurogenpy'
-            Environment used to run the algorithm.
+        env : str, default='neurogenpy'
+            Environment used to run the algorithm. Supported environments:
+
+                - 'neurogenpy'
 
         Returns
         -------

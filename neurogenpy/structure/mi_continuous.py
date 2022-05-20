@@ -25,8 +25,10 @@ class MiContinuous(LearnStructure):
 
         Parameters
         ----------
-        env : {'scikit-learn'}, default='scikit-learn'
-            Environment used to run the algorithm.
+        env : str, default='scikit-learn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'scikit-learn': :cite:`mir`
 
         Returns
         -------

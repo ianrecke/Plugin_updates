@@ -50,8 +50,10 @@ class GraphicalLasso(LearnStructure):
 
         Parameters
         ----------
-        env : {'scikit-learn'}, default='scikit-learn'
-            Environment used to run the algorithm.
+        env : str, default='scikit-learn'
+            Environment used to run the algorithm. Currently supported:
+
+                - 'scikit-learn': :cite:`glasso`
 
         Returns
         -------
@@ -63,6 +65,7 @@ class GraphicalLasso(LearnStructure):
         ValueError
             If the environment is not supported.
         """
+
         if self.data_type != 'continuous':
             raise Exception(
                 'Algorithm only supported for continuous datasets ')
