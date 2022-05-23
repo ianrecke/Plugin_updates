@@ -1,4 +1,3 @@
 celery[redis]==5.2.6
 uvicorn==0.17.6
 fastapi==0.76.0
-numpy==1.21.6

@@ -2,9 +2,6 @@ import logging
 import os
 from typing import List
 
-import numpy as np
-import pandas as pd
-
 CHANNEL = os.getenv('NEUROGENPY_CELERY_CHANNEL', 'neurogenpy_http')
 
 logger = logging.getLogger(__name__)
@@ -24,6 +21,8 @@ app.config_from_object(default_config)
 def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
               estimation: str):
     import siibra
+    import pandas as pd
+    import statistics
     from neurogenpy import BayesianNetwork
     import socket
 
@@ -41,7 +40,7 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
                 f'Region definition {roi} could not be matched in atlas.')
 
         # FIXME: Too many requests raise an exception.
-        samples = {gene_name: [np.mean(f.expression_levels) for f in
+        samples = {gene_name: [statistics.mean(f.expression_levels) for f in
                                siibra.get_features(region, 'gene',
                                                    gene=gene_name)] for
                    gene_name in genes}

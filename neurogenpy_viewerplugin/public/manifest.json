@@ -1,8 +1,9 @@
 {
   "name": "upm.cig.neurogenpy",
   "displayName": "NeurogenPy",
-  "iframeUrl": "index.html",
-  "description": "Human readable description of the plugin.",
-  "desc": "Same as description. If both present, description takes more priority.",
-  "authors": "Computational Intelligence Group (CIG), Universidad Politécnica de Madrid (UPM)"
+  "templateURL": "http://localhost:6001/viewer_plugin/index.html",
+  "scriptURL": "http://localhost:6001/viewer_plugin/build/bundle.js",
+  "description": "Estimate Gene Regulatory Networks with Bayesian networks.",
+  "authors": "Computational Intelligence Group (CIG), Universidad Politécnica de Madrid (UPM)",
+  "homepage": "https://neurogenpy.readthedocs.io/en/latest/"
 }
