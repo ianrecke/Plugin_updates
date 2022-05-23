@@ -22,7 +22,7 @@ class LearnParameters(metaclass=ABCMeta):
         Structure of the Bayesian network.
     """
 
-    def __init__(self, data, graph):
+    def __init__(self, data, graph=None):
         self.data = data
         self.graph = graph
 

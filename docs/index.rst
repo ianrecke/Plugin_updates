@@ -5,7 +5,7 @@ NeurogenPy
     :start-line: 2
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
     :caption: Contents
 
     getting-started
@@ -13,4 +13,3 @@ NeurogenPy
     references
     acknowledgements
     autoapi/index
-

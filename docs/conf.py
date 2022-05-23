@@ -2,10 +2,10 @@
 
 # -- Path setup --------------------------------------------------------------
 
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
+import os
+import sys
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../examples/'))
 
 # -- Project information -----------------------------------------------------
 
@@ -34,8 +34,12 @@ extensions = [
     'autoapi.extension',
     'numpydoc',
     'sphinx_rtd_theme',
-    'sphinxcontrib.bibtex'
+    'sphinxcontrib.bibtex',
+    'nbsphinx',
+    'nbsphinx_link',
 ]
+
+nbsphinx_allow_errors = True
 
 bibtex_bibfiles = ['references.bib']
 bibtex_default_style = 'plain'
@@ -62,7 +66,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -115,6 +119,13 @@ autoapi_options = ['members', 'undoc-members', 'show-inheritance',
                    'inherited-members', 'special-members']
 numpydoc_validation_checks = {'all', 'GL08'}
 
+
+# Grouping the document tree into LaTeX files. List of tuples# (source start
+# file, target name, title, author, documentclass [howto/manual]).
+# latex_documents = [
+#     ('index', 'yourdoc.tex', u'NeurogenPy', u'Javier Gallego Gutiérrez',
+#      'manual'),
+# ]
 
 # Grouping the document tree into LaTeX files. List of tuples# (source start
 # file, target name, title, author, documentclass [howto/manual]).

@@ -8,7 +8,7 @@ Utilities to calculate prediction scores for structure learning methods.
 
 import numpy as np
 
-from .fges_adjacency import undirect, get_hubs
+from ..util.fges_adjacency import undirect, get_hubs
 
 
 # TODO: Decide what to do with the threshold.

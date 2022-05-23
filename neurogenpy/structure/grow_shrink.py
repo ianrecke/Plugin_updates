@@ -28,7 +28,7 @@ class GrowShrink(LearnStructure):
         more information.
     """
 
-    def __init__(self, df, data_type=None, *, alpha=0.5):
+    def __init__(self, df, data_type=None, *, alpha=0.05):
 
         super().__init__(df, data_type)
         self.alpha = alpha
