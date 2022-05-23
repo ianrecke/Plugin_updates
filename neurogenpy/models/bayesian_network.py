@@ -46,7 +46,7 @@ from ..structure.pc import PC
 from ..structure.pearson import Pearson
 from ..structure.sparsebn import SparseBn
 from ..structure.tan import Tan
-from ..util.score import confusion_matrix, accuracy, f1_score, mcc_score, \
+from neurogenpy.score.base import confusion_matrix, accuracy, f1_score, mcc_score, \
     confusion_hubs
 
 
@@ -122,7 +122,7 @@ class BayesianNetwork:
                 dist, order = (None, None)
 
             self.joint_dist = ModifiableJointDistribution(
-                initial=dist,
+                dist=dist,
                 save_dist=self.num_nodes > 300,
                 data_type=self.data_type,
                 nodes_order=order)
