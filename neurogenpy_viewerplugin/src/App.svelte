@@ -50,9 +50,9 @@
                 </Button>
             {/if}
 
-            {#if result && hasDataSrcFlag}
-                <ShowGraph {result}/>
-            {/if}
+            <!--{#if result && hasDataSrcFlag}-->
+            <!--    <ShowGraph {result}/>-->
+            <!--{/if}-->
 
             {#if errorText}
                 {errorText}
