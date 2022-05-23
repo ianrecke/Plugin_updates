@@ -6,9 +6,11 @@ NeurogenPy
 ..
  TODO: add badges
 
-Description
------------
 .. description-start
+
+.. image:: https://readthedocs.org/projects/neurogenpy/badge/?version=latest
+  :target: https://neurogenpy.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
 
 **NeurogenPy** is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the continuous case is the only one that is fully provided. However, discrete inference will be implemented in the near future.
 
@@ -24,14 +26,19 @@ NeurogenPy has been developed from **BayeSuites** :cite:`bayesuites`, which is i
 
 Installation
 ------------
+
+.. installation-start
+
 ``neurogenpy`` can be installed with ``pip`` using the command:
 
 .. code-block:: bash
 
  pip install git+https://github.com/javiegal/neurogenpy.git@main
- 
-As it makes use of R's package ``bnlearn`` via `rpy2 <https://rpy2.github.io/>`_, you should have installed an R compatible version. For any installation issues related to this, we recommend to check `rpy2 documentation <https://rpy2.github.io/doc.html>`_.
-If ``bnlearn`` is not installed, the package does it via ``rpy2``.
+
+As it makes use of R's packages ``bnlearn`` and ``sparsebn`` via `rpy2 <https://rpy2.github.io/>`_, you should have installed an R compatible version. For any installation issues related to this, we recommend to check `rpy2 documentation <https://rpy2.github.io/doc.html>`_.
+If ``bnlearn`` or ``sparsebn`` are not installed, the package does it via ``rpy2``.
+
+.. installation-end
 
 Usage
 -----
