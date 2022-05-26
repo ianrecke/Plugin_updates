@@ -12,3 +12,4 @@ User guide
     examples/inference
     examples/distributions
     examples/visualization
+    examples/siibra
