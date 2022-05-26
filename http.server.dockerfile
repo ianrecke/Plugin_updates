@@ -16,7 +16,6 @@ COPY ./neurogenpy_http/requirements-server.txt /neurogenpy/requirements-server.t
 RUN pip install -r /neurogenpy/requirements-server.txt
 
 COPY ./neurogenpy_http /neurogenpy/neurogenpy_http
-COPY ./examples /neurogenpy/examples
 WORKDIR /neurogenpy/
 
 COPY --from=builder /neurogenpy_viewerplugin/public /neurogenpy/neurogenpy_http/public

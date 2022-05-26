@@ -23,7 +23,7 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
     import siibra
     import pandas as pd
     import statistics
-    from neurogenpy import BayesianNetwork
+    from neurogenpy import BayesianNetwork, GEXF
     import socket
 
     hostname = socket.gethostname()
@@ -50,8 +50,7 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
         bn = BayesianNetwork().fit(df, algorithm=algorithm,
                                    estimation=estimation)
 
-        result = 'bn.gexf'
-        bn.save(file_path='bn.gexf')
+        result = GEXF().get_str(bn)
 
         logger.info(f'{hostname}:task:success')
         logger.debug(f'{hostname}:task:success_result {result}')

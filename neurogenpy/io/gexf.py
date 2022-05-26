@@ -63,6 +63,22 @@ class GEXF(BNIO):
             they have.
         """
 
+        self.add_attrs(bn, layout_name, communities, sizes_method)
+
+        networkx_io.write_gexf(bn.graph, file_path)
+
+    def read_file(self, file_path):
+        return networkx_io.read_gexf(file_path)
+
+    def get_str(self, bn, layout_name=None, communities=False,
+                sizes_method='mb'):
+        self.add_attrs(bn, layout_name, communities, sizes_method)
+
+        linefeed = chr(10)  # linefeed=\n
+        return linefeed.join(networkx_io.generate_gexf(bn.graph))
+
+    def add_attrs(self, bn, layout_name=None, communities=False,
+                  sizes_method='mb'):
         layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
                    'ForceAtlas2': ForceAtlas2Layout, 'Grid': IgraphLayout,
                    'FruchtermanReingold': IgraphLayout,
@@ -117,10 +133,7 @@ class GEXF(BNIO):
                     'color': {'r': edge_color[0], 'g': edge_color[1],
                               'b': edge_color[2], 'a': 1.0}}
 
-        networkx_io.write_gexf(bn.graph, file_path)
-
-    def read_file(self, file_path):
-        return networkx_io.read_gexf(file_path)
+        return bn
 
 
 def _edges_sizes(bn, network_size):

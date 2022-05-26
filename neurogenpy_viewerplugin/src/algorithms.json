@@ -1,26 +1,92 @@
 {
   "algorithms": [
-    "cl",
-    "fast_iamb",
-    "fges",
-    "fges_merge",
-    "genie3",
-    "graphical_lasso",
-    "grow_shrink",
-    "hc",
-    "hc_tabu",
-    "hiton_pc",
-    "iamb",
-    "inter_iamb",
-    "Lr",
-    "mbc",
-    "mutual_information",
-    "mmhc",
-    "mmpc",
-    "nb",
-    "pc",
-    "pearson_correlation",
-    "sparsebn",
-    "tan"
+    {
+      "name": "Chow Liu",
+      "id": "cl"
+    },
+    {
+      "name": "Fast-IAMB",
+      "id": "fast_iamb"
+    },
+    {
+      "name": "FGES",
+      "id": "fges"
+    },
+    {
+      "name": "FGES-Merge",
+      "id": "fges_merge"
+    },
+    {
+      "name": "GENIE3",
+      "id": "genie3"
+    },
+    {
+      "name": "Graphical lasso",
+      "id": "graphical_lasso"
+    },
+    {
+      "name": "Grow shrink",
+      "id": "grow_shrink"
+    },
+    {
+      "name": "Hill climbing",
+      "id": "hc"
+    },
+    {
+      "name": "Hill climbing with tabu search",
+      "idd": "hc_tabu"
+    },
+    {
+      "name": "Hiton Parents and Children",
+      "id": "hiton_pc"
+    },
+    {
+      "name": "IAMB",
+      "id": "iamb"
+    },
+    {
+      "name": "Inter-IAMB",
+      "id": "inter_iamb"
+    },
+    {
+      "name": "Linear regression",
+      "id": "Lr"
+    },
+    {
+      "name": "Multidimensional Bayesian classifier",
+      "id": "mbc"
+    },
+    {
+      "name": "Mutual information",
+      "id": "mutual_information"
+    },
+    {
+      "name": "MMHC",
+      "id": "mmhc"
+    },
+    {
+      "name": "MMPC",
+      "id": "mmpc"
+    },
+    {
+      "name": "Naive Bayes",
+      "id": "nb"
+    },
+    {
+      "name": "PC",
+      "id": "pc"
+    },
+    {
+      "name": "Pearson correlation",
+      "id": "pearson_correlation"
+    },
+    {
+      "name": "sparsebn",
+      "id": "sparsebn"
+    },
+    {
+      "name": "Tree augmented naive Bayes",
+      "id": "tan"
+    }
   ]
 }

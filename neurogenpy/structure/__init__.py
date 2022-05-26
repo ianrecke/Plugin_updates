@@ -52,11 +52,11 @@ __all__ = [
 ]
 
 # Install R packages sparsebn and bnlearn
-utils = importr('utils')
-utils.chooseCRANmirror(ind=1)
-
-packnames = ('sparsebn', 'bnlearn')
-names_to_install = [x for x in packnames if not isinstalled(x)]
-
-if names_to_install:
-    utils.install_packages(StrVector(names_to_install))
+# utils = importr('utils')
+# utils.chooseCRANmirror(ind=1)
+#
+# packnames = ('sparsebn', 'bnlearn')
+# names_to_install = [x for x in packnames if not isinstalled(x)]
+#
+# if names_to_install:
+#     utils.install_packages(StrVector(names_to_install))

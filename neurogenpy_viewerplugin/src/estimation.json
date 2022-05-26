@@ -1,6 +1,12 @@
 {
   "estimation": [
-    "bayesian",
-    "mle"
+    {
+      "name": "Bayesian estimation",
+      "id": "bayesian"
+    },
+    {
+      "name": "Maximum likelihood estimation",
+      "id": "mle"
+    }
   ]
 }

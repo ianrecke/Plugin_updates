@@ -1,9 +1,10 @@
 <svelte:window on:message={handleMessage}/>
 
 {#if !destroyFlag}
+    <Description/>
     <Card>
         <Content>
-            <h3>ROI Selection</h3>
+            <h4>ROI Selection</h4>
             <RoiSelection
                     on:RoiSelected={ev => handleUpdateParam({ roi: ev.detail })}
                     label="Select Region of interest"
@@ -15,16 +16,12 @@
 
     <Card>
         <Content>
-            <h3>Genes selection</h3>
+            <h4>Genes selection</h4>
             <GeneSelection on:GeneSelected={ev => handleUpdateParam({ genes: ev.detail })} genes={genes}/>
             <StructureLearning
-                    on:AlgorithmSelected={ev => handleUpdateParam({ algorithm: ev.detail })}
-                    label="Select structure learning algorithm"
-                    postMessage={postMessage}/>
+                    on:AlgorithmSelected={ev => handleUpdateParam({ algorithm: ev.detail })}/>
             <ParametersEstimation
-                    on:EstimationSelected={ev => handleUpdateParam({ estimation: ev.detail })}
-                    label="Select parameter estimation method"
-                    postMessage={postMessage}/>
+                    on:EstimationSelected={ev => handleUpdateParam({ estimation: ev.detail })}/>
         </Content>
     </Card>
 
@@ -34,7 +31,7 @@
         <Content>
             <Button on:click={learnGRN} disabled={runningFlag}>
                 <Label>
-                    Learn Gene regulatory network
+                    Learn GRN
                 </Label>
             </Button>
             {#if runningFlag}
@@ -42,10 +39,10 @@
             {/if}
 
             {#if downloadUrl}
-                <Button href={downloadUrl} download="result.json">
+                <Button href={downloadUrl} download="bn.gexf">
                     <Icon class="material-icons">file_download</Icon>
                     <Label>
-                        Save
+                        Save GEXF
                     </Label>
                 </Button>
             {/if}
@@ -70,6 +67,7 @@
     import Button, {Label, Icon} from "@smui/button"
     import CircularProgress from "@smui/circular-progress"
     // import ShowGraph from "./ShowGraph.svelte"
+    import Description from "./Description.svelte";
     import {onDestroy, tick} from "svelte"
     import ParametersEstimation from "./ParametersEstimation.svelte";
 
@@ -227,7 +225,7 @@
                 }, 1000)
             })
 
-            const blob = new Blob([JSON.stringify(result, null, 2)], {type: 'text/plain'})
+            const blob = new Blob([result["result"]], {type: 'text/plain'})
             downloadUrl = URL.createObjectURL(blob)
         } catch (e) {
             errorText = e.toString()
