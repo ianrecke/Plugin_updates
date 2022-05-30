@@ -1,75 +1,80 @@
-<svelte:window on:message={handleMessage}/>
+<svelte:window height="100%" on:message={handleMessage}/>
 
 {#if !destroyFlag}
-    <Description/>
-    <Card>
-        <Content>
-            <h4>ROI Selection</h4>
-            <RoiSelection
-                    on:RoiSelected={ev => handleUpdateParam({ roi: ev.detail })}
-                    label="Select Region of interest"
-                    postMessage={postMessage}/>
-        </Content>
-    </Card>
+    <div class="row">
+        <div class="column left">
+            <Description/>
+            <Card>
+                <Content>
+                    <h4>ROI Selection</h4>
+                    <RoiSelection
+                            on:RoiSelected={ev => handleUpdateParam({ roi: ev.detail })}
+                            label="Select Region of interest"
+                            postMessage={postMessage}/>
+                </Content>
+            </Card>
 
-    <div class="spacer"></div>
+            <div class="spacer"></div>
 
-    <Card>
-        <Content>
-            <h4>Genes selection</h4>
-            <GeneSelection on:GeneSelected={ev => handleUpdateParam({ genes: ev.detail })} genes={genes}/>
-            <StructureLearning
-                    on:AlgorithmSelected={ev => handleUpdateParam({ algorithm: ev.detail })}/>
-            <ParametersEstimation
-                    on:EstimationSelected={ev => handleUpdateParam({ estimation: ev.detail })}/>
-        </Content>
-    </Card>
+            <Card>
+                <Content>
+                    <h4>Genes selection</h4>
+                    <GeneSelection on:GeneSelected={ev => handleUpdateParam({ genes: ev.detail })} genes={genes}/>
+                    <StructureLearning
+                            on:AlgorithmSelected={ev => handleUpdateParam({ algorithm: ev.detail })}/>
+                    <ParametersEstimation
+                            on:EstimationSelected={ev => handleUpdateParam({ estimation: ev.detail })}/>
+                </Content>
+            </Card>
 
-    <div class="spacer"></div>
+            <div class="spacer"></div>
 
-    <Card>
-        <Content>
-            <Button on:click={learnGRN} disabled={runningFlag}>
-                <Label>
-                    Learn GRN
-                </Label>
-            </Button>
-            {#if runningFlag}
-                <CircularProgress style="width:1rem;height:1rem;" indeterminate/>
-            {/if}
+            <Card>
+                <Content>
+                    <Button on:click={learnGRN} disabled={runningFlag}>
+                        <Label>
+                            Learn GRN
+                        </Label>
+                    </Button>
+                    {#if runningFlag}
+                        <CircularProgress style="width:1rem;height:1rem;" indeterminate/>
+                    {/if}
 
-            {#if downloadUrl}
-                <Button href={downloadUrl} download="bn.gexf">
-                    <Icon class="material-icons">file_download</Icon>
-                    <Label>
-                        Save GEXF
-                    </Label>
-                </Button>
-            {/if}
+                    {#if downloadUrl}
+                        <Button href={downloadUrl} download="bn.gexf">
+                            <Icon class="material-icons">file_download</Icon>
+                            <Label>
+                                Save GEXF
+                            </Label>
+                        </Button>
+                    {/if}
 
-            <!--{#if result && hasDataSrcFlag}-->
-            <!--    <ShowGraph {result}/>-->
-            <!--{/if}-->
-
-            {#if errorText}
-                {errorText}
-            {/if}
-        </Content>
-    </Card>
+                    {#if errorText}
+                        {errorText}
+                    {/if}
+                </Content>
+            </Card>
+        </div>
+        <!--{#if result}-->
+        <div class="column right">
+            <ShowGraph {result}/>
+        </div>
+        <!--{/if}-->
+    </div>
 {/if}
 
 <script>
     import RoiSelection from "./RoiSelection.svelte"
     import StructureLearning from "./StructureLearning.svelte"
     import GeneSelection from "./GeneSelection.svelte"
-    import {hasDataSrc, getGeneNames, parcellationId, NEUROGENPY_ENDPOINT } from "./store.js"
+    import {getGeneNames, hasDataSrc, NEUROGENPY_ENDPOINT, parcellationId} from "./store.js"
     import Card, {Content} from "@smui/card"
-    import Button, {Label, Icon} from "@smui/button"
+    import Button, {Icon, Label} from "@smui/button"
     import CircularProgress from "@smui/circular-progress"
-    // import ShowGraph from "./ShowGraph.svelte"
     import Description from "./Description.svelte";
     import {onDestroy, tick} from "svelte"
     import ParametersEstimation from "./ParametersEstimation.svelte";
+    import ShowGraph from "./ShowGraph.svelte";
 
 
     const getUuid = () => crypto.getRandomValues(new Uint32Array(1))[0].toString(16)
@@ -239,5 +244,28 @@
 <style>
     div.spacer {
         height: 1rem;
+    }
+
+    .column {
+        float: left;
+        padding: 10px;
+    }
+
+
+    .left {
+        width: 20%;
+    }
+
+    .right {
+        position: relative;
+        width: 80%;
+        border: 1px solid #907c7c;
+        background-color: rgba(33, 33, 37, 100);
+    }
+
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
     }
 </style>

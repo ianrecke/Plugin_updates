@@ -1,137 +1,175 @@
-<FormField>
-    <Switch
-            bind:checked
-            on:SMUISwitch:change={handleSwitchEvent}/>
-    <span slot="label">Show graph</span>
-</FormField>
-
-<div id="sigma-container"></div>
-<div id="controls">
-    <div class="input"><label for="zoom-in">Zoom in</label>
-        <button id="zoom-in">+</button>
+<div class="row">
+    <div class="column left">
+        <div bind:this={container} class="sigmaElement">
+        </div>
+        <div id="zoom">
+            <button on:click={() => camera.animatedZoom({duration: 600})}>
+                <i class="material-icons">add</i>
+            </button>
+            <button on:click={() => camera.animatedUnzoom({duration: 600})}>
+                <i class="material-icons">remove</i>
+            </button>
+            <button on:click={() => camera.animatedReset({duration: 600})}>
+                <i class="material-icons">replay</i>
+            </button>
+        </div>
+        <div id="controls">
+            <Select bind:value={selectedLayout} label="Select layout" on:SMUISelect:change={changeLayout}>
+                {#each layouts as layout}
+                    <Option value={layout}>
+                        {layout}
+                    </Option>
+                {/each}
+            </Select>
+            <FormField>
+                <Checkbox bind:checked={showLabels} on:click={changeLabels}/>
+                <span slot="label" style="color: white">Labels</span>
+            </FormField>
+        </div>
     </div>
-    <div class="input"><label for="zoom-out">Zoom out</label>
-        <button id="zoom-out">-</button>
-    </div>
-    <div class="input"><label for="zoom-reset">Reset zoom</label>
-        <button id="zoom-reset">⊙</button>
-    </div>
-    <div class="input">
-        <label for="labels-threshold">Labels threshold</label>
-        <input id="labels-threshold" type="range" min="0" max="15" step="0.5"/>
+    <div class="column right">
+        {#if nodeLabel}
+            <NodeInfo {nodeLabel}></NodeInfo>
+        {/if}
     </div>
 </div>
 
-<style>
-    body {
-        font-family: sans-serif;
-    }
 
-    html,
-    body,
-    #sigma-container {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
+<style>
+    #zoom {
+        position: absolute;
+        left: 0.5em;
+        bottom: 0;
     }
 
     #controls {
         position: absolute;
-        right: 1em;
-        top: 1em;
+        right: 0.5em;
+        top: 0.5em;
         text-align: right;
     }
 
-    .input {
-        position: relative;
-        display: inline-block;
-        vertical-align: middle;
-    }
-
-    .input:not(:hover) label {
-        display: none;
-    }
-
-    .input label {
+    .sigmaElement {
         position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: black;
-        color: white;
-        padding: 0.2em;
-        border-radius: 2px;
-        margin-top: 0.3em;
-        font-size: 0.8em;
-        white-space: nowrap;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
     }
 
-    .input button {
-        width: 2.5em;
-        height: 2.5em;
-        display: inline-block;
-        text-align: center;
-        background: white;
+    button {
+        background-color: transparent;
+        background-repeat: no-repeat;
+        border: none;
         outline: none;
-        border: 1px solid dimgrey;
-        border-radius: 2px;
-        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    button:hover {
+        color: white;
+    }
+
+    button:active {
+        background-color: transparent;
+    }
+
+    .left {
+        position: relative;
+        border: 1px solid #907c7c;
+        background-color: rgba(33, 33, 37, 100);
+        width: 80%;
+        height: 100%;
+    }
+
+    .column {
+        float: left;
+        padding: 10px;
+    }
+
+    .right {
+        width: 20%;
+    }
+
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
     }
 </style>
 
 
 <script>
-    import Sigma from "sigma"
-    import Graph from "graphology";
-    import {parse} from "graphology-gexf/browser";
-    import Switch from "@smui/switch"
-    import FormField from '@smui/form-field'
+    import sigma from "sigma"
+    import Graph from "graphology"
+    import Select, {Option} from "@smui/select"
+    import Checkbox from '@smui/checkbox';
+    import FormField from '@smui/form-field';
+    import {onMount} from "svelte";
+    import {circular} from "graphology-layout";
+    import {animateNodes} from "sigma/utils/animate";
+    import NodeInfo from "./NodeInfo.svelte";
 
-    let checked = false
-    export let result = "bn.gexf";
 
-    // Load external GEXF file:
-    fetch(result)
-        .then((res) => res.text())
-        .then((gexf) => {
-            // Parse GEXF string:
-            const graph = parse(Graph, gexf);
+    export let result = undefined
+    const graph = new Graph();
 
-            // Retrieve some useful DOM elements:
-            const container = document.getElementById("sigma-container");
-            const zoomInBtn = document.getElementById("zoom-in");
-            const zoomOutBtn = document.getElementById("zoom-out");
-            const zoomResetBtn = document.getElementById("zoom-reset");
-            const labelsThresholdRange = document.getElementById("labels-threshold");
+    let container = undefined
+    let camera = undefined
+    let showLabels = true
+    let renderer = undefined
 
-            const renderer = new Sigma(graph, container, {
-                minCameraRatio: 0.1,
-                maxCameraRatio: 10,
-            });
-            const camera = renderer.getCamera();
+    let nodeLabel = undefined
 
-            // Bind zoom manipulation buttons
-            zoomInBtn.addEventListener("click", () => {
-                camera.animatedZoom({duration: 600});
-            });
-            zoomOutBtn.addEventListener("click", () => {
-                camera.animatedUnzoom({duration: 600});
-            });
-            zoomResetBtn.addEventListener("click", () => {
-                camera.animatedReset({duration: 600});
-            });
+    let layouts = [`ForceAtlas2`, `Circular`];
+    let selectedLayout = undefined
 
-            // Bind labels threshold to range input
-            labelsThresholdRange.addEventListener("input", () => {
-                renderer.setSetting("labelRenderedSizeThreshold", +labelsThresholdRange.value);
-            });
+    onMount(() => {
 
-            // Set proper range initial value:
-            labelsThresholdRange.value = renderer.getSetting("labelRenderedSizeThreshold") + "";
+        graph.addNode("John", {x: 0, y: 10, size: 50, label: "John", color: "blue"});
+        graph.addNode("Brad", {x: 4, y: 8, size: 20, label: "Brad", color: "yellow"});
+        graph.addNode("Tom", {x: 5, y: 5, size: 40, label: "Tom", color: "green"});
+        graph.addNode("Mary", {x: 10, y: 0, size: 30, label: "Mary", color: "red"});
+
+        graph.addEdge("John", "Mary");
+        graph.addEdge("Mary", "Brad");
+        graph.addEdge("John", "Tom");
+        // const graph = parse(Graph, result["result"]);
+
+        renderer = new sigma(graph, container, {
+            enableEdgeClickEvents: true,
+            minCameraRatio: 0.1,
+            maxCameraRatio: 10,
         });
 
-    function handleSwitchEvent(event) {}
+        renderer.setSetting('labelColor', {'color': '#fff'})
+        renderer.on("clickNode", (e) => nodeClicked(e))
+        camera = renderer.getCamera();
+    })
+
+    function nodeClicked(e) {
+        nodeLabel = graph.getNodeAttribute(e.node, "label")
+    }
+
+    function changeLabels() {
+        renderer.setSetting('renderLabels', !showLabels)
+        renderer.refresh()
+    }
+
+    function changeLayout() {
+        switch (selectedLayout) {
+            case "Circular":
+                circularLayout()
+        }
+    }
+
+    function circularLayout() {
+        // if (fa2Layout.isRunning()) stopFA2();
+        // if (cancelCurrentAnimation) cancelCurrentAnimation();
+
+        //since we want to use animations we need to process positions before applying them through animateNodes
+        const circularPositions = circular(graph, {scale: 100});
+        //In other context, it's possible to apply the position directly we : circular.assign(graph, {scale:100})
+        animateNodes(graph, circularPositions, {duration: 2000, easing: "linear"});
+    }
+
 
 </script>

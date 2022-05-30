@@ -5,6 +5,7 @@ import livereload from 'rollup-plugin-livereload';
 import {terser} from 'rollup-plugin-terser';
 import json from "@rollup/plugin-json";
 import css from 'rollup-plugin-css-only';
+import nodePolyfills from 'rollup-plugin-polyfill-node';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -32,6 +33,7 @@ function serve() {
 
 export default {
     input: 'src/main.js',
+
     output: {
         sourcemap: true,
         format: 'iife',
@@ -39,11 +41,12 @@ export default {
         file: 'public/build/bundle.js'
     },
     plugins: [
+        nodePolyfills(),
         svelte({
             compilerOptions: {
                 // enable run-time checks when not in production
                 dev: !production
-            }
+            },
         }),
         // we'll extract any component CSS out into
         // a separate file - better for performance
