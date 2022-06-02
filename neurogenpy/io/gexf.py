@@ -70,11 +70,11 @@ class GEXF(BNIO):
     def read_file(self, file_path):
         return networkx_io.read_gexf(file_path)
 
-    def get_str(self, bn, layout_name=None, communities=False,
-                sizes_method='mb'):
+    def generate(self, bn, layout_name=None, communities=False,
+                 sizes_method='mb'):
         self.add_attrs(bn, layout_name, communities, sizes_method)
 
-        linefeed = chr(10)  # linefeed=\n
+        linefeed = chr(10)
         return linefeed.join(networkx_io.generate_gexf(bn.graph))
 
     def add_attrs(self, bn, layout_name=None, communities=False,
