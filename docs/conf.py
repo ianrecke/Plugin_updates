@@ -40,6 +40,7 @@ extensions = [
 ]
 
 nbsphinx_allow_errors = True
+nbsphinx_execute = 'never'
 
 bibtex_bibfiles = ['references.bib']
 bibtex_default_style = 'plain'

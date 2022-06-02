@@ -1,5 +1,5 @@
 """
-GEXF input/output module.
+GEXF input/output module. It uses `networkx` functionality.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -28,12 +28,28 @@ _CONFIGS = {
     'default_color': '#282c34'}
 
 
+# TODO: Add to docs networkx warning: the parser uses the standard xml library
+#  present in Python, which is insecure.
 class GEXF(BNIO):
     """
     Bayesian network GEXF input/output class.
     """
 
-    def write_file(self, bn, file_path='bn.gexf', layout_name=None,
+    # TODO: Implement convert. It is not directly provided from networkx.
+    def convert(self, io_object):
+        """
+        Creates the graph structure object from the GEXF string representation
+        received.
+
+        Returns
+        -------
+        networkx.DiGraph or (networkx.DiGraph, dict)
+            The graph structure of the loaded Bayesian network and the
+            parameters in case the format provides them.
+        """
+        pass
+
+    def write_file(self, file_path='bn.gexf', layout_name=None,
                    communities=False, sizes_method='mb'):
         """
         Exports a representation of the Bayesian network structure for the
@@ -43,9 +59,6 @@ class GEXF(BNIO):
 
         Parameters
         ----------
-        bn : BayesianNetwork
-            Bayesian network to be stored.
-
         file_path : str, default='bn.gexf'
             Path of the file to store the Bayesian network in.
 
@@ -63,31 +76,49 @@ class GEXF(BNIO):
             they have.
         """
 
-        self.add_attrs(bn, layout_name, communities, sizes_method)
+        self._add_attrs(layout_name, communities, sizes_method)
 
-        networkx_io.write_gexf(bn.graph, file_path)
+        networkx_io.write_gexf(self.bn.graph, file_path)
 
     def read_file(self, file_path):
         return networkx_io.read_gexf(file_path)
 
-    def generate(self, bn, layout_name=None, communities=False,
+    def generate(self, layout_name=None, communities=False,
                  sizes_method='mb'):
-        self.add_attrs(bn, layout_name, communities, sizes_method)
+        """
+        Generates the GEXF string that represents the network.
+
+        Parameters
+        ----------
+        layout_name : str, optional
+
+        communities : optional
+
+        sizes_method : str, default='mb'
+
+        Returns
+        -------
+            The object that represents the network.
+        """
+
+        self._add_attrs(layout_name, communities, sizes_method)
 
         linefeed = chr(10)
-        return linefeed.join(networkx_io.generate_gexf(bn.graph))
+        return linefeed.join(networkx_io.generate_gexf(self.bn.graph))
 
-    def add_attrs(self, bn, layout_name=None, communities=False,
-                  sizes_method='mb'):
+    def _add_attrs(self, layout_name=None, communities=False,
+                   sizes_method='mb'):
+        """Add attributes related with the display of the graph."""
+
         layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
                    'ForceAtlas2': ForceAtlas2Layout, 'Grid': IgraphLayout,
                    'FruchtermanReingold': IgraphLayout,
                    'Image': ImageLayout, 'Sugiyama': IgraphLayout}
 
         if layout_name is not None:
-            if bn.num_nodes < 100:
+            if self.bn.num_nodes < 100:
                 network_size = 'small'
-            elif bn.num_nodes < 300:
+            elif self.bn.num_nodes < 300:
                 network_size = 'medium'
             else:
                 network_size = 'large'
@@ -95,127 +126,127 @@ class GEXF(BNIO):
             layout = layouts[layout_name]
             params = {} if 'layout_name' not in inspect.getfullargspec(
                 layout).kwonlyargs else {'layout_name': layout_name}
-            layout = layout(bn.graph, **params).run()
+            layout = layout(self.bn.graph, **params).run()
 
-            nx_dict = networkx_io.json_graph.node_link_data(bn.graph)
+            nx_dict = networkx_io.json_graph.node_link_data(self.bn.graph)
 
-            nodes_colors = _nodes_colors(bn, communities)
+            nodes_colors = self._nodes_colors(communities)
             nodes = _get_nodes_attr(nx_dict, layout,
-                                    _nodes_sizes(bn, network_size,
-                                                 method=sizes_method),
+                                    self._nodes_sizes(network_size,
+                                                      method=sizes_method),
                                     nodes_colors)
-            edges = _get_edges_attr(nx_dict, _edges_sizes(bn, network_size),
-                                    _edges_colors(bn, nodes_colors))
+            edges = _get_edges_attr(nx_dict, self._edges_sizes(network_size),
+                                    self._edges_colors(nodes_colors))
 
             rgb_colors = {color: ImageColor.getcolor(color, 'RGB') for
                           color in set(nodes_colors.values())}
 
             for node in nodes:
                 node_id = node['id']
-                bn.graph.nodes[node_id]["viz"] = {"size": node['size']}
-                bn.graph.nodes[node_id]['viz']['position'] = {
+                self.bn.graph.nodes[node_id]["viz"] = {"size": node['size']}
+                self.bn.graph.nodes[node_id]['viz']['position'] = {
                     'x': node['x'], 'y': node['y'], 'z': 0}
-                bn.graph.nodes[node_id]['viz']['color'] = {
+                self.bn.graph.nodes[node_id]['viz']['color'] = {
                     'hex': node['color'], 'alpha': 0}
                 node_color = rgb_colors[node['color']]
-                bn.graph.nodes[node_id]['viz']['color'] = {'r': node_color[0],
-                                                           'g': node_color[1],
-                                                           'b': node_color[2],
-                                                           'a': 1.0}
+                self.bn.graph.nodes[node_id]['viz']['color'] = {
+                    'r': node_color[0],
+                    'g': node_color[1],
+                    'b': node_color[2],
+                    'a': 1.0}
 
             for edge in edges:
                 x, y = edge['x'], edge['y']
-                bn.graph.edges[x, y]['weight'] = edge['weight']
-                bn.graph.edges[x, y]['type'] = edge['type']
-                # bn.graph.edges[x, y]['label'] = edge['label']
+                self.bn.graph.edges[x, y]['weight'] = edge['weight']
+                self.bn.graph.edges[x, y]['type'] = edge['type']
+                # self.bn.graph.edges[x, y]['label'] = edge['label']
                 edge_color = rgb_colors[edge['color']]
-                bn.graph.edges[x, y]['viz'] = {
+                self.bn.graph.edges[x, y]['viz'] = {
                     'color': {'r': edge_color[0], 'g': edge_color[1],
                               'b': edge_color[2], 'a': 1.0}}
 
-        return bn
+    def _edges_sizes(self, network_size):
+        """Retrieves the size of each edge in the network."""
 
+        edges_sizes = {}
+        sum_weights = self.bn.sum_weights()
+        for (x, y, edge_data) in self.bn.graph.edges(data=True):
+            w_normalized = edge_data[
+                               'weight'] * self.bn.num_nodes / sum_weights
+            edge_size = w_normalized * _CONFIGS[network_size]['weight'] + \
+                        _CONFIGS[network_size]['minEdgeSize']
+            edges_sizes[(x, y)] = min(edge_size,
+                                      _CONFIGS[network_size]['maxEdgeSize'])
 
-def _edges_sizes(bn, network_size):
-    """Retrieves the size of each edge in the network."""
+        return edges_sizes
 
-    edges_sizes = {}
-    sum_weights = bn.sum_weights()
-    for (x, y, edge_data) in bn.graph.edges(data=True):
-        w_normalized = edge_data['weight'] * bn.num_nodes / sum_weights
-        edge_size = w_normalized * _CONFIGS[network_size]['weight'] + \
-                    _CONFIGS[network_size]['minEdgeSize']
-        edges_sizes[(x, y)] = min(edge_size,
-                                  _CONFIGS[network_size]['maxEdgeSize'])
+    def _nodes_sizes(self, network_size, method):
+        """
+        Retrieves the size of each node in the network according to the method
+        provided.
 
-    return edges_sizes
+        Parameters
+        ----------
+        method : {'mb', 'neighbors'}
+            The method used to calculate the sizes of the nodes.
 
+        Returns
+        -------
+        dict
+            The size of each node and the size of the network.
 
-def _nodes_sizes(bn, network_size, method):
-    """
-    Retrieves the size of each node in the network according to the method
-    provided.
+        Raises
+        ------
+        ValueError
+            If the method provided is not supported.
+        """
 
-    Parameters
-    ----------
-    method : {'mb', 'neighbors'}
-        The method used to calculate the sizes of the nodes.
+        nodes_sizes = {}
+        for node in list(self.bn.graph.nodes()):
+            if method == 'mb':
+                method_len = len(self.bn.markov_blanket(node))
+            elif method == 'neighbors':
+                method_len = len(self.bn.adjacencies(node))
+            else:
+                raise ValueError(f'{method} method is not supported.')
 
-    Returns
-    -------
-    dict
-        The size of each node and the size of the network.
+            node_size = _CONFIGS[network_size]['minNodeSize'] + method_len * \
+                        _CONFIGS[network_size]['weight']
 
-    Raises
-    ------
-    ValueError
-        If the method provided is not supported.
-    """
+            nodes_sizes[node] = min(_CONFIGS[network_size]['maxNodeSize'],
+                                    node_size)
 
-    nodes_sizes = {}
-    for node in list(bn.graph.nodes()):
-        if method == 'mb':
-            method_len = len(bn.markov_blanket(node))
-        elif method == 'neighbors':
-            method_len = len(bn.adjacencies(node))
+        return nodes_sizes
+
+    def _nodes_colors(self, communities):
+        """Returns a dictionary with nodes as keys and their colors as
+        values."""
+        if not communities:
+            return {node: _CONFIGS['default_color'] for node in
+                    self.bn.graph.nodes()}
+
         else:
-            raise ValueError(f'{method} method is not supported.')
+            coms = self.bn.communities()
+            coms_colors = {com: _generate_random_color() for com in
+                           set(coms.values())}
+            return {node: coms_colors[coms[node]] for node in
+                    self.bn.graph.nodes()}
 
-        node_size = _CONFIGS[network_size]['minNodeSize'] + method_len * \
-                    _CONFIGS[network_size]['weight']
+    def _edges_colors(self, nodes_colors):
+        """Returns a dictionary with edges as keys and their colors as
+        values."""
 
-        nodes_sizes[node] = min(_CONFIGS[network_size]['maxNodeSize'],
-                                node_size)
+        if len(set(nodes_colors.values())) == 1:
+            return {(x, y): _CONFIGS['default_color'] for (x, y) in
+                    self.bn.graph.edges()}
 
-    return nodes_sizes
-
-
-def _nodes_colors(bn, communities):
-    """Returns a dictionary with nodes as keys and their colors as values."""
-    if not communities:
-        return {node: _CONFIGS['default_color'] for node in bn.graph.nodes()}
-
-    else:
-        coms = bn.communities()
-        coms_colors = {com: _generate_random_color() for com in
-                       set(coms.values())}
-        return {node: coms_colors[coms[node]] for node in bn.graph.nodes()}
-
-
-def _edges_colors(bn, nodes_colors):
-    """Returns a dictionary with edges as keys and their colors as values."""
-
-    if len(set(nodes_colors.values())) == 1:
-        return {(x, y): _CONFIGS['default_color'] for (x, y) in
-                bn.graph.edges()}
-
-    edges_colors = {}
-    for (x, y) in bn.graph.edges():
-        if nodes_colors[x] == nodes_colors[y]:
-            edges_colors[(x, y)] = nodes_colors[x]
-        else:
-            edges_colors[(x, y)] = _CONFIGS['default_color']
-    return edges_colors
+        edges_colors = {}
+        for (x, y) in self.bn.graph.edges():
+            if nodes_colors[x] == nodes_colors[y]:
+                edges_colors[(x, y)] = nodes_colors[x]
+            else:
+                edges_colors[(x, y)] = _CONFIGS['default_color']
+        return edges_colors
 
 
 def _get_nodes_attr(nx_dict, layout, nodes_sizes, nodes_colors):

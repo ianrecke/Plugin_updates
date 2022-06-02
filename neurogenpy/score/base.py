@@ -1,5 +1,6 @@
 """
-Utilities to calculate prediction scores for structure learning methods.
+This module provides some functions to calculate prediction scores for
+structure learning methods.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.

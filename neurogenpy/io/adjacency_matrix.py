@@ -1,5 +1,5 @@
 """
-Adjacency matrix input/output module.
+Adjacency matrix input/output module. It mainly uses `networkx` functionality.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -51,8 +51,40 @@ class AdjacencyMatrix(BNIO):
     Adjacency matrix input/output class.
     """
 
-    def generate(self, bn):
-        pass
+    def convert(self, io_object, nodes=None):
+        """
+        Creates the graph structure object from the adjacency matrix received.
+
+        Parameters
+        ----------
+        io_object : numpy.array
+
+        nodes : list, optional
+            Nodes order present in the adjacency matrix.
+
+        Returns
+        -------
+        networkx.DiGraph
+            The graph structure of the loaded Bayesian network.
+        """
+        if not nodes:
+            nodes = list(range(io_object.shape[0]))
+        return matrix2nx(io_object, nodes)
+
+    def generate(self):
+        """
+        Generates the adjacency matrix that represents the network. It also
+        retrieves the nodes order used to build the matrix.
+
+        Returns
+        -------
+        (numpy.array, list)
+            The adjacency matrix for the graph structure and the nodes order
+            used to represent it.
+        """
+
+        nodes = list(self.bn.graph.nodes())
+        return networkx.to_numpy_matrix(self.bn.graph, nodes), nodes
 
     def read_file(self, file_path):
         """
@@ -68,7 +100,7 @@ class AdjacencyMatrix(BNIO):
         Returns
         -------
         networkx.DiGraph
-            The graph structure of the loaded Bayesian network.
+            The graph structure loaded.
         """
 
         if file_path.endswith('.csv'):
@@ -86,7 +118,7 @@ class AdjacencyMatrix(BNIO):
 
         return matrix2nx(adj_matrix, nodes)
 
-    def write_file(self, file_path, bn):
+    def write_file(self, file_path):
         """
         Writes a Bayesian network structure adjacency matrix in a file.
 
@@ -95,13 +127,9 @@ class AdjacencyMatrix(BNIO):
         file_path: str
             Path of the file to store the Bayesian network in. It can be a CSV
             or parquet file.
-
-        bn : BayesianNetwork
-            Bayesian network to be stored.
         """
 
-        nodes = bn.graph.nodes()
-        adj_matrix = networkx.to_numpy_matrix(bn.graph, nodes)
+        adj_matrix, nodes = self.generate()
         pd_adj_matrix = pd.DataFrame(adj_matrix, columns=nodes)
         if file_path.endswith('.csv'):
             pd_adj_matrix.to_csv(file_path)

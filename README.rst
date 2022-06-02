@@ -33,7 +33,7 @@ Installation
 
 .. code-block:: bash
 
- pip install git+https://github.com/javiegal/neurogenpy.git@main
+ pip install git+https://github.com/javiegal/neurogenpy.git@master
 
 As it makes use of R's packages ``bnlearn`` and ``sparsebn`` via `rpy2 <https://rpy2.github.io/>`_, you should have installed an R compatible version. For any installation issues related to this, we recommend to check `rpy2 documentation <https://rpy2.github.io/doc.html>`_.
 If ``bnlearn`` or ``sparsebn`` are not installed, the package does it via ``rpy2``.

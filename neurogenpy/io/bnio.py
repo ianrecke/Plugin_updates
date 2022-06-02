@@ -1,5 +1,7 @@
 """
-Bayesian network input/output base module.
+Bayesian network input/output base module. It provides a base class for
+input/output formats that are completed using ´networkx` and `pgmpy`
+functionality.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -12,10 +14,15 @@ from abc import ABCMeta, abstractmethod
 class BNIO(metaclass=ABCMeta):
     """
     Base class for all input/output Bayesian network classes.
+
+    Parameters
+    ----------
+    bn : BayesianNetwork, optional
+        The BayesianNetwork needed in some cases.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, bn=None):
+        self.bn = bn
 
     @abstractmethod
     def read_file(self, file_path):
@@ -29,12 +36,13 @@ class BNIO(metaclass=ABCMeta):
 
         Returns
         -------
-        networkx.DiGraph
-            The graph structure of the loaded Bayesian network.
+        networkx.DiGraph or (networkx.DiGraph, dict)
+            The graph structure of the loaded Bayesian network and the
+            parameters in case the format provides them.
         """
 
     @abstractmethod
-    def write_file(self, file_path, bn):
+    def write_file(self, file_path):
         """
         Writes a Bayesian network in a file.
 
@@ -42,9 +50,34 @@ class BNIO(metaclass=ABCMeta):
         ----------
         file_path :
             Path of the file to store the Bayesian network in.
+        """
 
-        bn : BayesianNetwork
-            Bayesian network to be stored.
+    @abstractmethod
+    def generate(self):
+        """
+        Generates the object that represents the network.
+
+        Returns
+        -------
+            The object that represents the network.
+        """
+
+    @abstractmethod
+    def convert(self, io_object):
+        """
+        Creates the attributes of a Bayesian network from the input/output
+        object received.
+
+        Parameters
+        ----------
+        io_object
+            input/output object.
+
+        Returns
+        -------
+        networkx.DiGraph or (networkx.DiGraph, dict)
+            The graph structure loaded and the parameters in case the format
+            provides them.
         """
 
     @abstractmethod

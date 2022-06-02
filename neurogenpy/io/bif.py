@@ -1,5 +1,5 @@
 """
-BIF input/output module.
+BIF input/output module. It uses `pgmpy` functionality.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -12,13 +12,37 @@ from .bnio import BNIO
 from ..util.data_structures import pgmpy2nx, nx2pgmpy
 
 
+# TODO: Look for BIF object representation.
 class BIF(BNIO):
     """
     BIF (Bayesian Interchange Format) input/output class.
     It uses `pgmpy` BIF reading and writing capabilities :cite:`bif`.
     """
 
-    def generate(self, bn):
+    def convert(self, io_object):
+        """
+        Creates the graph structure object and parameters dictionary from the
+        BIF object received.
+
+        Parameters
+        ----------
+        io_object :
+
+        Returns
+        -------
+        (networkx.DiGraph, dict)
+            The graph structure loaded and the parameters.
+        """
+        pass
+
+    def generate(self):
+        """
+        Generates the BIF object that represents the network.
+
+        Returns
+        -------
+            The object that represents the network.
+        """
         pass
 
     def read_file(self, file_path):
@@ -41,20 +65,17 @@ class BIF(BNIO):
 
         return pgmpy2nx(bn_pgmpy)
 
-    def write_file(self, file_path, bn):
+    def write_file(self, file_path):
         """
         Writes a Bayesian network in a BIF file.
 
         Parameters
         ----------
         file_path : str
-            Path of the file to store the Bayesian network in.
-
-        bn : BayesianNetwork
-            Bayesian network to be stored.
+            Path of the file to store the Bayesian network in..
         """
 
-        bn_pgmpy = nx2pgmpy(bn.graph, bn.parameters)
+        bn_pgmpy = nx2pgmpy(self.bn.graph, self.bn.parameters)
 
         bif_writer = BIFWriter(model=bn_pgmpy)
         for param in bn_pgmpy.cpds:

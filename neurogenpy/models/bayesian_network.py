@@ -23,10 +23,13 @@ from ..distributions.modifiable_joint import ModifiableJointDistribution
 from ..io.adjacency_matrix import AdjacencyMatrix
 from ..io.bif import BIF
 from ..io.gexf import GEXF
+from ..io.json import JSON
 from ..parameters.discrete_be import DiscreteBE
 from ..parameters.discrete_mle import DiscreteMLE
 from ..parameters.gaussian_mle import GaussianNode, GaussianMLE
 from ..parameters.learn_parameters import LearnParameters
+from ..score.base import confusion_matrix, accuracy, f1_score, mcc_score, \
+    confusion_hubs
 from ..structure.cl import CL
 from ..structure.fast_iamb import FastIamb
 from ..structure.fges import FGES
@@ -829,7 +832,7 @@ class BayesianNetwork:
                 graph.remove_edge(x, y)
         return graph
 
-    def fit(self, df=None, data_type='continuous', estimation='mle',
+    def fit(self, df=None, data_type='continuous', estimation=None,
             algorithm='FGESMerge', skip_structure=False, **kwargs):
         """
         Builds a Bayesian network using the input data.
@@ -1010,6 +1013,8 @@ class BayesianNetwork:
 
         if self.graph is None:
             raise Exception('The Bayesian Network does not have a structure.')
+        elif estimation is None:
+            pass
         elif isinstance(estimation, LearnParameters):
             self.parameters = estimation.run()
         else:
@@ -1022,7 +1027,7 @@ class BayesianNetwork:
                 raise ValueError('Parameter learning is only available for the'
                                  f' following methods: {*estimators.keys(),}.')
 
-        if self.data_type == 'continuous':
+        if self.parameters and self.data_type == 'continuous':
             self.joint_dist.from_params(
                 data_type=self.data_type,
                 save_dist=self.num_nodes > 300, params=self.parameters,
@@ -1080,6 +1085,7 @@ class BayesianNetwork:
                 In this case, it is posible to set the desired layout for the
                 graph.
             - CSV and parquet, for saving the adjacency matrix of the graph.
+            - JSON, for saving a JSON representation of the graph structure.
 
         >>> from neurogenpy import BayesianNetwork
         >>> import pandas as pd
@@ -1092,11 +1098,13 @@ class BayesianNetwork:
         file_path = file_path.lower()
 
         if file_path.endswith('.gexf'):
-            GEXF().write_file(self, file_path, **kwargs)
+            GEXF(self).write_file(file_path, **kwargs)
         elif file_path.endswith('.gzip') or file_path.endswith('.csv'):
-            AdjacencyMatrix().write_file(file_path, self)
+            AdjacencyMatrix(self).write_file(file_path)
         elif file_path.endswith('.bif'):
-            BIF().write_file(file_path, self)
+            BIF(self).write_file(file_path)
+        elif file_path.endswith('.json'):
+            JSON(self).write_file(file_path)
         else:
             raise ValueError('File extension not supported.')
 
