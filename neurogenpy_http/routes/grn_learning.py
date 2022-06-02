@@ -36,6 +36,7 @@ class ResultStatus(str, Enum):
 
 class NeurogenPyResult(BModel):
     result: str
+    marginals: dict
 
 
 class ResultModel(BModel):

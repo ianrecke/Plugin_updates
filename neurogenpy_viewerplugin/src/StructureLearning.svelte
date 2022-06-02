@@ -5,7 +5,7 @@
             bind:text={autocmplText}
             on:SMUIAutocomplete:selected={ev => algorithmSelected(algs[ev.detail])}
     >
-        <Textfield label="Select structure learning algorithm" inputStyle={{fontSize: 5}}
+        <Textfield label="Structure learning" inputStyle={{fontSize: 5}}
                    bind:value={autocmplText}/>
     </Autocomplete>
 </div>

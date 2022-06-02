@@ -6,7 +6,7 @@
     on:SMUIAutocomplete:selected={ev => geneSelected(ev.detail)}
     on:keydown={handleKeydown}
     >
-    <Textfield label="Select genes" bind:value={autocmplText} />
+    <Textfield label="Genes" bind:value={autocmplText} />
   </Autocomplete>
 </div>
 <div>

@@ -12,7 +12,6 @@ export const getGeneNames = async () => {
 
 const atlasId = "juelich/iav/atlas/v1.0.0/1"
 export const parcellationId = "minds/core/parcellationatlas/v1.0.0/94c1125b-b87e-45e4-901c-00daee7f2579-290"
-// FIXME: find only works with the full input, so it is not useful for autocomplete.
 export const searchRegion = async input => {
     const url = new URL(`${SIIBRA_API_ENDPOINT}/v2_0/atlases/${atlasId}/parcellations/${parcellationId}/regions`)
     url.searchParams.set('find', input)

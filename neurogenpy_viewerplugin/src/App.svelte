@@ -1,4 +1,4 @@
-<svelte:window height="100%" on:message={handleMessage}/>
+<svelte:window height="100%" width="100%" on:message={handleMessage}/>
 
 {#if !destroyFlag}
     <div class="row">
@@ -6,19 +6,11 @@
             <Description/>
             <Card>
                 <Content>
-                    <h4>ROI Selection</h4>
+                    <h4>Select options</h4>
                     <RoiSelection
                             on:RoiSelected={ev => handleUpdateParam({ roi: ev.detail })}
-                            label="Select Region of interest"
+                            label="Region of interest"
                             postMessage={postMessage}/>
-                </Content>
-            </Card>
-
-            <div class="spacer"></div>
-
-            <Card>
-                <Content>
-                    <h4>Genes selection</h4>
                     <GeneSelection on:GeneSelected={ev => handleUpdateParam({ genes: ev.detail })} genes={genes}/>
                     <StructureLearning
                             on:AlgorithmSelected={ev => handleUpdateParam({ algorithm: ev.detail })}/>
@@ -89,7 +81,27 @@
     let errorText = undefined
     let downloadUrl = undefined
     let genes = []
-    let result = undefined
+    let result = {
+        'result': '',
+        'marginals': {
+            'John': {
+                'mu': 4,
+                'sigma': 0.5
+            },
+            'Mary': {
+                'mu': 1,
+                'sigma': 2.5
+            },
+            'Brad': {
+                'mu': 7,
+                'sigma': 0.2
+            },
+            'Tom': {
+                'mu': 34,
+                'sigma': 5
+            }
+        }
+    }
 
     let param = {
         parcellation_id: parcellationId
@@ -248,9 +260,8 @@
 
     .column {
         float: left;
-        padding: 10px;
+        /*padding: 5px;*/
     }
-
 
     .left {
         width: 20%;
@@ -259,13 +270,10 @@
     .right {
         position: relative;
         width: 80%;
-        border: 1px solid #907c7c;
-        background-color: rgba(33, 33, 37, 100);
+        height: 550px;
     }
 
-    .row:after {
-        content: "";
-        display: table;
-        clear: both;
+    .row {
+        margin: 0 0 0 0;
     }
 </style>

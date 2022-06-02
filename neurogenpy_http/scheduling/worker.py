@@ -23,7 +23,7 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
     import siibra
     import pandas as pd
     import statistics
-    from neurogenpy import BayesianNetwork, GEXF
+    from neurogenpy import BayesianNetwork, JSON
     import socket
 
     hostname = socket.gethostname()
@@ -50,11 +50,40 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
         bn = BayesianNetwork().fit(df, algorithm=algorithm,
                                    estimation=estimation)
 
-        result = GEXF().get_str(bn)
+        graphology_options = {'link': 'edges', 'name': 'key'}
+        graphology_keys = ['nodes', 'edges']
+        result = JSON().generate(bn, options=graphology_options,
+                                 keys=graphology_keys)
+        marginals = {node: bn.marginal(node) for node in bn.nodes()}
 
         logger.info(f'{hostname}:task:success')
         logger.debug(f'{hostname}:task:success_result {result}')
-        return {'result': result}
+        return {'result': result, 'marginals': marginals}
+
+    except Exception as exc:
+        logger.critical(f'{hostname}:task:failed {str(exc)}')
+        raise exc
+
+
+@app.task
+def get_mb(graph_json, node):
+    from neurogenpy import BayesianNetwork, JSON
+    import socket
+
+    hostname = socket.gethostname()
+    logger.info(f'{hostname}:task:rec')
+    logger.debug(
+        f'{hostname}:task:rec_param {graph_json}, {node}')
+
+    try:
+        graph = JSON().convert(io_object=graph_json)
+        bn = BayesianNetwork(graph=graph)
+
+        mb = bn.markov_blanket(node)
+
+        logger.info(f'{hostname}:task:success')
+        logger.debug(f'{hostname}:task:success_result {mb}')
+        return {'mb': mb}
 
     except Exception as exc:
         logger.critical(f'{hostname}:task:failed {str(exc)}')

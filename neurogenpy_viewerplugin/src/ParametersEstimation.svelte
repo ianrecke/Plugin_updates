@@ -5,7 +5,7 @@
             bind:text={autocmplText}
             on:SMUIAutocomplete:selected={ev => estimationSelected(methods[ev.detail])}
     >
-        <Textfield label="Select parameter estimation method" inputStyle={{fontSize: 9}}
+        <Textfield label="Parameter estimation" inputStyle={{fontSize: 9}}
                    bind:value={autocmplText}/>
     </Autocomplete>
 </div>
