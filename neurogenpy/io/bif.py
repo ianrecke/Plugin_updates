@@ -18,6 +18,9 @@ class BIF(BNIO):
     It uses `pgmpy` BIF reading and writing capabilities :cite:`bif`.
     """
 
+    def generate(self, bn):
+        pass
+
     def read_file(self, file_path):
         """
         Returns the graph and parameters stored in a BIF file.

@@ -46,3 +46,17 @@ class BNIO(metaclass=ABCMeta):
         bn : BayesianNetwork
             Bayesian network to be stored.
         """
+
+    @abstractmethod
+    def generate(self, bn):
+        """
+        Generates the object that represents the network.
+
+        Parameters
+        ----------
+        bn : BayesianNetwork
+
+        Returns
+        -------
+            The object that represents the network.
+        """

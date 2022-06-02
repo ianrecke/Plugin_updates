@@ -5,6 +5,7 @@ Bayesian network module.
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
+
 import inspect
 import warnings
 from operator import itemgetter
@@ -15,6 +16,9 @@ from community import best_partition
 from networkx.algorithms.centrality import betweenness
 from sklearn.metrics import roc_auc_score, average_precision_score
 
+from neurogenpy.score.base import confusion_matrix, accuracy, f1_score, \
+    mcc_score, \
+    confusion_hubs
 from ..distributions.modifiable_joint import ModifiableJointDistribution
 from ..io.adjacency_matrix import AdjacencyMatrix
 from ..io.bif import BIF
@@ -287,6 +291,18 @@ class BayesianNetwork:
                           'and they have been ignored.')
 
         return wrong_nodes
+
+    def nodes(self):
+        """
+        Retrieves the nodes that form the Bayesian network.
+
+        Returns
+        -------
+        list
+            Nodes of the network.
+        """
+
+        return list(self.graph.nodes())
 
     def merge_graph(self, new_graph):
         """
@@ -1282,54 +1298,3 @@ class BayesianNetwork:
             result = {**result, m: func(**params)}
 
         return result
-
-# TODO: Decide about _get_parameters_cont and _get_parameters_disc.
-# def _get_parameters_cont(self, node):
-#     evidence_value = self.evidence[node]
-#     mean, std_dev = self.joint_dist.marginal(node)
-#
-#     init_mean, init_std_dev = self.joint_dist.marginal(
-#        node, initial=True)
-#     if init_mean != mean and init_std_dev != std_dev:
-#         gaussian_pdf_plot = density_functions_bn(
-#             [init_mean, mean], [init_std_dev, std_dev], evidence_value)
-#     else:
-#         gaussian_pdf_plot = density_functions_bn(mean,
-#                                                  std_dev,
-#                                                  evidence_value)
-#
-#     return gaussian_pdf_plot, evidence_value
-#
-# def _get_parameters_disc(self, node):
-#     found = False
-#     node_parameters_states, node_parameters_values = None, None
-#     for cpd in self.parameters:
-#         if cpd.variable == node:
-#             if len(cpd.variables) > 1:
-#                 list_vars = copy.deepcopy(cpd.variables)
-#                 list_vars.remove(node)
-#                 cpd.marginalize(list_vars)
-#
-#             node_parameters_values = list(
-#                 np.round(cpd.get_values().flat, decimals=3))
-#             if cpd.state_names:
-#                 node_parameters_states = cpd.state_names[node]
-#             else:
-#                 node_parameters_states = []
-#                 for i, state in enumerate(node_parameters_values):
-#                     node_parameters_states.append('State ' + str(i))
-#             found = True
-#             break
-#
-#     if not found:
-#         raise Exception('Node parameters not found')
-#
-#     return node_parameters_states, node_parameters_values
-
-# def get_probabilities_effect(self, group_categories=None):
-#     means, std_devs = self.marginal_params(
-#         group_categories=group_categories, evidences=self.evidence)
-#     start_means, start_std_devs = means[0], std_devs[0]
-#     current_means, current_std_devs = means[1], std_devs[1]
-#
-#     return start_means, start_std_devs, current_means, current_std_devs

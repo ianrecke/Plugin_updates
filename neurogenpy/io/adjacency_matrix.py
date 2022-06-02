@@ -51,6 +51,9 @@ class AdjacencyMatrix(BNIO):
     Adjacency matrix input/output class.
     """
 
+    def generate(self, bn):
+        pass
+
     def read_file(self, file_path):
         """
         Returns the graph structure of a Bayesian network whose adjacency
