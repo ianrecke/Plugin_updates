@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .neurogenpy_logger import access_logger
 from .routes.grn_learning import router as grn_router
+from .routes.markov_blanket import router as mb_router
 
 path_to_static = path.join(
     path.dirname(__file__),
@@ -46,4 +47,5 @@ def hello():
 
 
 app.include_router(grn_router, prefix="/grn")
+app.include_router(mb_router, prefix="/mb")
 app.mount('/viewer_plugin', StaticFiles(directory=path_to_static))

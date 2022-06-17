@@ -10,3 +10,4 @@ node_modules
 probabilistic_clustering.py
 .ipynb_checkpoints
 build
+.vscode

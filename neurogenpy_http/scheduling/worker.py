@@ -23,7 +23,7 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
     import siibra
     import pandas as pd
     import statistics
-    from neurogenpy import BayesianNetwork, JSON
+    from neurogenpy import BayesianNetwork, JSON, GEXF
     import socket
 
     hostname = socket.gethostname()
@@ -52,13 +52,15 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
 
         graphology_options = {'link': 'edges', 'name': 'key'}
         graphology_keys = ['nodes', 'edges']
-        result = JSON().generate(bn, options=graphology_options,
-                                 keys=graphology_keys)
-        marginals = {node: bn.marginal(node) for node in bn.nodes()}
+        json_graph = JSON(bn).generate(options=graphology_options,
+                                       keys=graphology_keys)
+        gexf = GEXF(bn).generate()
+        # marginals = {node: bn.marginal([node]) for node in bn.nodes()}
 
         logger.info(f'{hostname}:task:success')
-        logger.debug(f'{hostname}:task:success_result {result}')
-        return {'result': result, 'marginals': marginals}
+        logger.debug(f'{hostname}:task:success_result {json_graph}')
+        logger.debug(f'{hostname}:task:success_result {json_graph}')
+        return {'json_graph': json_graph, 'gexf': gexf, 'marginals': []}
 
     except Exception as exc:
         logger.critical(f'{hostname}:task:failed {str(exc)}')
@@ -76,7 +78,9 @@ def get_mb(graph_json, node):
         f'{hostname}:task:rec_param {graph_json}, {node}')
 
     try:
-        graph = JSON().convert(io_object=graph_json)
+        graphology_options = {'link': 'edges', 'name': 'key'}
+        graph = JSON().convert(io_object=graph_json,
+                               options=graphology_options)
         bn = BayesianNetwork(graph=graph)
 
         mb = bn.markov_blanket(node)
