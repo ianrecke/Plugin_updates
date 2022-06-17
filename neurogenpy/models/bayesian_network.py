@@ -16,9 +16,6 @@ from community import best_partition
 from networkx.algorithms.centrality import betweenness
 from sklearn.metrics import roc_auc_score, average_precision_score
 
-from neurogenpy.score.base import confusion_matrix, accuracy, f1_score, \
-    mcc_score, \
-    confusion_hubs
 from ..distributions.modifiable_joint import ModifiableJointDistribution
 from ..io.adjacency_matrix import AdjacencyMatrix
 from ..io.bif import BIF
@@ -593,7 +590,7 @@ class BayesianNetwork:
             else:
                 wrong_nodes = self._check_nodes_warn(nodes)
 
-                nodes -= wrong_nodes
+                nodes = [node for node in nodes if node not in wrong_nodes]
 
                 for node in nodes:
                     try:
@@ -630,7 +627,7 @@ class BayesianNetwork:
         self._check_params_fitted()
         wrong_nodes = self._check_nodes_warn(nodes)
 
-        nodes -= wrong_nodes
+        nodes = [node for node in nodes if node not in wrong_nodes]
         return self.joint_dist.marginal(nodes, initial=initial)
 
     def has_evidence(self, node):
@@ -761,9 +758,12 @@ class BayesianNetwork:
 
         """
 
-        start -= self._check_nodes_warn(start)
-        end -= self._check_nodes_warn(end)
-        observed -= self._check_nodes_warn(observed)
+        start = [node for node in start if
+                 node not in self._check_nodes_warn(start)]
+        end = [node for node in end if
+               node not in self._check_nodes_warn(end)]
+        observed = [node for node in observed if
+                    node not in self._check_nodes_warn(observed)]
 
         return self._reachable(start, observed, end)
 
@@ -802,7 +802,8 @@ class BayesianNetwork:
         list
             Set of edges in the subgraph.
         """
-        nodes -= self._check_nodes_warn(nodes)
+        nodes = [node for node in nodes if
+                 node not in self._check_nodes_warn(nodes)]
         return [(x, y) for y in nodes for x in nodes if y in self.children(x)]
 
     def filter_edges(self, min_weight, max_weight):
