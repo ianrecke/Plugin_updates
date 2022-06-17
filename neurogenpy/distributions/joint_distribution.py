@@ -38,21 +38,13 @@ class JointDistribution(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def marginal(self, nodes, marginal_nodes):
+    def marginal(self):
         """
-        Retrieves the marginal distribution parameters for a set of nodes.
-
-        Parameters
-        ----------
-        nodes : list
-            Full set of nodes in the joint distribution.
-
-        marginal_nodes : list
-            Set of nodes whose marginal distribution will be computed.
+        Retrieves the marginal distribution parameters for a node or set of
+        nodes.
 
         Returns
         -------
-        JointDistribution
             The marginal distribution.
         """
 
