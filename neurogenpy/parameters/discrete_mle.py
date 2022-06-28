@@ -19,7 +19,7 @@ class DiscreteMLE(LearnParameters):
     Discrete maximum likelihood estimation.
     """
 
-    def run(self, env='pgmpy2'):
+    def run(self, env='pgmpy'):
         """
         Learns the parameters of the network using Discrete maximum likelihood
         estimation.

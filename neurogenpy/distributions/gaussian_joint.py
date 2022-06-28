@@ -99,7 +99,7 @@ class GaussianJointDistribution(JointDistribution):
 
         return self
 
-    def marginal(self, nodes, marginal_nodes):
+    def marginal(self, *, nodes=None, marginal_nodes=None):
         """
         Retrieves the marginal distribution parameters for a set of nodes.
 
@@ -139,7 +139,7 @@ class GaussianJointDistribution(JointDistribution):
 
         evidence : dict
             The evidence to use for conditioning the distribution. The keys are
-            nodes and the values the observed value for them.
+            nodes and the values represent the observed value for them.
         """
 
         indices = list(range(self.sigma.shape[0]))
