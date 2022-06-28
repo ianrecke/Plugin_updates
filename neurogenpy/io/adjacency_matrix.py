@@ -73,10 +73,15 @@ class AdjacencyMatrix(BNIO):
             nodes = list(range(io_object.shape[0]))
         return matrix2nx(io_object, nodes)
 
-    def generate(self):
+    # TODO: Add parquet case
+    def generate(self, representation='csv'):
         """
         Generates the adjacency matrix that represents the network. It also
         retrieves the nodes order used to build the matrix.
+
+        Parameters
+        ----------
+        representation : str, default='csv'
 
         Returns
         -------
@@ -85,8 +90,9 @@ class AdjacencyMatrix(BNIO):
             used to represent it.
         """
 
-        nodes = list(self.bn.graph.nodes())
-        return networkx.to_numpy_matrix(self.bn.graph, nodes), nodes
+        pd_adj_matrix = self._get_df()
+        if representation == 'csv':
+            return pd_adj_matrix.to_csv()
 
     def read_file(self, file_path):
         """
@@ -131,9 +137,15 @@ class AdjacencyMatrix(BNIO):
             or parquet file.
         """
 
-        adj_matrix, nodes = self.generate()
-        pd_adj_matrix = pd.DataFrame(adj_matrix, columns=nodes)
+        pd_adj_matrix = self._get_df()
         if file_path.endswith('.csv'):
             pd_adj_matrix.to_csv(file_path)
         elif file_path.endswith('.gzip'):
             pd_adj_matrix.to_parquet(file_path)
+
+    def _get_df(self):
+        """Returns the DataFrame with the adjacency matrix."""
+
+        nodes = list(self.bn.graph.nodes())
+        adj_matrix = networkx.to_numpy_matrix(self.bn.graph, nodes)
+        return pd.DataFrame(adj_matrix, columns=nodes)
