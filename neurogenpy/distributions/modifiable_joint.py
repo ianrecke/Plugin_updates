@@ -59,24 +59,34 @@ class ModifiableJointDistribution:
             self.save()
             self.dist.clear()
 
-    def from_params(self, params, nodes_order, data_type, save_dist):
-        self.type = data_type
+    def from_product(self, mu, sigmas, parents_coeffs, parents, order):
+        self.dist = GaussianJointDistribution().from_product(mu, sigmas,
+                                                             parents_coeffs,
+                                                             parents, order)
+        self.loaded = True
+
+        if self.save_dist:
+            self.save()
+            self.dist.clear()
+
+        return self
+
+    def from_params(self, params, nodes_order):
         self.nodes_order = nodes_order
-        self.save_dist = save_dist
         if self.type == 'discrete':
             self.dist = DiscreteJointDistribution().from_parameters(
                 params, self.nodes_order)
         elif self.type == 'continuous':
             self.dist = GaussianJointDistribution().from_parameters(
                 params, self.nodes_order)
-        else:
-            raise ValueError(f'{data_type} data type is not supported.')
 
         self.loaded = True
 
         if self.save_dist:
             self.save()
             self.dist.clear()
+
+        return self
 
     def save(self, initial=False, path=None):
         """
@@ -93,7 +103,8 @@ class ModifiableJointDistribution:
         """
 
         if path is None:
-            outfile = NamedTemporaryFile(delete=False, dir=self.tmp_dir)
+            outfile = NamedTemporaryFile(delete=False, suffix='.npz',
+                                         dir=self.tmp_dir.name)
             path = outfile.name
             if initial:
                 self.initial_path = path
@@ -117,7 +128,7 @@ class ModifiableJointDistribution:
             self.initial_path = None
         else:
             config = np.load(self.path)
-        self.nodes_order = config.pop('nodes_order')
+        self.nodes_order = config['nodes_order'].tolist()
         for k, v in config.items():
             setattr(self.dist, k, v)
         self.path = None
@@ -148,7 +159,7 @@ class ModifiableJointDistribution:
         else:
             self.save(initial=True)
 
-        self.dist.condition(evidence, self.nodes_order)
+        self.dist.condition(self.nodes_order, evidence)
         for elem in evidence.keys():
             self.nodes_order.remove(elem)
 
@@ -187,6 +198,20 @@ class ModifiableJointDistribution:
             self.dist.clear()
 
         return marginal
+
+    def all_cpds(self, nodes, initial=False):
+        if initial and self.initial_path is not None:
+            self.load(initial=initial)
+        elif self.save_dist:
+            self.load()
+
+        marginals = self.dist.all_cpds(nodes)
+
+        if self.save_dist:
+            self.save()
+            self.dist.clear()
+
+        return marginals
 
     def relabel_nodes(self, mapping):
         """

@@ -47,11 +47,17 @@ class GaussianMLE(LearnParameters):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_neurogenpy(self):
-        parameters = {}
         nodes = self.data.columns.values.tolist()
 
-        for node in nodes:
+        n = len(nodes)
+        mu = np.zeros(n)
+        sigmas = np.zeros(n)
+        parents_coeffs = []
+        parents = []
+
+        for i, node in enumerate(nodes):
             node_parents = [pred for pred in self.graph.predecessors(node)]
+            parents.append(node_parents)
 
             y = self.data.loc[:, node].values.reshape(self.data.shape[0],
                                                       -1).astype(float)
@@ -59,17 +65,18 @@ class GaussianMLE(LearnParameters):
             if not node_parents:
                 mean = y.mean()
                 variance = y.var()
-                parents_coeffs = []
+                parents_coeffs.append([])
             else:
                 x = self.data.loc[:, node_parents].values.reshape(
                     self.data.shape[0], -1)
                 variance, coeffs = _linear_gaussian(x, y)
-                mean, parents_coeffs = coeffs[0], coeffs[1:]
+                mean = coeffs[-1]
+                parents_coeffs.append(coeffs[:-1])
 
-            parameters[node] = GaussianNode(mean, variance, node_parents,
-                                            parents_coeffs)
+            mu[i] = mean
+            sigmas[i] = variance
 
-        return parameters
+        return mu, sigmas, parents_coeffs, parents, nodes
 
 
 GaussianNode = namedtuple('GaussianNode',

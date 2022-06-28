@@ -1,6 +1,6 @@
 FROM python:3.8-slim
 RUN pip install -U pip
-RUN apt-get update && apt-get install -y r-base
+RUN apt-get update && apt-get install -y r-base graphviz graphviz-dev
 
 RUN mkdir -p /neurogenpy/neurogenpy_http
 COPY ./neurogenpy_http/requirements-worker.txt /neurogenpy/neurogenpy_http/requirements-worker.txt

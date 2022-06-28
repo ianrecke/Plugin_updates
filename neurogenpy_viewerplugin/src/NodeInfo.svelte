@@ -5,29 +5,29 @@
     import { Chart } from "chart.js/dist/chart";
     import { afterUpdate, createEventDispatcher, onMount } from "svelte";
     import Textfield from "@smui/textfield";
-    import { NEUROGENPY_ENDPOINT } from "./store";
+    import quantile from "@stdlib/stats-base-dists-normal-quantile";
 
     const dispatcher = createEventDispatcher();
 
-    export let nodeLabel = undefined;
-    export let jsonBN = undefined;
+    export let initialMarginals;
+    export let evidenceMarginals = undefined;
+    export let nodeLabel;
 
-    let evidence = "";
+    let evidence = {};
+    let evidenceSelected = "";
     let currentValue = undefined;
+    let previousNode = undefined;
 
     let distLabels;
-    let values;
+    let initialValues;
+    let evidenceValues;
 
     let chart;
     let chartRef;
     let ctx;
-    let runningFlag = false;
 
     onMount(() => {
         ctx = chartRef.getContext("2d");
-
-        distLabels = [];
-        values = [];
 
         chart = new Chart(ctx, {
             type: "line",
@@ -35,11 +35,18 @@
                 labels: distLabels,
                 datasets: [
                     {
-                        label: "Distribution",
-                        data: values,
+                        label: "Initial",
+                        data: initialValues,
                         fill: true,
                         borderColor: "#fff",
                         backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    },
+                    {
+                        label: "Evidence",
+                        data: evidenceValues,
+                        fill: true,
+                        borderColor: "rgb(255, 62, 0)",
+                        backgroundColor: "rgba(255, 62, 0, 0.2)",
                     },
                 ],
             },
@@ -53,7 +60,23 @@
                 },
                 plugins: {
                     legend: {
-                        display: false,
+                        display: !!evidenceValues,
+                    },
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            callback: function (value) {
+                                return this.getLabelForValue(value).toFixed(3);
+                            },
+                        },
+                    },
+                    y: {
+                        ticks: {
+                            callback: function (value) {
+                                return value.toFixed(2);
+                            },
+                        },
                     },
                 },
             },
@@ -61,118 +84,148 @@
     });
 
     afterUpdate(() => {
-        if (!chart) return;
-
-        // let mean = marginals[nodeLabel]['mu']
-        // let std_deviation = marginals[nodeLabel]['sigma']
-        let mean = 3;
-        let std_deviation = 0.4;
-
-        const normDist = new NormalDistribution(mean, std_deviation);
-
-        let minValue = mean - 3 * std_deviation;
-        let maxValue = mean + 3 * std_deviation;
-        let step = (maxValue - minValue) / 80;
-
-        distLabels = Array.from({ length: 81 }, (_, i) =>
-            (minValue + step * i).toFixed(2)
-        );
-        values = distLabels.map((i) => normDist.pdf(i));
+        updateChartValues();
 
         chart.data.labels = distLabels;
-        chart.data.datasets[0].data = values;
+        chart.data.datasets[0].data = initialValues;
+        chart.data.datasets[1].data = evidenceValues;
+        chart.options.plugins.legend.display = !!evidenceValues;
 
         chart.update();
     });
 
-    async function getMB() {
-        if (runningFlag) {
-            console.warn(
-                `Markov blanket already running, do not start a new one.`
-            );
-            return;
+    $: nodeLabel, labelChange();
+
+    function labelChange() {
+        if (previousNode && currentValue) {
+            evidence[previousNode] = currentValue;
+        } else if (previousNode && previousNode in evidence) {
+            delete evidence[previousNode];
         }
-        runningFlag = true;
-        let mb = [];
+        previousNode = nodeLabel;
 
-        try {
-            const res = await fetch(`${NEUROGENPY_ENDPOINT}/mb/mb`, {
-                method: "POST",
-                body: jsonBN,
-                headers: {
-                    "content-type": "application/json",
-                },
-            });
-            if (res.status >= 400) {
-                throw new Error(res.statusText);
-            }
-            const { poll_url } = await res.json();
+        evidenceSelected = "";
+        if (nodeLabel in evidence) {
+            currentValue = evidence[nodeLabel];
+        } else {
+            currentValue = undefined;
+        }
+    }
 
-            mb = await new Promise((rs, rj) => {
-                const intervalRef = setInterval(async () => {
-                    const res = await fetch(
-                        `${NEUROGENPY_ENDPOINT}/mb/mb/${poll_url}`
-                    );
-                    if (res.status >= 400) {
-                        return rj(res.statusText);
-                    }
-                    const { status, result } = await res.json();
-                    if (status === "SUCCESS") {
-                        console.log("SUCCESS", result);
-                        clearInterval(intervalRef);
-                        rs(result);
-                    }
-                    if (status === "FAILURE") {
-                        console.log("FAILURE");
-                        clearInterval(intervalRef);
-                        rj("operation failed");
-                    }
-                }, 1000);
-            });
-        } finally {
-            runningFlag = false;
-            dispatcher("HighlightNodes", mb);
+    function getDistValues(marginals) {
+        let mean = marginals[nodeLabel]["mu"];
+        let variance = marginals[nodeLabel]["sigma"];
+
+        const dist = new NormalDistribution(mean, variance);
+        const stDev = Math.sqrt(variance);
+        const minValue = quantile(0.001, mean, stDev);
+        const maxValue = quantile(0.999, mean, stDev);
+
+        return { dist: dist, min: minValue, max: maxValue };
+    }
+
+    function updateChartValues() {
+        const initialData = getDistValues(initialMarginals);
+
+        let realMin = initialData["min"];
+        let realMax = initialData["max"];
+
+        let evidenceData;
+        if (evidenceMarginals && !(nodeLabel in evidence)) {
+            evidenceData = getDistValues(evidenceMarginals);
+            realMin = Math.min(realMin, evidenceData["min"]);
+            realMax = Math.max(realMax, evidenceData["max"]);
+        }
+
+        let step = (realMax - realMin) / 200;
+        distLabels = Array.from({ length: 201 }, (_, i) => realMin + step * i);
+        initialValues = distLabels.map((i) => initialData["dist"].pdf(i));
+
+        if (evidenceData) {
+            evidenceValues = distLabels.map((i) => evidenceData["dist"].pdf(i));
+        } else {
+            evidenceValues = undefined;
+        }
+    }
+
+    async function getRelated(method) {
+        dispatcher("GetRelated", method);
+    }
+
+    function performInference() {
+        if (currentValue) {
+            evidence[nodeLabel] = currentValue;
+        }
+        dispatcher("PerformInference", evidence);
+    }
+
+    function setEvidence() {
+        const parseSelected = parseFloat(evidenceSelected);
+        if (!isNaN(parseSelected)) {
+            currentValue = parseSelected;
         }
     }
 </script>
 
-<Card style="padding: 10px; position: relative;">
-    <Media>
+<Card style="padding: 10px">
+    <Media style="padding: 10px 10px 0 10px">
         <div>
             <div>
                 <canvas id="myChart" bind:this={chartRef} style="width: 100%" />
             </div>
-
-            <div class="spacer" />
-
-            <h2 class="mdc-typography--headline6">
+            <pre
+                class="status"
+                style="color: white; width: {evidenceMarginals && !(nodeLabel in evidence)? '50%': '100%'}; float: left;">Mean: {initialMarginals[
+                    nodeLabel
+                ]["mu"].toFixed(3)} - Variance: {initialMarginals[nodeLabel][
+                    "sigma"
+                ].toFixed(3)}</pre>
+            {#if evidenceMarginals && !(nodeLabel in evidence)}
+                <pre
+                    class="status"
+                    style="color: rgb(255, 62, 0); width: 50%">Mean: {evidenceMarginals[
+                        nodeLabel
+                    ]["mu"].toFixed(3)} - Variance: {evidenceMarginals[
+                        nodeLabel
+                    ]["sigma"].toFixed(3)}</pre>{/if}
+            <h2 class="mdc-typography--headline6" style="margin-left: 5px">
                 {nodeLabel}
             </h2>
         </div>
     </Media>
 
-    <Content>
+    <Content style="padding: 0 16px">
         <div class="mdc-typography--body2">
             <Textfield
                 class="textfieldClass"
-                bind:value={evidence}
+                bind:value={evidenceSelected}
                 label="Set evidence"
             />
-            <Button on:click={() => (currentValue = evidence)}>
+            <Button on:click={setEvidence}>
                 <Label>Set</Label>
             </Button>
             {#if currentValue}
-                <Button on:click={() => (currentValue = undefined)}>
+                <Button
+                    on:click={() => {
+                        currentValue = undefined;
+                        evidenceSelected = "";
+                    }}
+                >
                     <Label>Clear</Label>
+                </Button>
+            {/if}
+            {#if currentValue || Object.keys(evidence).length > 0}
+                <Button on:click={performInference}>
+                    <Label>Run Inference</Label>
                 </Button>
             {/if}
             <pre class="status" style="color: white">Value: {currentValue}</pre>
         </div>
-        <Button on:click={getMB}>
+        <Button on:click={() => getRelated("mb")}>
             <Label>Markov blanket</Label>
         </Button>
 
-        <Button>
+        <Button on:click={() => getRelated("reachable")}>
             <Label>Reachable nodes</Label>
         </Button>
     </Content>

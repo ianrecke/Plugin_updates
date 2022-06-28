@@ -23,7 +23,7 @@
         </div>
 
         <div>
-            <Select bind:value={fileType} label="Select file type" style="">
+            <Select bind:value={fileType} label="Select file format" style="">
                 {#each fileTypes as ft}
                     <Option value={ft}>
                         {ft}

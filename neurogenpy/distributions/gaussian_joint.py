@@ -30,6 +30,28 @@ class GaussianJointDistribution(JointDistribution):
         self.mu = mu
         self.sigma = sigma
 
+    def from_product(self, mu, sigmas, parents_coeffs, parents, order):
+        n = len(order)
+        self.mu = mu
+        self.sigma = np.zeros((n, n))
+
+        for i, node in enumerate(order):
+            mean, var = mu[i], sigmas[i]
+            betas = parents_coeffs[i]
+            node_parents = parents[i]
+            node_parents = [order.index(p) for p in node_parents]
+
+            if node_parents:
+                cov_parents_involved = self.sigma[:, node_parents]
+                self.sigma[:, i] = np.dot(cov_parents_involved,
+                                          np.array(betas))
+                self.sigma[i, i] = var
+                self.sigma[i, :] = self.sigma[:, i]
+            else:
+                self.sigma[i, i] = var
+
+        return self
+
     def from_parameters(self, parameters, order):
         """
         Takes the topological order of some nodes and their parameters and
@@ -56,9 +78,9 @@ class GaussianJointDistribution(JointDistribution):
 
         for i, node in enumerate(order):
             node_params = parameters[node]
-            mean, var = node_params.mean, node_params.var
-            betas = node_params.parents_coeffs
-            parents = [order.index(p) for p in node_params.parents]
+            mean, var = node_params["mu"], node_params["sigma"]
+            betas = node_params["parents_coeffs"]
+            parents = [order.index(p) for p in node_params["parents"]]
             self.mu[i] = mean + sum(
                 [self.mu[p] * b for p, b in zip(parents, betas)])
             if parents:
@@ -100,8 +122,9 @@ class GaussianJointDistribution(JointDistribution):
 
         if len(marginal_nodes) == 1:
             sigma_marginal = sigma_marginal.item()
+            mu_marginal = mu_marginal.item()
 
-        return mu_marginal, sigma_marginal
+        return {'mu': mu_marginal, 'sigma': sigma_marginal}
 
     def condition(self, order, evidence):
         """
@@ -121,6 +144,9 @@ class GaussianJointDistribution(JointDistribution):
         evidence_mask = np.array(
             [order[i] in evidence.keys() for i in indices])
 
+        evidence_values = [evidence[node] for node in order if
+                           node in evidence.keys()]
+
         # xx: nodes with evidence, yy: nodes without evidence
         sigma_xx = self.sigma[evidence_mask, :][:, evidence_mask]
         sigma_yy = self.sigma[~evidence_mask, :][:, ~evidence_mask]
@@ -128,8 +154,23 @@ class GaussianJointDistribution(JointDistribution):
         sigma_inv = np.linalg.solve(sigma_xx, sigma_xy)
 
         mu_y = self.mu[~evidence_mask] + np.dot(sigma_inv.T, np.array(
-            list(evidence.values())) - np.array(self.mu[evidence_mask]))
+            evidence_values) - np.array(self.mu[evidence_mask]))
         sigma_y = sigma_yy - np.dot(sigma_xy.T, sigma_inv)
 
         self.mu = mu_y
         self.sigma = sigma_y
+
+    def all_cpds(self, nodes):
+        idx_marginal = [nodes.index(node_name) for node_name in nodes]
+
+        return {node: {'mu': self.mu[i], 'sigma': self.calc(i)} for i, node in
+                enumerate(nodes)}
+
+    def calc(self, node_pos):
+        array_node = np.array([node_pos])
+        sigma_yy = self.sigma[node_pos, node_pos]
+        sigma_xy = self.sigma[~array_node, :][:, node_pos]
+        sigma_xx = self.sigma[~array_node, :][:, ~array_node]
+        sigma_inv = np.linalg.solve(sigma_xx, sigma_xy)
+
+        return sigma_yy - np.dot(sigma_xy.T, sigma_inv)

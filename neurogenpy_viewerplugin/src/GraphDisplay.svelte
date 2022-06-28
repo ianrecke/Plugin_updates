@@ -1,11 +1,11 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
-    import sigma from "./sigma";
+    import sigma from "sigma";
     import { drawHover } from "./hover";
     import forceAtlas2 from "graphology-layout-forceatlas2";
     import FA2Layout from "graphology-layout-forceatlas2/worker";
     import { circular } from "graphology-layout";
-    import { animateNodes } from "./sigma/utils/animate";
+    import { animateNodes } from "sigma/utils/animate";
     import Graph from "graphology";
     import { parse } from "graphology-gexf/browser";
     import Select, { Option } from "@smui/select";
@@ -16,8 +16,8 @@
     import NodeSelection from "./NodeSelection.svelte";
     import { saveAsPNG } from "./saveFile";
 
-    export let graph_gexf = undefined;
-    const graph = parse(Graph, graph_gexf);
+    export let gexf_graph = undefined;
+    let graph = parse(Graph, gexf_graph);
 
     const dispatcher = createEventDispatcher();
 
@@ -27,71 +27,111 @@
     let showLabels = true;
     let renderer = undefined;
 
-    const layouts = [`ForceAtlas2`, `Circular`];
+    const layouts = [
+        { text: "ForceAtlas2", id: "ForceAtlas2" },
+        { text: "Circular", id: "Circular" },
+        { text: "Dot", id: "Dot" },
+        { text: "Grid", id: "Grid" },
+        { text: "FruchtermanReingold", id: "fruchterman_reingold" },
+        { text: "Sugiyama", id: "Sugiyama" },
+    ];
+
     let selectedLayout = undefined;
     let fa2Layout = undefined;
+    let layoutPositions = Object.assign(
+        {},
+        ...layouts.map((l) => ({ [l["id"]]: undefined }))
+    );
 
+    let highlightedNeighbors = new Set();
     let hoveredNode = undefined;
-    let hoveredNeighbors = undefined;
+    let highlightedNodes = undefined;
     let cancelCurrentAnimation = null;
 
     let fullScreen = false;
     let display;
 
+    let draggedNode = undefined;
+    let isDragging = false;
+
     export let nodes = [];
-    onMount(() => {
+    onMount(() => createGraph());
+
+    function createGraph() {
         renderer = new sigma(graph, container, {
             minCameraRatio: 0.1,
             maxCameraRatio: 10,
             hoverRenderer: drawHover,
             defaultEdgeType: "arrow",
             allowInvalidContainer: true,
-        });
-
-        renderer.setSetting("labelColor", { color: "#fff" });
-        renderer.setSetting("nodeReducer", (node, data) => {
-            const res = { ...data };
-
-            if (
-                hoveredNeighbors &&
-                !hoveredNeighbors.has(node) &&
-                hoveredNode !== node
-            ) {
-                res.label = "";
-                res.color = "rgb(33, 33, 37)";
-            }
-
-            res.highlighted = node === hoveredNode;
-
-            return res;
-        });
-
-        renderer.setSetting("edgeReducer", (edge, data) => {
-            const res = { ...data };
-
-            if (hoveredNode && !graph.hasExtremity(edge, hoveredNode)) {
-                res.hidden = true;
-            }
-
-            return res;
+            enableEdgeWheelEvents: true,
+            defaultNodeColor: "#ffffff",
+            labelColor: { color: "#fff" },
+            nodeReducer: nodeReducerFunction,
+            edgeReducer: edgeReducerFunction,
         });
 
         renderer.on("clickNode", (e) => {
-            nodeClicked(e);
+            if (!isDragging) nodeClicked(e);
         });
         renderer.on("enterNode", ({ node }) => {
-            setHoveredNode(node);
+            setHighlightedNodes([node], true);
         });
         renderer.on("leaveNode", () => {
-            setHoveredNode(undefined);
+            setHighlightedNodes(undefined, true);
         });
+
+        renderer.on("downNode", (e) => {
+            isDragging = true;
+            draggedNode = e.node;
+            graph.setNodeAttribute(draggedNode, "highlighted", true);
+        });
+
+        renderer.getMouseCaptor().on("mousemovebody", (e) => {
+            if (!isDragging || !draggedNode) return;
+            const pos = renderer.viewportToGraph(e);
+
+            graph.setNodeAttribute(draggedNode, "x", pos.x);
+            graph.setNodeAttribute(draggedNode, "y", pos.y);
+
+            e.preventSigmaDefault();
+            e.original.preventDefault();
+            e.original.stopPropagation;
+        });
+
+        renderer.getMouseCaptor().on("mouseup", () => {
+            if (draggedNode)
+                graph.removeNodeAttribute(draggedNode, "highlighted");
+
+            isDragging = false;
+            draggedNode = undefined;
+        });
+
         camera = renderer.getCamera();
 
         const sensibleSettings = forceAtlas2.inferSettings(graph);
         fa2Layout = new FA2Layout(graph, {
             settings: sensibleSettings,
         });
-    });
+
+        // Sigma assigns some events to the parent window, so we have to reassign them.
+        // Events forwarding should be the best solution. Svelte Material UI also deals with
+        // this issue.
+        let mouseCaptor = renderer.getMouseCaptor();
+        document.removeEventListener("mousemove", mouseCaptor.handleMove);
+        document.removeEventListener("mouseup", mouseCaptor.handleUp);
+
+        display.ownerDocument.addEventListener(
+            "mousemove",
+            mouseCaptor.handleMove,
+            false
+        );
+        display.ownerDocument.addEventListener(
+            "mouseup",
+            mouseCaptor.handleUp,
+            false
+        );
+    }
 
     function nodeClicked(e) {
         dispatcher("NodeSelected", graph.getNodeAttribute(e.node, "label"));
@@ -102,13 +142,19 @@
         renderer.refresh();
     }
 
-    function setHoveredNode(node) {
-        if (node) {
-            hoveredNode = node;
-            hoveredNeighbors = new Set(graph.neighbors(node));
+    export function setHighlightedNodes(nodes, neigh) {
+        if (nodes) {
+            highlightedNodes = new Set(nodes);
+            if (neigh) {
+                hoveredNode = nodes[0];
+                highlightedNeighbors = new Set(graph.neighbors(hoveredNode));
+            } else {
+                highlightedNeighbors = new Set();
+            }
         } else {
+            highlightedNodes = undefined;
             hoveredNode = undefined;
-            hoveredNeighbors = undefined;
+            highlightedNeighbors = new Set();
         }
 
         renderer.refresh();
@@ -142,13 +188,23 @@
     }
 
     function changeLayout() {
-        switch (selectedLayout) {
-            case "Circular":
-                circularLayout();
-                break;
-            case "ForceAtlas2":
-                toggleFA2Layout();
-                break;
+        if (layoutPositions[selectedLayout.id]) {
+            animateLayout(layoutPositions[selectedLayout.id]);
+        } else {
+            switch (selectedLayout.text) {
+                case "Circular":
+                    layoutPositions["Circular"] = circular(graph, {
+                        scale: 100,
+                    });
+                    animateLayout(layoutPositions["Circular"]);
+                    break;
+                case "ForceAtlas2":
+                    toggleFA2Layout();
+                    break;
+                default:
+                    dispatcher("NeurogenpyLayout", selectedLayout.id);
+                    break;
+            }
         }
     }
 
@@ -169,12 +225,11 @@
         }
     }
 
-    function circularLayout() {
+    function animateLayout(positions) {
         if (fa2Layout.isRunning()) stopFA2();
         if (cancelCurrentAnimation) cancelCurrentAnimation();
 
-        const circularPositions = circular(graph, { scale: 100 });
-        cancelCurrentAnimation = animateNodes(graph, circularPositions, {
+        cancelCurrentAnimation = animateNodes(graph, positions, {
             duration: 2000,
             easing: "linear",
         });
@@ -196,9 +251,17 @@
                 ...distinctComs.map((x) => ({ [x]: generateRandomColor() }))
             );
 
-            graph.forEachNode((node, attributes) =>
+            graph.forEachNode((node) =>
                 graph.setNodeAttribute(node, "color", colors[communities[node]])
             );
+            graph.forEachEdge((edge, source, target) => {
+                const sourceCom = communities[source];
+                if (sourceCom === communities[target]) {
+                    graph.setEdgeAttribute(edge, "color", colors[sourceCom]);
+                } else {
+                    graph.setEdgeAttribute(edge, "color", "#FFFFFF");
+                }
+            });
             renderer.refresh();
         }
     }
@@ -215,6 +278,49 @@
     export function savePNG() {
         saveAsPNG(renderer);
     }
+
+    export function setLayout(layoutName, lp) {
+        layoutPositions[layoutName] = lp;
+        animateLayout(layoutPositions[layoutName]);
+    }
+
+    function nodeReducerFunction(node, data) {
+        const res = { ...data };
+
+        if (
+            !isDragging &&
+            highlightedNodes &&
+            !highlightedNodes.has(node) &&
+            !highlightedNeighbors.has(node)
+        ) {
+            res.label = "";
+            res.color = "rgb(33, 33, 37)";
+        }
+        res.highlighted = highlightedNodes && highlightedNodes.has(node);
+
+        return res;
+    }
+
+    function edgeReducerFunction(edge, data) {
+        const res = { ...data };
+
+        if (!isDragging && highlightedNodes) {
+            if (hoveredNode) {
+                if (!graph.hasExtremity(edge, hoveredNode)) {
+                    res.hidden = true;
+                }
+            } else {
+                if (
+                    !highlightedNodes.has(graph.source(edge)) ||
+                    !highlightedNodes.has(graph.target(edge))
+                ) {
+                    res.hidden = true;
+                }
+            }
+        }
+
+        return res;
+    }
 </script>
 
 <div bind:this={display}>
@@ -223,6 +329,7 @@
         class="sigmaElement"
         use:watchResize={() => renderer.refresh()}
     />
+
     <div id="zoom">
         <button on:click={() => camera.animatedZoom({ duration: 600 })}>
             <i class="material-icons">add</i>
@@ -239,10 +346,10 @@
             >
         </button>
     </div>
-    <div id="controls">
+    <div id="controls1" class="controls">
         <NodeSelection
             on:NodeSelected={(ev) => {
-                setHoveredNode(ev.detail);
+                setHighlightedNodes([ev.detail], true);
                 dispatcher(
                     "NodeSelected",
                     graph.getNodeAttribute(ev.detail, "label")
@@ -252,6 +359,8 @@
             searchOne={true}
             label="Search a node"
         />
+    </div>
+    <div id="controls2" class="controls">
         <Select
             bind:value={selectedLayout}
             label="Select layout"
@@ -259,7 +368,7 @@
         >
             {#each layouts as layout}
                 <Option value={layout}>
-                    {layout}
+                    {layout.text}
                 </Option>
             {/each}
         </Select>
@@ -279,16 +388,25 @@
         position: absolute;
         left: 0;
         bottom: 0;
-        background-color: rgba(255, 62, 0, 0.2);
         padding: 2px 5px 0 0;
         border-radius: 0 10px 0 0;
+        background-color: rgba(255, 62, 0, 0.2);
     }
 
-    #controls {
+    .controls {
         position: absolute;
-        right: 0;
         top: 0;
         background-color: rgba(255, 62, 0, 0.2);
+    }
+
+    #controls1 {
+        left: 0;
+        padding: 0 10px 10px 10px;
+        border-radius: 0 0 10px 0;
+    }
+
+    #controls2 {
+        right: 0;
         padding: 0 0 10px 10px;
         border-radius: 0 0 0 10px;
     }

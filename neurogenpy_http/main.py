@@ -6,8 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .neurogenpy_logger import access_logger
-from .routes.grn_learning import router as grn_router
-from .routes.markov_blanket import router as mb_router
+from .routes.bn_manipulation import router
 
 path_to_static = path.join(
     path.dirname(__file__),
@@ -46,6 +45,5 @@ def hello():
     return 'world'
 
 
-app.include_router(grn_router, prefix="/grn")
-app.include_router(mb_router, prefix="/mb")
+app.include_router(router, prefix="/grn")
 app.mount('/viewer_plugin', StaticFiles(directory=path_to_static))

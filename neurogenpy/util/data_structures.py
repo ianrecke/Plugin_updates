@@ -5,6 +5,7 @@ Data structures utilities module.
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
 # http://cig.fi.upm.es/
 # License:
+import logging
 
 import networkx as nx
 import numpy as np
@@ -12,6 +13,8 @@ from igraph import Graph
 from pgmpy.models import BayesianNetwork as PGMPY_BN
 from rpy2.robjects import pandas2ri, default_converter, conversion
 from rpy2.robjects.conversion import localconverter
+
+logger = logging.getLogger(__name__)
 
 
 def get_data_type(df):
@@ -174,6 +177,7 @@ def bnlearn2nx(nodes, r_output):
         A graph representing the network.
     """
 
+    logger.info(f'bnlearn output: {r_output}')
     arcs_r = r_output.rx2('arcs')
     edges_from = np.array(arcs_r.rx(True, 1))
     edges_to = np.array(arcs_r.rx(True, 2))

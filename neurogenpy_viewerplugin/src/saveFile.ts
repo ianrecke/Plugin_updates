@@ -1,6 +1,6 @@
 // Taken from https://codesandbox.io/s/github/jacomyal/sigma.js/tree/main/examples/png-snapshot?file=/saveAsPNG.ts:0-2700
 
-import Sigma from "./sigma";
+import Sigma from "sigma";
 
 /**
  * There is a bug I can't find sources about, that makes it impossible to render

@@ -1,4 +1,4 @@
-import { PlainObject } from "./sigma/types";
+import { PlainObject } from "sigma/types";
 
 const TEXT_COLOR = "#000000";
 

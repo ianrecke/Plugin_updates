@@ -3,6 +3,7 @@
   import Textfield from "@smui/textfield";
   import Chip, { Set as ChipsSet, Text, TrailingAction } from "@smui/chips";
   import { createEventDispatcher } from "svelte";
+  import Button, { Icon } from "@smui/button";
 
   export let genes = [];
   let selectedGenes = [];
@@ -11,6 +12,7 @@
 
   let autocmplText = "";
   let currentAutocompleteList = [];
+  let browseInput;
 
   $: {
     if (autocmplText === "") {
@@ -47,6 +49,16 @@
   async function searchfn(_input) {
     return currentAutocompleteList;
   }
+
+  async function readFile(ev) {
+    const [file] = ev.target.files;
+    if (!file) return;
+    const data = await file.text();
+
+    const genesJSON = JSON.parse(data);
+    selectedGenes = genesJSON["genes"];
+    dispatcher("GeneSelected", selectedGenes);
+  }
 </script>
 
 <div>
@@ -59,6 +71,21 @@
   >
     <Textfield label="Genes" bind:value={autocmplText} />
   </Autocomplete>
+  <input
+    bind:this={browseInput}
+    type="file"
+    id="file"
+    class="hidden"
+    style="display: none;"
+    on:change={(ev) => readFile(ev)}
+  />
+  <Button
+    on:click={() => browseInput.click()}
+    color="secondary"
+    class="fileButton"
+  >
+    <Icon class="material-icons">file_upload</Icon>
+  </Button>
 </div>
 <div>
   <ChipsSet chips={selectedGenes} let:chip selectedGenes>
@@ -68,3 +95,9 @@
     </Chip>
   </ChipsSet>
 </div>
+
+<style>
+  * :global(.fileButton:hover) {
+    color: "primary";
+  }
+</style>

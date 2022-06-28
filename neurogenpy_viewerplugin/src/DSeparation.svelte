@@ -9,16 +9,41 @@
     import Button, { Label } from "@smui/button";
     import List, { Item, Text } from "@smui/list";
     import NodeSelection from "./NodeSelection.svelte";
+    import Dialog, {
+        Title as DialogTitle,
+        Content as DialogContent,
+        Actions,
+    } from "@smui/dialog";
+    import { getFromNeurogenpy } from "./request";
 
     export let nodes = [];
-    let active = "X nodes";
-    let selectedNodes = { "X nodes": [], "Y nodes": [], "Z nodes": [] };
+    let active = "X";
+    let selectedNodes = { X: [], Y: [], Z: [] };
     let showedNodes = selectedNodes[active];
+    let openDialog = false;
+    let dseparated = undefined;
 
     function setActive(value) {
         selectedNodes[active] = showedNodes;
         active = value;
         showedNodes = selectedNodes[active];
+    }
+
+    async function checkDSeparation() {
+        try {
+            let result = await getFromNeurogenpy(
+                "/grn/dseparated",
+                JSON.stringify({
+                    X: selectedNodes["X"],
+                    Y: selectedNodes["Y"],
+                    Z: selectedNodes["Z"],
+                })
+            );
+
+            dseparated = result["result"];
+            openDialog = true;
+        } finally {
+        }
     }
 </script>
 
@@ -33,20 +58,20 @@
         <Content>
             <List>
                 <Item
-                    on:click={() => setActive("X nodes")}
-                    activated={active === "X nodes"}
+                    on:click={() => setActive("X")}
+                    activated={active === "X"}
                 >
                     <Text>X nodes</Text>
                 </Item>
                 <Item
-                    on:click={() => setActive("Y nodes")}
-                    activated={active === "Y nodes"}
+                    on:click={() => setActive("Y")}
+                    activated={active === "Y"}
                 >
                     <Text>Y nodes</Text>
                 </Item>
                 <Item
-                    on:click={() => setActive("Z nodes")}
-                    activated={active === "Z nodes"}
+                    on:click={() => setActive("Z")}
+                    activated={active === "Z"}
                 >
                     <Text>Z nodes</Text>
                 </Item>
@@ -64,11 +89,28 @@
                 {nodes}
             />
 
-            <Button>
+            <Button on:click={checkDSeparation}>
                 <Label>Check d-separation</Label>
             </Button>
         </main>
     </AppContent>
+    <Dialog
+        bind:open={openDialog}
+        aria-labelledby="simple-title"
+        aria-describedby="simple-content"
+    >
+        <DialogTitle id="simple-title">D-Separation</DialogTitle>
+
+        <DialogContent id="simple-content">
+            X and Y are {dseparated ? "" : "not "}D-separated by Z.
+        </DialogContent>
+
+        <Actions>
+            <Button>
+                <Label>OK</Label>
+            </Button>
+        </Actions>
+    </Dialog>
 </div>
 
 <style>
@@ -91,5 +133,11 @@
         padding: 16px;
         height: 100%;
         box-sizing: border-box;
+    }
+
+    * :global(.material-icons) {
+        position: "absolute";
+        left: "95%";
+        top: "5%";
     }
 </style>

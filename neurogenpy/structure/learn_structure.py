@@ -8,6 +8,8 @@ Structure learning base module.
 
 from abc import abstractmethod, ABCMeta
 
+from rpy2.robjects.packages import importr
+
 from ..util.data_structures import pd2r, bnlearn2nx
 
 
@@ -80,7 +82,8 @@ class LearnStructure(metaclass=ABCMeta):
 
         nodes = list(self.data.columns.values)
 
-        output_raw_r = bnlearn_function(dataframe, **kwargs)
+        output_raw_r = importr('bnlearn').cextend(
+            bnlearn_function(dataframe, **kwargs))
 
         graph = bnlearn2nx(nodes, output_raw_r)
 

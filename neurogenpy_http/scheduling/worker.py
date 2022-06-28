@@ -16,21 +16,20 @@ default_config = 'neurogenpy_http.conf.celeryconfig'
 app = Celery(CHANNEL)
 app.config_from_object(default_config)
 
+BN = None
+
 
 @app.task
 def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
               estimation: str):
     import siibra
-    import pandas as pd
     import statistics
-    from neurogenpy import BayesianNetwork, JSON, GEXF
-    import socket
+    import pandas as pd
+    from neurogenpy import BayesianNetwork, GEXF
 
-    hostname = socket.gethostname()
-    logger.info(f'{hostname}:task:rec')
-    logger.debug(
-        f'{hostname}:task:rec_param {parcellation_id} {roi} , '
-        f'{",".join(genes)}')
+    global BN
+
+    hostname = log_rec(parcellation_id, roi, genes, algorithm, estimation)
 
     try:
         parcellation = siibra.parcellations[parcellation_id]
@@ -46,49 +45,117 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
                    gene_name in genes}
 
         df = pd.DataFrame(samples)
+        # df = pd.read_csv('df.csv')
 
-        bn = BayesianNetwork().fit(df, algorithm=algorithm,
+        BN = BayesianNetwork().fit(df, algorithm=algorithm,
                                    estimation=estimation)
 
-        graphology_options = {'link': 'edges', 'name': 'key'}
-        graphology_keys = ['nodes', 'edges']
-        json_graph = JSON(bn).generate(options=graphology_options,
-                                       keys=graphology_keys)
-        gexf = GEXF(bn).generate()
-        # marginals = {node: bn.marginal([node]) for node in bn.nodes()}
+        gexf = GEXF(BN).generate(layout_name='circular', communities=True)
+        marginals = BN.all_cpds()
+        # marginals = {node: BN.marginal([node]) for node in BN.nodes()}
 
-        logger.info(f'{hostname}:task:success')
-        logger.debug(f'{hostname}:task:success_result {json_graph}')
-        logger.debug(f'{hostname}:task:success_result {json_graph}')
-        return {'json_graph': json_graph, 'gexf': gexf, 'marginals': []}
+        log_success(hostname, gexf, marginals)
+        return {'gexf': gexf, 'marginals': marginals}
 
     except Exception as exc:
-        logger.critical(f'{hostname}:task:failed {str(exc)}')
+        log_fail(hostname, str(exc))
         raise exc
 
 
 @app.task
-def get_mb(graph_json, node):
-    from neurogenpy import BayesianNetwork, JSON
-    import socket
+def get_related(node, method):
+    global BN
 
+    hostname = log_rec(node, method)
+
+    try:
+        result = []
+        if method == 'mb':
+            result = BN.markov_blanket(node)
+        elif method == 'reachable':
+            result = list(BN.reachable_nodes([node]))
+
+        log_success(hostname, result)
+        return {'result': result}
+
+    except Exception as exc:
+        log_fail(hostname, str(exc))
+        raise exc
+
+
+@app.task
+def get_layout(layout):
+    from neurogenpy.io.layout import DotLayout, IgraphLayout
+
+    hostname = log_rec(layout)
+
+    try:
+        lo = IgraphLayout(
+            BN.graph, layout_name=layout) if layout != "Dot" else DotLayout(
+            BN.graph)
+        layout_pos = lo.run()
+
+        log_success(hostname, layout_pos)
+        return {'result': layout_pos}
+
+    except Exception as exc:
+        log_fail(hostname, str(exc))
+        raise exc
+
+
+@app.task
+def check_dseparation(X, Y, Z):
+    hostname = log_rec(X, Y, Z)
+
+    try:
+
+        result = BN.is_dseparated(X, Y, Z)
+
+        log_success(hostname, result)
+        return {'result': result}
+
+    except Exception as exc:
+        log_fail(hostname, str(exc))
+        raise exc
+
+
+@app.task
+def perform_inference(evidence, marginals):
+    hostname = log_rec(evidence, marginals)
+
+    try:
+        BN.set_evidence(evidence)
+        non_evidence = [node for node in BN.nodes() if
+                        node not in evidence.keys()]
+        new_marginals = {node: BN.marginal([node], initial=False) for node in
+                         non_evidence}
+
+        for node in evidence.keys():
+            new_marginals[node] = {"mu": evidence[node], "sigma": 0}
+
+        log_success(hostname, new_marginals)
+
+        return {'marginals': new_marginals}
+
+    except Exception as exc:
+        log_fail(hostname, str(exc))
+        raise exc
+
+
+def log_rec(*args):
+    import socket
     hostname = socket.gethostname()
     logger.info(f'{hostname}:task:rec')
     logger.debug(
-        f'{hostname}:task:rec_param {graph_json}, {node}')
+        f'{hostname}:task:rec_param {args}')
 
-    try:
-        graphology_options = {'link': 'edges', 'name': 'key'}
-        graph = JSON().convert(io_object=graph_json,
-                               options=graphology_options)
-        bn = BayesianNetwork(graph=graph)
+    return hostname
 
-        mb = bn.markov_blanket(node)
 
-        logger.info(f'{hostname}:task:success')
-        logger.debug(f'{hostname}:task:success_result {mb}')
-        return {'mb': mb}
+def log_success(hostname, *args):
+    logger.info(f'{hostname}:task:success')
+    logger.debug(f'{hostname}:task:success_result {args}')
 
-    except Exception as exc:
-        logger.critical(f'{hostname}:task:failed {str(exc)}')
-        raise exc
+
+def log_fail(hostname, *args):
+    logger.critical(f'{hostname}:task:failed {args}')
