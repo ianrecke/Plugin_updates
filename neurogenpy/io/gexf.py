@@ -19,13 +19,13 @@ from .layout.igraph_layout import IgraphLayout
 from .layout.image_layout import ImageLayout
 
 _CONFIGS = {
-    'small': {'maxNodeSize': 12, 'minNodeSize': 2, 'maxEdgeSize': 8,
+    'small': {'maxNodeSize': 20, 'minNodeSize': 10, 'maxEdgeSize': 8,
               'minEdgeSize': 4, 'weight': 0.55, 'width': 1},
     'medium': {'maxNodeSize': 5, 'minNodeSize': 1, 'maxEdgeSize': 1.5,
                'minEdgeSize': .5, 'weight': 0.55, 'width': 1},
     'large': {'maxNodeSize': 3, 'minNodeSize': 1, 'maxEdgeSize': 0.5,
               'minEdgeSize': .1, 'weight': 1.1, 'width': 2},
-    'default_color': '#282c34'}
+    'default_color': '#FFFFFF'}
 
 
 # TODO: Add to docs networkx warning: the parser uses the standard xml library
@@ -112,7 +112,7 @@ class GEXF(BNIO):
 
         layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
                    'ForceAtlas2': ForceAtlas2Layout, 'Grid': IgraphLayout,
-                   'FruchtermanReingold': IgraphLayout,
+                   'fruchterman_reingold': IgraphLayout,
                    'Image': ImageLayout, 'Sugiyama': IgraphLayout}
 
         if layout_name is not None:
@@ -140,6 +140,7 @@ class GEXF(BNIO):
 
             rgb_colors = {color: ImageColor.getcolor(color, 'RGB') for
                           color in set(nodes_colors.values())}
+            rgb_colors["#FFFFFF"] = ImageColor.getcolor("#FFFFFF", 'RGB')
 
             for node in nodes:
                 node_id = node['id']
@@ -157,13 +158,14 @@ class GEXF(BNIO):
 
             for edge in edges:
                 x, y = edge['x'], edge['y']
-                self.bn.graph.edges[x, y]['weight'] = edge['weight']
+                # self.bn.graph.edges[x, y]['weight'] = edge['weight']
                 self.bn.graph.edges[x, y]['type'] = edge['type']
                 # self.bn.graph.edges[x, y]['label'] = edge['label']
                 edge_color = rgb_colors[edge['color']]
                 self.bn.graph.edges[x, y]['viz'] = {
                     'color': {'r': edge_color[0], 'g': edge_color[1],
                               'b': edge_color[2], 'a': 1.0}}
+                self.bn.graph.edges[x, y]['viz']['size'] = edge['size']
 
     def _edges_sizes(self, network_size):
         """Retrieves the size of each edge in the network."""
@@ -279,7 +281,7 @@ def _get_edges_attr(nx_dict, edges_sizes, edges_colors):
             'x': x,
             'y': y,
             'type': 'directed',
-            'weight': edges_sizes[(x, y)],
+            'size': edges_sizes[(x, y)],
             'color': edges_colors[(x, y)],
         }
         edges.append(edge_attributes)

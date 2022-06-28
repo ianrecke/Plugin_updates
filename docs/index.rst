@@ -13,4 +13,3 @@ NeurogenPy
     references
     acknowledgements
     autoapi/index
-

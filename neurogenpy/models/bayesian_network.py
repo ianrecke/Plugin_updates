@@ -7,6 +7,7 @@ Bayesian network module.
 # License:
 
 import inspect
+import logging
 import warnings
 from operator import itemgetter
 
@@ -50,6 +51,8 @@ from ..structure.pc import PC
 from ..structure.pearson import Pearson
 from ..structure.sparsebn import SparseBn
 from ..structure.tan import Tan
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: Manage hybrid case.
@@ -129,9 +132,8 @@ class BayesianNetwork:
                 data_type=self.data_type,
                 nodes_order=order)
             if parameters is not None and self.data_type == 'continuous':
-                self.joint_dist.from_params(
-                    params=self.parameters, save_dist=self.num_nodes > 300,
-                    data_type=self.data_type,
+                self.joint = self.joint_dist.from_params(
+                    params=self.parameters,
                     nodes_order=self._topological_order())
 
         else:
@@ -213,17 +215,13 @@ class BayesianNetwork:
         while visit_nodes:
             node = visit_nodes.pop()
             if node not in obs_ancestors:
-                visit_nodes += list(set(self.parents(node)))
-                obs_ancestors.update(node)
+                visit_nodes += self.parents(node)
+                obs_ancestors.add(node)
 
         # Phase II: traverse active trails starting from X
         via_nodes = [(node, 'up') for node in start]
         visited = set()
-
-        if end is None:
-            result = set()
-        else:
-            result = True
+        result = set() if end is None else True
 
         while via_nodes:
             node, direction = via_nodes.pop()
@@ -235,7 +233,7 @@ class BayesianNetwork:
                         if node in end:
                             return False
                     else:
-                        result.update(node)
+                        result.add(node)
 
                 if direction == 'up' and node not in observed:
                     for parent in self.parents(node):
@@ -590,7 +588,7 @@ class BayesianNetwork:
             else:
                 wrong_nodes = self._check_nodes_warn(nodes)
 
-                nodes -= wrong_nodes
+                nodes = [node for node in nodes if node not in wrong_nodes]
 
                 for node in nodes:
                     try:
@@ -624,10 +622,11 @@ class BayesianNetwork:
         -------
             The desired marginal distribution.
         """
+
         self._check_params_fitted()
         wrong_nodes = self._check_nodes_warn(nodes)
 
-        nodes -= wrong_nodes
+        nodes = [node for node in nodes if node not in wrong_nodes]
         return self.joint_dist.marginal(nodes, initial=initial)
 
     def has_evidence(self, node):
@@ -737,6 +736,14 @@ class BayesianNetwork:
         """
         return self.evidence.keys()
 
+    def all_cpds(self):
+        self._check_params_fitted()
+
+        nodes = [node for node in self.joint_dist.nodes_order if
+                 node not in self.evidence.keys()]
+
+        return self.joint_dist.all_cpds(nodes)
+
     def is_dseparated(self, start, end, observed):
         """
         Checks if two sets of nodes (`start` and `end`) are D-separated given
@@ -758,16 +765,19 @@ class BayesianNetwork:
 
         """
 
-        start -= self._check_nodes_warn(start)
-        end -= self._check_nodes_warn(end)
-        observed -= self._check_nodes_warn(observed)
+        start = [node for node in start if
+                 node not in self._check_nodes_warn(start)]
+        end = [node for node in end if
+               node not in self._check_nodes_warn(end)]
+        observed = [node for node in observed if
+                    node not in self._check_nodes_warn(observed)]
 
         return self._reachable(start, observed, end)
 
     def reachable_nodes(self, start):
         """
-        Returns the reachable nodes from `start_nodes` given the current
-        evidence via active trails. It follows the algorithm proposed in
+        Returns the reachable nodes from `start` given the current evidence via
+        active trails. It follows the algorithm proposed in
         :cite:`koller`, page 75.
 
         Parameters
@@ -799,7 +809,8 @@ class BayesianNetwork:
         list
             Set of edges in the subgraph.
         """
-        nodes -= self._check_nodes_warn(nodes)
+        nodes = [node for node in nodes if
+                 node not in self._check_nodes_warn(nodes)]
         return [(x, y) for y in nodes for x in nodes if y in self.children(x)]
 
     def filter_edges(self, min_weight, max_weight):
@@ -1019,16 +1030,20 @@ class BayesianNetwork:
                 est = estimators[f'{estimation}_{self.data_type}']
                 params = {k: v for k, v in kwargs.items() if
                           k in inspect.getfullargspec(est).kwonlyargs}
-                self.parameters = est(df, self.graph, **params).run()
+                mu, sigmas, parents_coeffs, prnts, order = est(
+                    df, self.graph, **params).run()
+
+                self.parameters = {node: {"mu": mu[i], "sigma": sigmas[i],
+                                          "parents_coeffs": parents_coeffs[i],
+                                          "parents": prnts[i]} for i, node in
+                                   enumerate(order)}
+                self.joint_dist = ModifiableJointDistribution(
+                    save_dist=self.num_nodes > 300,
+                    data_type='continuous').from_params(self.parameters, order)
             except KeyError:
                 raise ValueError('Parameter learning is only available for the'
                                  f' following methods: {*estimators.keys(),}.')
 
-        if self.parameters and self.data_type == 'continuous':
-            self.joint_dist.from_params(
-                data_type=self.data_type,
-                save_dist=self.num_nodes > 300, params=self.parameters,
-                nodes_order=self._topological_order())
         return self
 
     def save(self, file_path='bn.gexf', **kwargs):
@@ -1162,9 +1177,10 @@ class BayesianNetwork:
         elif file_path.endswith('.bif'):
             self.graph, self.parameters = BIF().read_file(file_path)
             self.data_type = 'discrete'
-            self.joint_dist.from_params(
+            self.joint = ModifiableJointDistribution(
                 save_dist=len(self.graph) > 300,
-                data_type=self.data_type, params=self.parameters,
+                data_type=self.data_type).from_params(
+                params=self.parameters,
                 nodes_order=self._topological_order())
         else:
             raise ValueError('File extension not supported.')

@@ -71,3 +71,11 @@ class JointDistribution(metaclass=ABCMeta):
         keys = self.__dict__.keys()
         for k in keys:
             setattr(self, k, None)
+
+    def all_cpds(self, nodes):
+        """
+
+        Returns
+        -------
+
+        """

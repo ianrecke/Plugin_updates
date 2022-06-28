@@ -79,3 +79,17 @@ class BNIO(metaclass=ABCMeta):
             The graph structure loaded and the parameters in case the format
             provides them.
         """
+
+    @abstractmethod
+    def generate(self, bn):
+        """
+        Generates the object that represents the network.
+
+        Parameters
+        ----------
+        bn : BayesianNetwork
+
+        Returns
+        -------
+            The object that represents the network.
+        """

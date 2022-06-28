@@ -4,6 +4,7 @@
 
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../examples/'))
 
@@ -120,13 +121,35 @@ autoapi_options = ['members', 'undoc-members', 'show-inheritance',
                    'inherited-members', 'special-members']
 numpydoc_validation_checks = {'all', 'GL08'}
 
-
 # Grouping the document tree into LaTeX files. List of tuples# (source start
 # file, target name, title, author, documentclass [howto/manual]).
-# latex_documents = [
-#     ('index', 'yourdoc.tex', u'NeurogenPy', u'Javier Gallego Gutiérrez',
-#      'manual'),
-# ]
+latex_documents = [
+    ('index', 'neurogenpy.tex', u'NeurogenPy', u'Javier Gallego Gutiérrez',
+     'manual'),
+]
+latex_elements = {
+    'papersize': 'a4paper',
+    'pointsize': '11pt',
+    'fncychap': '',
+    'preamble': r'''
+    \usepackage{mathpazo}
+    \usepackage{enumitem}
+    \setlistdepth{99}
+    \definecolor{TitleColor}{rgb}{0,0,0}
+    \definecolor{InnerLinkColor}{rgb}{0,0,0}
+    \usepackage{titlesec}
+    \titleformat{\section}  
+    {\color{black}\normalfont\Large\bfseries}
+    {\color{black}\thesection}{1em}{}
+    \titleformat{\subsection}
+    {\color{black}\normalfont\large\bfseries}
+    {\color{black}\thesubsection}{1em}{}
+    \titleformat{\subsubection}
+    {\color{black}\normalfont\normalsize\bfseries}
+    {\color{black}\thesubsubsection}{1em}{}''',
+    'sphinxsetup': 'hmargin={2.54cm,2.54cm}, vmargin={3cm, 3cm}'
+}
+
 
 def setup(sphinx):
     sphinx.connect('autoapi-skip-member', skip_util_classes)
