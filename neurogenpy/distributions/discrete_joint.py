@@ -14,7 +14,6 @@ from pgmpy.models import BayesianNetwork as PGMPY_BN
 from .joint_distribution import JointDistribution
 
 
-# TODO: Implement discrete inference.
 class DiscreteJointDistribution(JointDistribution):
     """
     Discrete joint probability distribution class.
