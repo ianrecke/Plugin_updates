@@ -57,9 +57,6 @@ from ..structure.tan import Tan
 logger = logging.getLogger(__name__)
 
 
-# TODO: Manage hybrid case.
-
-
 class BayesianNetwork:
     """
     Bayesian network class. 

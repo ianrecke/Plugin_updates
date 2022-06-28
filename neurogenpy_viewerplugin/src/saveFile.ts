@@ -46,8 +46,8 @@ export async function saveAsPNG(renderer: Sigma) {
     canvas.setAttribute("height", height * pixelRatio + "");
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-    // Draw a white background first:
-    ctx.fillStyle = "#fff";
+    // Draw a black background first:
+    ctx.fillStyle = "rgb(33, 33, 37)";
     ctx.fillRect(0, 0, width * pixelRatio, height * pixelRatio);
 
     // For each layer, draw it on our canvas:

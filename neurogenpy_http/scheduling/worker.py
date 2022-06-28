@@ -142,6 +142,31 @@ def perform_inference(evidence, marginals):
         raise exc
 
 
+@app.task
+def downloadable_file(file_type, positions):
+    hostname = log_rec(file_type)
+
+    try:
+        from neurogenpy import JSON, GEXF, AdjacencyMatrix, BIF
+
+        writers = {'json': JSON, 'gexf': GEXF, 'csv': AdjacencyMatrix,
+                   'bif': BIF}
+
+        writer = writers[file_type](BN)
+
+        positions = {k: (v['x'], v['y']) for k, v in positions.items()}
+        args = {'layout': positions} if file_type == 'gexf' else {}
+        result = writer.generate(**args)
+
+        log_success(hostname, result)
+
+        return {'result': result}
+
+    except Exception as exc:
+        log_fail(hostname, str(exc))
+        raise exc
+
+
 def log_rec(*args):
     import socket
     hostname = socket.gethostname()

@@ -17,16 +17,27 @@
     let runningFlag = false;
 
     async function downloadFile(fileType) {
+        let positions = {};
         switch (fileType) {
-            case "json":
-                const result_json = JSON.stringify(result);
-                saveTextFile(result_json, "result.json");
-                break;
-            case "gexf":
-                saveTextFile(gexf_graph, "result.gexf");
-                break;
             case "png":
                 gd.savePNG();
+                break;
+            case "gexf":
+                positions = gd.getPositions();
+            default:
+                const json_object = JSON.stringify({
+                    file_type: fileType,
+                    positions: positions,
+                });
+
+                const result = await callNeurogenpy(
+                    "download",
+                    "/grn/download",
+                    json_object
+                );
+
+                const downloadableFile = result["result"];
+                saveTextFile(downloadableFile, "result." + fileType);
                 break;
         }
     }
@@ -79,7 +90,11 @@
         const json_object = JSON.stringify({
             layout: layoutName,
         });
-        const result = await callNeurogenpy("Layout", "/grn/gexf", json_object);
+        const result = await callNeurogenpy(
+            "Layout",
+            "/grn/layout",
+            json_object
+        );
 
         const layoutResult = result["result"];
         const newLP = {};
@@ -94,7 +109,7 @@
     }
 </script>
 
-<window on:mouseup on:resize></window>
+<window on:mouseup on:resize />
 
 <div id="container">
     <div class="column left" disabled={runningFlag}>

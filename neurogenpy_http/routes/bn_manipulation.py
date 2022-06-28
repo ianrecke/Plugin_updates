@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from ..scheduling.worker import learn_grn, get_layout, get_related, \
-    check_dseparation, perform_inference
+    check_dseparation, perform_inference, downloadable_file
 
 
 class BModel(BaseModel):
@@ -25,8 +25,13 @@ class LearnPostReqModel(BModel):
     estimation: str
 
 
-class GEXFPostReqModel(BModel):
+class LayoutPostReqModel(BModel):
     layout: str
+
+
+class IOPostReqModel(BModel):
+    file_type: str
+    positions: dict
 
 
 class RelatedNodesPostReqModel(BModel):
@@ -60,18 +65,27 @@ class LearnResult(BModel):
     marginals: dict
 
 
+class IOResult(BModel):
+    result: str
+
+
+class IOResultModel(BModel):
+    status: ResultStatus
+    result: Optional[IOResult]
+
+
 class LearnResultModel(BModel):
     status: ResultStatus
     result: Optional[LearnResult]
 
 
-class GEXFResult(BModel):
+class LayoutResult(BModel):
     result: dict
 
 
-class GEXFResultModel(BModel):
+class LayoutResultModel(BModel):
     status: ResultStatus
-    result: Optional[GEXFResult]
+    result: Optional[LayoutResult]
 
 
 class RelatedNodesResult(BModel):
@@ -121,24 +135,24 @@ def get_grn_with_id(grn_id: str):
     return LearnResultModel(status=ResultStatus.PENDING)
 
 
-@router.post('/gexf', response_model=PostRespModel)
-def post_layout(post_req: GEXFPostReqModel):
+@router.post('/layout', response_model=PostRespModel)
+def post_layout(post_req: LayoutPostReqModel):
     res = get_layout.delay(**post_req.dict())
     return PostRespModel(poll_url=res.id)
 
 
-@router.get('/gexf/{gexf_id}', response_model=GEXFResultModel)
-def get_gexf_with_id(gexf_id: str):
-    res = get_layout.AsyncResult(gexf_id)
+@router.get('/layout/{layout_id}', response_model=LayoutResultModel)
+def get_gexf_with_id(layout_id: str):
+    res = get_layout.AsyncResult(layout_id)
     if res.state == "FAILURE":
         res.forget()
-        return GEXFResultModel(status=ResultStatus.FAILURE)
+        return LayoutResultModel(status=ResultStatus.FAILURE)
     if res.state == "SUCCESS":
         result = res.get()
         res.forget()
-        return GEXFResultModel(status=ResultStatus.SUCCESS,
-                               result=GEXFResult(**result))
-    return GEXFResultModel(status=ResultStatus.PENDING)
+        return LayoutResultModel(status=ResultStatus.SUCCESS,
+                                 result=LayoutResult(**result))
+    return LayoutResultModel(status=ResultStatus.PENDING)
 
 
 @router.post('/related', response_model=PostRespModel)
@@ -172,7 +186,7 @@ def get_dseparation_with_id(dseparated_id: str):
     res = check_dseparation.AsyncResult(dseparated_id)
     if res.state == "FAILURE":
         res.forget()
-        return DSepResult(status=ResultStatus.FAILURE)
+        return DSepResultModel(status=ResultStatus.FAILURE)
     if res.state == "SUCCESS":
         result = res.get()
         res.forget()
@@ -192,10 +206,30 @@ def get_new_marginals_with_id(marginals_id: str):
     res = perform_inference.AsyncResult(marginals_id)
     if res.state == "FAILURE":
         res.forget()
-        return InferenceResult(status=ResultStatus.FAILURE)
+        return InferenceResultModel(status=ResultStatus.FAILURE)
     if res.state == "SUCCESS":
         result = res.get()
         res.forget()
         return InferenceResultModel(status=ResultStatus.SUCCESS,
                                     result=InferenceResult(**result))
     return InferenceResultModel(status=ResultStatus.PENDING)
+
+
+@router.post('/download', response_model=PostRespModel)
+def post_download(post_req: IOPostReqModel):
+    res = downloadable_file.delay(**post_req.dict())
+    return PostRespModel(poll_url=res.id)
+
+
+@router.get('/download/{download_id}', response_model=IOResultModel)
+def get_downloadable_with_id(download_id: str):
+    res = downloadable_file.AsyncResult(download_id)
+    if res.state == "FAILURE":
+        res.forget()
+        return IOResultModel(status=ResultStatus.FAILURE)
+    if res.state == "SUCCESS":
+        result = res.get()
+        res.forget()
+        return IOResultModel(status=ResultStatus.SUCCESS,
+                             result=IOResult(**result))
+    return IOResultModel(status=ResultStatus.PENDING)

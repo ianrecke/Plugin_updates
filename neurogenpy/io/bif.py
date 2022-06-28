@@ -1,5 +1,5 @@
 """
-BIF input/output module. It uses `pgmpy` functionality.
+BIF input/output module. It uses `pgmpy`.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -35,17 +35,21 @@ class BIF(BNIO):
         (networkx.DiGraph, dict)
             The graph structure loaded and the parameters.
         """
-        pass
+        bif_reader = BIFReader(string=io_object)
+        bn_pgmpy = bif_reader.get_model()
+
+        return pgmpy2nx(bn_pgmpy)
 
     def generate(self):
         """
-        Generates the BIF object that represents the network.
+        Generates the BIF string that represents the network.
 
         Returns
         -------
-            The object that represents the network.
+            The BIF string representation.
         """
-        pass
+
+        return self._get_writer().__str__()
 
     def read_file(self, file_path):
         """
@@ -77,11 +81,17 @@ class BIF(BNIO):
             Path of the file to store the Bayesian network in..
         """
 
+        writer = self._get_writer()
+
+        writer.write_bif(file_path)
+
+    def _get_writer(self):
+        """Returns the BIFWriter for the network."""
+
         bn_pgmpy = nx2pgmpy(self.bn.graph, self.bn.parameters)
 
         bif_writer = BIFWriter(model=bn_pgmpy)
         for param in bn_pgmpy.cpds:
             bif_writer.variable_states[param.variable] = param.state_names[
                 param.variable]
-
-        bif_writer.write_bif(file_path)
+        return bif_writer

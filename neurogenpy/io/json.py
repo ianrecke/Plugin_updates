@@ -58,9 +58,10 @@ class JSON(BNIO):
         with open(file_path, 'w') as f:
             f.write(json_str)
 
+    # TODO: Add parameters to JSON file
     def generate(self, options=None, keys=None):
         """
-        Generates the JSON string that represents the network structure.
+        Generates the JSON string that represents the network.
 
         Parameters
         ----------
@@ -77,9 +78,12 @@ class JSON(BNIO):
             JSON representation of the network.
         """
 
-        data = json_graph.node_link_data(self.bn.graph, options)
+        graph_data = json_graph.node_link_data(self.bn.graph, options)
         if keys:
-            data = {k: data[k] for k in keys}
+            graph_data = {k: graph_data[k] for k in keys}
+
+        data = {'graph': graph_data, 'parameters': {}}
+
         return json.dumps(data)
 
     def convert(self, io_object, options=None):
@@ -100,5 +104,5 @@ class JSON(BNIO):
         """
 
         data = json.loads(io_object)
-        return json_graph.node_link_graph(data, directed=True,
+        return json_graph.node_link_graph(data['graph'], directed=True,
                                           multigraph=False, attrs=options)

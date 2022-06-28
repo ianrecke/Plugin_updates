@@ -52,7 +52,7 @@ class GEXF(BNIO):
         pass
 
     def write_file(self, file_path='bn.gexf', layout_name=None,
-                   communities=False, sizes_method='mb'):
+                   communities=False, sizes_method='mb', layout=None):
         """
         Exports a representation of the Bayesian network structure for the
         chosen layout in GEXF format. It also calculates the sizes and colors
@@ -66,7 +66,7 @@ class GEXF(BNIO):
 
         layout_name : str, optional
             Layout used for calculating the positions of the nodes in the
-            graph.
+            graph. If it is not determined, nodes positions are not provided.
 
         communities : bool, default=False
             Whether to assign different colors to the nodes and edges belonging
@@ -76,9 +76,14 @@ class GEXF(BNIO):
             The method used to calculate the sizes of the nodes. It can be the
             size of the Markov blanket of each node or the amount of neighbors
             they have.
+
+        layout : dict, optional
+            Custom layout to include in the GEXF representation. If
+            `layout_name` is provided, it is ignored. Keys should be the nodes
+            and values, tuples with the format (x_coord, y_coord).
         """
 
-        self._add_attrs(layout_name, communities, sizes_method)
+        self._add_attrs(layout_name, communities, sizes_method, layout)
 
         networkx_io.write_gexf(self.bn.graph, file_path)
 
@@ -86,30 +91,41 @@ class GEXF(BNIO):
         return networkx_io.read_gexf(file_path)
 
     def generate(self, layout_name=None, communities=False,
-                 sizes_method='mb'):
+                 sizes_method='mb', layout=None):
         """
         Generates the GEXF string that represents the network.
 
         Parameters
         ----------
         layout_name : str, optional
+            Layout used for calculating the positions of the nodes in the
+            graph. If it is not determined, nodes positions are not provided.
 
-        communities : optional
+        communities : bool, default=False
+            Whether to assign different colors to the nodes and edges belonging
+            to different communities of Louvain.
 
-        sizes_method : str, default='mb'
+        sizes_method : {'mb', 'neighbors'}, default='mb'
+            The method used to calculate the sizes of the nodes. It can be the
+            size of the Markov blanket of each node or the amount of neighbors
+            they have.
+
+        layout : dict, optional
+            Custom layout to include in the GEXF representation. If
+            `layout_name` is provided, it is ignored. Keys should be the nodes
+            and values, tuples with the format (x_coord, y_coord).
 
         Returns
         -------
-            The object that represents the network.
+            The string representation of the network.
         """
 
-        self._add_attrs(layout_name, communities, sizes_method)
+        self._add_attrs(layout_name, communities, sizes_method, layout)
 
         linefeed = chr(10)
         return linefeed.join(networkx_io.generate_gexf(self.bn.graph))
 
-    def _add_attrs(self, layout_name=None, communities=False,
-                   sizes_method='mb'):
+    def _add_attrs(self, layout_name, communities, sizes_method, layout):
         """Add attributes related with the display of the graph."""
 
         layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
@@ -118,17 +134,18 @@ class GEXF(BNIO):
                    'Image': ImageLayout, 'Sugiyama': IgraphLayout}
 
         if layout_name is not None:
+            layout = layouts[layout_name]
+            params = {} if 'layout_name' not in inspect.getfullargspec(
+                layout).kwonlyargs else {'layout_name': layout_name}
+            layout = layout(self.bn.graph, **params).run()
+
+        if layout is not None:
             if self.bn.num_nodes < 100:
                 network_size = 'small'
             elif self.bn.num_nodes < 300:
                 network_size = 'medium'
             else:
                 network_size = 'large'
-
-            layout = layouts[layout_name]
-            params = {} if 'layout_name' not in inspect.getfullargspec(
-                layout).kwonlyargs else {'layout_name': layout_name}
-            layout = layout(self.bn.graph, **params).run()
 
             nx_dict = networkx_io.json_graph.node_link_data(self.bn.graph)
 

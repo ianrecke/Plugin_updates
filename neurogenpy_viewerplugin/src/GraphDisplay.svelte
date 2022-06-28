@@ -235,6 +235,17 @@
         });
     }
 
+    export function getPositions() {
+        let positions = {};
+        graph.forEachNode((node) => {
+            positions[node] = {
+                x: graph.getNodeAttribute(node, "x"),
+                y: graph.getNodeAttribute(node, "y"),
+            };
+        });
+        return positions;
+    }
+
     export function communitiesLouvain(printComs) {
         if (printComs) {
             const communities = louvain(graph);

@@ -8,7 +8,7 @@
     export let nodes = [];
     const dispatcher = createEventDispatcher();
 
-    let fileTypes = ["json", "gexf", "png"];
+    let fileTypes = ["json", "gexf", "png", "csv", "bif"];
     let fileType = fileTypes[0];
 </script>
 

@@ -93,8 +93,10 @@ class DiscreteJointDistribution(JointDistribution):
             cpd.marginalize(list_vars)
 
         values = list(cpd.get_values().flat)
-        states = cpd.state_names[node] if cpd.state_names else states = [
-            f'State {i}' for i in range(values)]
+        if cpd.state_names:
+            states = cpd.state_names[node]
+        else:
+            states = [f'State {i}' for i in range(values)]
 
         return {states[i]: value for i, value in enumerate(values)}
 
