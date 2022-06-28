@@ -9,7 +9,6 @@ Discrete joint probability distribution module.
 from .joint_distribution import JointDistribution
 
 
-# TODO: Implement discrete inference.
 class DiscreteJointDistribution(JointDistribution):
     """
     Discrete joint probability distribution class.
