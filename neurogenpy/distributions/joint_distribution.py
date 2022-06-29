@@ -14,13 +14,18 @@ from abc import ABCMeta, abstractmethod
 class JointDistribution(metaclass=ABCMeta):
     """
     Abstract class for joint probability distributions.
+
+    Parameters
+    ----------
+    order :
+        Order of the nodes in the distribution.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, order):
+        self.order = order
 
     @abstractmethod
-    def from_parameters(self, parameters, order):
+    def from_parameters(self, parameters):
         """
         Computes the joint probability distribution given the topological order
         of some nodes and their parameters.
@@ -30,9 +35,6 @@ class JointDistribution(metaclass=ABCMeta):
         parameters : dict
             Parameters of the nodes.
 
-        order : list
-            Topological order of the nodes.
-
         Returns
         -------
         self : JointDistribution
@@ -40,10 +42,9 @@ class JointDistribution(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def marginal(self):
+    def marginal(self, nodes):
         """
-        Retrieves the marginal distribution parameters for a node or set of
-        nodes.
+        Retrieves the marginal distribution parameters for set of nodes.
 
         Returns
         -------
@@ -51,18 +52,20 @@ class JointDistribution(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def condition(self, evidence, order):
+    def condition(self, evidence):
         """
         Conditions a joint probability distribution on some evidence.
 
         Parameters
         ----------
-        order : list
-            Topological order of the nodes.
-
         evidence : dict
             The evidence to use for conditioning the distribution. The keys are
             nodes and the values the observed value for them.
+
+        Returns
+        -------
+        dict
+            CPDs of the unobserved nodes.
         """
 
     def clear(self):
@@ -74,10 +77,75 @@ class JointDistribution(metaclass=ABCMeta):
         for k in keys:
             setattr(self, k, None)
 
-    def all_cpds(self, nodes):
+    @abstractmethod
+    def get_cpd(self, node):
+        """
+        Retrieves the conditional probability distribution of a particular
+        node.
+
+        Parameters
+        ----------
+        node :
+            Node whose cpd will be computed.
+
+        Returns
+        -------
+        dict
+            Conditional probability distribution of the node.
+        """
+
+    @abstractmethod
+    def all_cpds(self):
         """
 
         Returns
         -------
 
         """
+
+    def relabel_nodes(self, mapping):
+        """
+        Relabel the nodes of the distribution according to a given mapping.
+
+        Parameters
+        ----------
+        mapping : dict
+            A dictionary with the old labels as keys and new labels as values.
+            It can be a partial mapping.
+        """
+
+        self.order = [mapping[node] if node in mapping.keys() else node
+                      for node in self.order]
+
+    @abstractmethod
+    def is_set(self):
+        """
+        Checks if the distribution parameters are set.
+
+        Returns
+        -------
+        bool
+            Whether the distribution parameters are set or not.
+        """
+
+    @abstractmethod
+    def size(self):
+        """
+        Retrieves the number of nodes in the distribution.
+
+        Returns
+        -------
+        int
+            Number of nodes in the distribution.
+        """
+
+    def order(self):
+        """
+        Retrieves the order of the nodes in the distribution.
+
+        Returns
+        -------
+            Order of the nodes in the distribution.
+        """
+
+        return self.order()

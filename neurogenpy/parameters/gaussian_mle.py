@@ -34,8 +34,9 @@ class GaussianMLE(LearnParameters):
         Returns
         -------
         dict
-            A dictionary with the nodes IDs as keys and GaussianNode objects
-            as values.
+            A dictionary with the nodes IDs as keys and `GaussianNode` objects
+            as values. This class provides the unconditional mean, conditional
+            variance, regression coefficients and parents of a node.
 
         Raises
         ------
@@ -50,39 +51,31 @@ class GaussianMLE(LearnParameters):
 
     def _run_neurogenpy(self):
         nodes = self.data.columns.values.tolist()
-
-        n = len(nodes)
-        mu = np.zeros(n)
-        sigmas = np.zeros(n)
-        parents_coeffs = []
-        parents = []
+        parameters = {}
 
         for i, node in enumerate(nodes):
             node_parents = [pred for pred in self.graph.predecessors(node)]
-            parents.append(node_parents)
-
             y = self.data.loc[:, node].values.reshape(self.data.shape[0],
                                                       -1).astype(float)
-
+            mean = y.mean()
             if not node_parents:
-                mean = y.mean()
                 variance = y.var()
-                parents_coeffs.append([])
+                parents_coeffs = []
             else:
                 x = self.data.loc[:, node_parents].values.reshape(
                     self.data.shape[0], -1)
                 variance, coeffs = _linear_gaussian(x, y)
-                mean = coeffs[-1]
-                parents_coeffs.append(coeffs[:-1])
+                parents_coeffs = coeffs[:-1]
 
-            mu[i] = mean
-            sigmas[i] = variance
+            parameters[node] = GaussianNode(mean, variance, node_parents,
+                                            parents_coeffs)
 
-        return mu, sigmas, parents_coeffs, parents, nodes
+        return parameters, nodes
 
 
 GaussianNode = namedtuple('GaussianNode',
-                          ('mean', 'var', 'parents', 'parents_coeffs'))
+                          ('uncond_mean', 'cond_var', 'parents',
+                           'parents_coeffs'))
 
 
 @numba.jit(nopython=True, fastmath=True)

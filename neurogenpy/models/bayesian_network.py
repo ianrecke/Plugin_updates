@@ -19,7 +19,9 @@ from community import best_partition
 from networkx.algorithms.centrality import betweenness
 from sklearn.metrics import roc_auc_score, average_precision_score
 
-from ..distributions.modifiable_joint import ModifiableJointDistribution
+from neurogenpy.distributions.joint_distribution import JointDistribution
+from ..distributions import GaussianJointDistribution, \
+    DiscreteJointDistribution
 from ..io.adjacency_matrix import AdjacencyMatrix
 from ..io.bif import BIF
 from ..io.gexf import GEXF
@@ -53,8 +55,12 @@ from ..structure.pc import PC
 from ..structure.pearson import Pearson
 from ..structure.sparsebn import SparseBn
 from ..structure.tan import Tan
+from ..util.data_structures import get_data_type
 
 logger = logging.getLogger(__name__)
+
+_DISTRIBUTIONS = {'discrete': DiscreteJointDistribution,
+                  'continuous': GaussianJointDistribution}
 
 
 class BayesianNetwork:
@@ -75,18 +81,14 @@ class BayesianNetwork:
             - Discrete case: the value of a node is a
                 :class:`~pgmpy.TabularCPD` object.
 
-            - Hybrid case: mixture. Not yet implemented.
-
         If `graph` is not set, this argument is ignored.
 
-    joint_dist : dict, optional
+    joint_dist : JointDistribution, optional
         Joint probability distribution of the variables in the network. It must
-        have two keys: 'distribution' and 'nodes_order'. The value for the
-        first one must be a JointDistribution object and, for the second one a
-        list of the nodes order used in the distribution.
-        If `parameters` is set or `graph` is not set, this argument is ignored.
+        have two keys: 'distribution' and 'nodes_order'. If `parameters` is set
+        or `graph` is not set, this argument is ignored.
 
-    data_type : {'discrete', 'continuous', 'hybrid'}, optional
+    data_type : {'discrete', 'continuous'}, optional
         The type of data we are dealing with.
 
     Examples
@@ -112,32 +114,23 @@ class BayesianNetwork:
 
         self.graph = graph
         self.num_nodes = 0 if self.graph is None else len(self.graph)
-
         self.data_type = data_type
 
         if self.graph is not None:
             self._check_parameters(parameters)
             self.parameters = parameters
 
-            if self._check_dist(joint_dist):
-                dist, order = (joint_dist['distribution'],
-                               joint_dist['nodes_order'])
-            else:
-                dist, order = (None, None)
+            if parameters is not None:
+                # Topological order is only important in the continuous case.
+                # In the discrete one, it just represents the IDs of the nodes.
+                self.joint_dist = _DISTRIBUTIONS[self.data_type](
+                    self._topological_order()).from_parameters(self.parameters)
 
-            self.joint_dist = ModifiableJointDistribution(
-                dist=dist,
-                save_dist=self.num_nodes > 300,
-                data_type=self.data_type,
-                nodes_order=order)
-            if parameters is not None and self.data_type == 'continuous':
-                self.joint = self.joint_dist.from_params(
-                    params=self.parameters,
-                    nodes_order=self._topological_order())
+            elif self._check_dist(joint_dist):
+                self.joint_dist = joint_dist
 
         else:
-            self.joint_dist = ModifiableJointDistribution(
-                data_type=self.data_type)
+            self.joint_dist = _DISTRIBUTIONS[self.data_type]([])
 
         self.evidence = {}
 
@@ -259,11 +252,11 @@ class BayesianNetwork:
                 'Parameters and graph structure must have the same nodes.')
 
     def _check_dist(self, dist):
-        if self.parameters is None and dist is not None and (
-                len(dist['distribution']) == self.num_nodes or set(
-            dist['nodes_order']) != set(self.graph.nodes())):
+        if dist is not None and (not isinstance(
+                dist, JointDistribution) or dist.size() != self.num_nodes or
+                                 set(dist.order()) != set(self.graph.nodes())):
             raise ValueError(
-                'Joint distribution and graph must have the same nodes.')
+                'Wrong Joint Probability Distribution.')
         return dist is not None
 
     def _check_params_fitted(self):
@@ -498,23 +491,7 @@ class BayesianNetwork:
         else:
             raise ValueError(f'{method} method is not supported.')
 
-    def save_dist(self, initial=False, path='joint_dist.npz'):
-        """
-        Saves the current joint probability distribution in a '.npz' file with
-        the path provided.
-
-        Parameters
-        ----------
-        initial : bool, default=False
-            Whether the distribution to save is the initial (without evidence)
-            or not.
-
-        path : str, default='joint_dist.npz'
-            The path of the file where the distribution has to be saved.
-        """
-        self.joint_dist.save(initial=initial, path=path)
-
-    def get_evidence(self):
+    def evidence(self):
         """
         Returns the known evidence.
 
@@ -524,6 +501,18 @@ class BayesianNetwork:
             Known evidence elements.
         """
         return self.evidence
+
+    def condition(self):
+        """
+        Retrieves the conditional probability distributions of the unobserved
+        nodes given the evidence already set.
+
+        Returns
+        -------
+        dict
+            CPDs of the unobserved nodes.
+        """
+        return self.joint_dist.condition(self.evidence)
 
     def set_evidence(self, nodes_values, evidence_scale='scalar'):
         """
@@ -544,30 +533,24 @@ class BayesianNetwork:
             If `evidence_scale` is not supported.
         """
         self._check_is_fitted()
+        wrong = self._check_nodes_warn(list(nodes_values.keys()))
 
-        if self.data_type == 'continuous':
+        for k in wrong:
+            nodes_values.pop(k)
 
-            wrong = self._check_nodes_warn(list(nodes_values.keys()))
+        if self.data_type == 'continuous' and \
+                evidence_scale == 'num_std_deviations':
+            for node, num_devs in nodes_values.keys():
+                mean, std_dev = self.joint_dist.marginal(nodes=[node],
+                                                         initial=True)
 
-            for k in wrong:
-                nodes_values.pop(k)
-
-            if evidence_scale == 'scalar':
-                self.evidence = {**self.evidence, **nodes_values}
-
-            elif evidence_scale == 'num_std_deviations':
-                for node, num_devs in nodes_values.keys():
-                    mean, std_dev = self.joint_dist.marginal(nodes=[node],
-                                                             initial=True)
-
-                    evidence_value_node = mean + std_dev * num_devs
-                    self.evidence[node] = evidence_value_node
-            else:
-                raise ValueError(
-                    f'Evidence scale \'{evidence_scale}\' is not supported.')
-            self.joint_dist.condition(self.evidence)
+                evidence_value_node = mean + std_dev * num_devs
+                self.evidence[node] = evidence_value_node
+        elif self.data_type == 'discrete' or evidence_scale == 'scalar':
+            self.evidence = {**self.evidence, **nodes_values}
         else:
-            raise Exception('Discrete and hybrid cases are not supported.')
+            raise ValueError(
+                f'Evidence scale \'{evidence_scale}\' is not supported.')
 
     def clear_evidence(self, nodes=None):
         """
@@ -579,29 +562,21 @@ class BayesianNetwork:
             If set, it determines for which nodes the evidence has to be
             cleared.
         """
+
         self._check_is_fitted()
 
-        if self.data_type == 'continuous':
-            if nodes is None:
-                self.evidence.clear()
-            else:
-                wrong_nodes = self._check_nodes_warn(nodes)
-
-                nodes = [node for node in nodes if node not in wrong_nodes]
-
-                for node in nodes:
-                    try:
-                        self.evidence.pop(node)
-                    except KeyError:
-                        pass
-
-            if not self.evidence:
-                self.joint_dist.restart()
-            else:
-                self.joint_dist.condition(self.evidence)
-
+        if nodes is None:
+            self.evidence.clear()
         else:
-            raise Exception('Discrete case not supported.')
+            wrong_nodes = self._check_nodes_warn(nodes)
+
+            nodes = [node for node in nodes if node not in wrong_nodes]
+
+            for node in nodes:
+                try:
+                    self.evidence.pop(node)
+                except KeyError:
+                    pass
 
     def marginal(self, nodes, initial=False):
         """
@@ -731,17 +706,25 @@ class BayesianNetwork:
 
         Returns
         -------
+        list
             The set of evidence nodes.
         """
-        return self.evidence.keys()
+        return list(self.evidence.keys())
 
     def all_cpds(self):
+        """
+        Retrieves the initial conditional probability distributions of the
+        nodes.
+
+        Returns
+        -------
+        dict
+            Initial CPDs of the nodes
+        """
+
         self._check_params_fitted()
 
-        nodes = [node for node in self.joint_dist.nodes_order if
-                 node not in self.evidence.keys()]
-
-        return self.joint_dist.all_cpds(nodes)
+        return self.joint_dist.all_cpds()
 
     def is_dseparated(self, start, end, observed):
         """
@@ -982,8 +965,7 @@ class BayesianNetwork:
 
         """
 
-        # self.data_type, self.cont_nodes = get_data_type(df)
-        self.data_type = data_type
+        self.data_type = data_type if data_type else get_data_type(df)
 
         if self.data_type == 'discrete':
             df = df.apply(lambda x: x.astype('category'))
@@ -1027,18 +1009,13 @@ class BayesianNetwork:
         else:
             try:
                 est = estimators[f'{estimation}_{self.data_type}']
-                params = {k: v for k, v in kwargs.items() if
-                          k in inspect.getfullargspec(est).kwonlyargs}
-                mu, sigmas, parents_coeffs, prnts, order = est(
-                    df, self.graph, **params).run()
+                est_params = {k: v for k, v in kwargs.items() if
+                              k in inspect.getfullargspec(est).kwonlyargs}
+                self.parameters, order = est(df, self.graph,
+                                             **est_params).run()
 
-                self.parameters = {node: {"mu": mu[i], "sigma": sigmas[i],
-                                          "parents_coeffs": parents_coeffs[i],
-                                          "parents": prnts[i]} for i, node in
-                                   enumerate(order)}
-                self.joint_dist = ModifiableJointDistribution(
-                    save_dist=self.num_nodes > 300,
-                    data_type='continuous').from_params(self.parameters, order)
+                self.joint_dist = _DISTRIBUTIONS[data_type](order).from_params(
+                    self.parameters)
             except KeyError:
                 raise ValueError('Parameter learning is only available for the'
                                  f' following methods: {*estimators.keys(),}.')
@@ -1175,12 +1152,10 @@ class BayesianNetwork:
             self.graph = AdjacencyMatrix().read_file(file_path)
         elif file_path.endswith('.bif'):
             self.graph, self.parameters = BIF().read_file(file_path)
+            # TODO: Check if BIF works in the continuous case
             self.data_type = 'discrete'
-            self.joint = ModifiableJointDistribution(
-                save_dist=len(self.graph) > 300,
-                data_type=self.data_type).from_params(
-                params=self.parameters,
-                nodes_order=self._topological_order())
+            self.joint_dist = DiscreteJointDistribution(
+                self.graph.nodes()).from_parameters(self.parameters)
         else:
             raise ValueError('File extension not supported.')
         self.num_nodes = len(self.graph)
