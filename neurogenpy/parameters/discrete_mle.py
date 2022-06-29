@@ -40,7 +40,7 @@ class DiscreteMLE(LearnParameters):
             If the environment is not supported.
         """
 
-        if env == 'pgmpy2':
+        if env == 'pgmpy':
             return self._run_pgmpy()
         else:
             raise ValueError(f'{env} environment is not supported.')

@@ -4,8 +4,10 @@
 # Licensed under GNU General Public License v3.0:
 # https://www.gnu.org/licenses/gpl-3.0.html
 
-from .modifiable_joint import ModifiableJointDistribution
+from .gaussian_joint import GaussianJointDistribution
+from .discrete_joint import DiscreteJointDistribution
 
 __all__ = [
-    'ModifiableJointDistribution'
+    'GaussianJointDistribution',
+    'DiscreteJointDistribution'
 ]

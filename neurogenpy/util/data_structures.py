@@ -31,20 +31,23 @@ def get_data_type(df):
 
     Returns
     -------
-    ({'continuous', 'discrete', 'hybrid'}, list)
-        The type of the data set and the set of continuous variables if the
-        type is 'hybrid'.
+    {'continuous', 'discrete'}
+        The type of the data set
+
+    Raises
+    ------
+    Exception
+        If the data is hybrid.
     """
 
     is_number = np.vectorize(lambda x: np.issubdtype(x, np.number))
     if all(is_number(df.dtypes)):
-        return 'continuous', None
+        return 'continuous'
     elif (not any(is_number(df.dtypes))) and (
             any(df.dtypes == 'object') or any(df.dtypes == 'bool')):
-        return 'discrete', None
+        return 'discrete'
     else:
-        aux = [x for x in df.columns if np.issubdtype(df[x].dtype, np.number)]
-        return 'hybrid', aux
+        raise Exception("Only continuous or discrete data sets are accepted.")
 
 
 def pd2r(df):
