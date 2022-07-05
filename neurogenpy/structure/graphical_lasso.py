@@ -24,7 +24,7 @@ class GraphicalLasso(LearnStructure):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous', 'discrete'}
         Type of the data introduced.
 
     alpha : float, default=0.5
@@ -37,9 +37,17 @@ class GraphicalLasso(LearnStructure):
 
     max_iter : int, default=100
         The maximum number of iterations.
+
+    Raises
+    ------
+    ValueError
+        If the data is not continuous.
     """
 
     def __init__(self, df, data_type, *, alpha=0.5, tol=1e-4, max_iter=100):
+        if data_type != 'continuous':
+            raise Exception(
+                'Algorithm only supported for continuous datasets.')
 
         super().__init__(df, data_type)
         self.alpha = alpha
@@ -68,20 +76,16 @@ class GraphicalLasso(LearnStructure):
             If the environment is not supported.
         """
 
-        if self.data_type != 'continuous':
-            raise Exception(
-                'Algorithm only supported for continuous datasets ')
-
         if env == 'scikit-learn':
             return self._run_sklearn()
         else:
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_sklearn(self):
-        nodes_names = list(self.data.columns.values)
-        data_np = np.array(self.data)
+        nodes = list(self.df.columns.values)
+        data = np.array(self.df)
 
-        cov_matrix = np.cov(data_np.T)
+        cov_matrix = np.cov(data.T)
         _, precision_matrix = sk_learn_cov.graphical_lasso(
             cov_matrix, alpha=self.alpha, tol=self.tol, max_iter=self.max_iter)
         adj_matrix = np.array(precision_matrix)
@@ -89,6 +93,6 @@ class GraphicalLasso(LearnStructure):
         adj_matrix = np.triu(adj_matrix)
         adj_matrix = np.square(adj_matrix)
 
-        graph = matrix2nx(adj_matrix, nodes_names)
+        graph = matrix2nx(adj_matrix, nodes)
 
         return graph

@@ -24,7 +24,7 @@ class PC(LearnStructure):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous', 'discrete'}
         Type of the data introduced.
 
     alpha : float, default=0.5
@@ -61,7 +61,7 @@ class PC(LearnStructure):
 
         if env == "pgmpy":
             graph, _ = pgmpy2nx(
-                PGMPY_PC(self.data).estimate(significance_level=self.alpha))
+                PGMPY_PC(self.df).estimate(significance_level=self.alpha))
             return graph
         elif env == "bnlearn":
             return self._run_bnlearn(importr("bnlearn").pc_stable,

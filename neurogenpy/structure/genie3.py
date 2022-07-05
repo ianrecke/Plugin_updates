@@ -28,7 +28,26 @@ from ..util.data_structures import matrix2nx
 class GENIE3(LearnStructure):
     """
     GENIE3 structure learning class.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Data set with the learning sample from which to infer the network.
+
+    data_type : {'continuous'}
+        Type of the data introduced.
+
+    Raises
+    ------
+    ValueError
+        If the data is not continuous.
     """
+
+    def __init__(self, df, data_type):
+        if data_type != 'continuous':
+            raise Exception(
+                'Algorithm only supported for continuous datasets.')
+        super().__init__(df, data_type)
 
     def run(self, env='genie3'):
         """
@@ -50,13 +69,7 @@ class GENIE3(LearnStructure):
         ------
         ValueError
             If the environment is not supported.
-        Exception
-            If the data is not continuous
         """
-
-        if self.data_type != 'continuous':
-            raise Exception(
-                'Algorithm only supported for continuous datasets ')
 
         if env == 'genie3':
             return self._run_genie()
@@ -64,10 +77,9 @@ class GENIE3(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_genie(self):
+        nodes = list(self.df.columns.values)
 
-        nodes = list(self.data.columns.values)
-
-        adj_matrix = genie3(np.array(self.data), nthreads=1)
+        adj_matrix = genie3(np.array(self.df), nthreads=1)
 
         np.fill_diagonal(adj_matrix, 0)
         adj_matrix = np.triu(adj_matrix)

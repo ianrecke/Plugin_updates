@@ -50,11 +50,7 @@ class SparseBn(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_sparsebn(self):
-        if self.data_type == 'hybrid':
-            raise ValueError(
-                'This algorithm does not support hybrid Bayesian networks')
-
-        dataframe = pd2r(self.data)
+        dataframe = pd2r(self.df)
 
         sparsebn = importr('sparsebn')
         sparsebn_utils = importr('sparsebnUtils')

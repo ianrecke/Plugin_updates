@@ -23,24 +23,28 @@ class NB(LearnStructure):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous'}
         Type of the data introduced.
 
-    features_classes : list
+    class_variable : str
+        Name of the class variable.
 
     Raises
     ------
     ValueError
-        If `features_classes` is empty.
+        If the data is not discrete or `class_variable` is not set.
     """
 
-    def __init__(self, df, data_type, *, features_classes):
+    def __init__(self, df, data_type, *, class_variable):
+        if self.data_type != 'discrete':
+            raise ValueError(
+                'This algorithm is only available for discrete data.')
+        if not class_variable:
+            raise ValueError(
+                'To run this classifier, you must supply a class variable.')
 
         super().__init__(df, data_type)
-        self.features_classes = features_classes
-        if not self.features_classes:
-            raise ValueError(
-                'To run this classifier, you must supply one class feature')
+        self.class_variable = class_variable
 
     def run(self, env='bnlearn'):
         """
@@ -71,18 +75,14 @@ class NB(LearnStructure):
         else:
             raise ValueError(f'{env} environment is not supported.')
 
-    # TODO: Check explanatory variables.
     def _run_nb_bnlearn(self):
-        explanatory = list(self.data.columns.values)
+        explanatory = list(self.df.columns.values)
 
-        try:
-            explanatory.remove(self.features_classes[0])
-        except ValueError:
-            pass
+        explanatory.remove(self.class_variable)
         explanatory = np.array(explanatory)
 
         return self._run_bnlearn(importr('bnlearn').naive_bayes,
-                                 training=self.features_classes[0],
+                                 training=self.class_variable,
                                  explanatory=explanatory)
 
     def _run_neurogenpy(self):

@@ -15,7 +15,6 @@ from rpy2.robjects.packages import importr
 from .learn_structure import LearnStructure
 
 
-# TODO: Check algorithm
 class MBC(LearnStructure):
     """
     Multidimensional Bayesian network classifier class.
@@ -25,24 +24,25 @@ class MBC(LearnStructure):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous', 'discrete'}
         Type of the data introduced.
 
-    features_classes : list, optional
+    class_variables : list
 
     Raises
     ------
     ValueError
-        If `features_classes` is empty.
+        If `class_variables` is empty.
     """
 
-    def __init__(self, df, data_type, *, features_classes=None):
-        super().__init__(df, data_type)
-        self.features_classes = features_classes
-        if len(self.features_classes) == 0:
+    def __init__(self, df, data_type, *, class_variables=None):
+        if not class_variables:
             raise ValueError(
                 'To run this classifier, you must supply at least one class '
-                'feature in the previous section.')
+                'feature.')
+
+        super().__init__(df, data_type)
+        self.class_variables = class_variables
 
     def run(self, env='bnlearn'):
         """
@@ -75,14 +75,13 @@ class MBC(LearnStructure):
 
     def _run_mbc_bnlearn(self):
         features = list(
-            set(self.data.columns.values) - set(self.features_classes))
+            set(self.df.columns.values) - set(self.class_variables))
 
         # Black list of arcs from features to classes
         blacklist = pd.DataFrame(columns=['from', 'to'])
-        blacklist['from'] = features * len(self.features_classes)
-        blacklist['to'] = np.repeat(
-            self.features_classes, [
-                len(features)], axis=0)
+        blacklist['from'] = features * len(self.class_variables)
+        blacklist['to'] = np.repeat(self.class_variables, [len(features)],
+                                    axis=0)
 
         # Learn MBC structure
         return self._run_bnlearn(importr('bnlearn').hc, blacklist=blacklist)

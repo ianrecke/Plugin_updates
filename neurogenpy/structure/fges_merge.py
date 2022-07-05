@@ -33,7 +33,7 @@ class FGESMerge(FGESBase):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous'}
         Type of the data introduced.
 
     penalty : int, default=45
@@ -41,6 +41,10 @@ class FGESMerge(FGESBase):
     """
 
     def __init__(self, df, data_type, *, penalty=45, n_jobs=1):
+        if self.data_type != 'continuous':
+            raise ValueError(
+                'This algorithm is only available for continuous data.')
+
         super().__init__(df, data_type, penalty=penalty, n_jobs=n_jobs)
 
         self.tmp_dir = TemporaryDirectory()
@@ -53,7 +57,7 @@ class FGESMerge(FGESBase):
         Parameters
         ----------
         env : str, default='neurogenpy'
-            Environment used to run the algorithm. Supported environments:
+            Environment used to run the algorithm. Currently supported:
 
                 - 'neurogenpy'
 
