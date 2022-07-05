@@ -12,7 +12,6 @@ to other similar formats such as
 
 import json
 
-import networkx
 from networkx.readwrite import json_graph
 
 from .bnio import BNIO
@@ -36,8 +35,8 @@ class JSON(BNIO):
 
         Returns
         -------
-        networkx.DiGraph
-            The graph structure loaded.
+        BayesianNetwork
+            The Bayesian Network loaded.
         """
 
         with open(file_path, 'r') as f:
@@ -58,7 +57,6 @@ class JSON(BNIO):
         with open(file_path, 'w') as f:
             f.write(json_str)
 
-    # TODO: Add parameters to JSON file
     def generate(self, options=None, keys=None):
         """
         Generates the JSON string that represents the network.
@@ -82,7 +80,8 @@ class JSON(BNIO):
         if keys:
             graph_data = {k: graph_data[k] for k in keys}
 
-        data = {'graph': graph_data, 'parameters': {}}
+        data = {'graph': graph_data, 'parameters': self.bn.parameters,
+                'data_type': self.bn.data_type}
 
         return json.dumps(data)
 
@@ -99,10 +98,15 @@ class JSON(BNIO):
 
         Returns
         -------
-        networkx.DiGraph
-            The graph structure loaded.
+        BayesianNetwork
+            The Bayesian Network loaded.
         """
+        from ..models import BayesianNetwork
 
         data = json.loads(io_object)
-        return json_graph.node_link_graph(data['graph'], directed=True,
-                                          multigraph=False, attrs=options)
+        graph = json_graph.node_link_graph(data['graph'], directed=True,
+                                           multigraph=False, attrs=options)
+        parameters = data['parameters']
+        data_type = data['data_type']
+        return BayesianNetwork(graph=graph, parameters=parameters,
+                               data_type=data_type)

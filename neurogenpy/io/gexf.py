@@ -1,5 +1,12 @@
 """
-GEXF input/output module. It uses `networkx` functionality.
+GEXF input/output module. It uses `networkx` functionality. For a detailed
+explanation about the format or `networkx` functions, check
+https://networkx.org/documentation/stable/reference/readwrite/gexf.html.
+
+.. warning::
+    `networkx` uses the standard xml library present in Python, which is
+    insecure.
+
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -30,8 +37,6 @@ _CONFIGS = {
     'default_color': '#FFFFFF'}
 
 
-# TODO: Add to docs networkx warning: the parser uses the standard xml library
-#  present in Python, which is insecure.
 class GEXF(BNIO):
     """
     Bayesian network GEXF input/output class.
@@ -52,7 +57,8 @@ class GEXF(BNIO):
         pass
 
     def write_file(self, file_path='bn.gexf', layout_name=None,
-                   communities=False, sizes_method='mb', layout=None):
+                   communities=False, sizes_method='mb', layout=None,
+                   colors=None):
         """
         Exports a representation of the Bayesian network structure for the
         chosen layout in GEXF format. It also calculates the sizes and colors
@@ -81,9 +87,14 @@ class GEXF(BNIO):
             Custom layout to include in the GEXF representation. If
             `layout_name` is provided, it is ignored. Keys should be the nodes
             and values, tuples with the format (x_coord, y_coord).
+
+        colors : dict, optional
+            Custom colors to include in the GEXF representation. If
+            `communities` is True, it is ignored. Keys should be the nodes
+            and values, colors
         """
 
-        self._add_attrs(layout_name, communities, sizes_method, layout)
+        self._add_attrs(layout_name, communities, sizes_method, layout, colors)
 
         networkx_io.write_gexf(self.bn.graph, file_path)
 
@@ -91,7 +102,7 @@ class GEXF(BNIO):
         return networkx_io.read_gexf(file_path)
 
     def generate(self, layout_name=None, communities=False,
-                 sizes_method='mb', layout=None):
+                 sizes_method='mb', layout=None, colors=None):
         """
         Generates the GEXF string that represents the network.
 
@@ -115,17 +126,23 @@ class GEXF(BNIO):
             `layout_name` is provided, it is ignored. Keys should be the nodes
             and values, tuples with the format (x_coord, y_coord).
 
+        colors : dict, optional
+            Custom colors to include in the GEXF representation. If
+            `communities` is True, it is ignored. Keys should be the nodes
+            and values, colors
+
         Returns
         -------
             The string representation of the network.
         """
 
-        self._add_attrs(layout_name, communities, sizes_method, layout)
+        self._add_attrs(layout_name, communities, sizes_method, layout, colors)
 
         linefeed = chr(10)
         return linefeed.join(networkx_io.generate_gexf(self.bn.graph))
 
-    def _add_attrs(self, layout_name, communities, sizes_method, layout):
+    def _add_attrs(self, layout_name, communities, sizes_method, layout,
+                   colors):
         """Add attributes related with the display of the graph."""
 
         layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
@@ -149,7 +166,10 @@ class GEXF(BNIO):
 
             nx_dict = networkx_io.json_graph.node_link_data(self.bn.graph)
 
-            nodes_colors = self._nodes_colors(communities)
+            if not communities and colors:
+                nodes_colors = colors
+            else:
+                nodes_colors = self._nodes_colors(communities)
             nodes = _get_nodes_attr(nx_dict, layout,
                                     self._nodes_sizes(network_size,
                                                       method=sizes_method),
