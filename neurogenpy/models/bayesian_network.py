@@ -19,13 +19,11 @@ from community import best_partition
 from networkx.algorithms.centrality import betweenness
 from sklearn.metrics import roc_auc_score, average_precision_score
 
-from neurogenpy.distributions.joint_distribution import JointDistribution
-from ..distributions import GaussianJointDistribution, \
-    DiscreteJointDistribution
+from ..distributions import JPD, GaussianJPD, DiscreteJPD
 from ..io.adjacency_matrix import AdjacencyMatrix
 from ..io.bif import BIF
 from ..io.gexf import GEXF
-from ..io.json import JSON
+from ..io.json import JSON as JSON_BN
 from ..parameters.discrete_be import DiscreteBE
 from ..parameters.discrete_mle import DiscreteMLE
 from ..parameters.gaussian_mle import GaussianNode, GaussianMLE
@@ -59,8 +57,8 @@ from ..util.data_structures import get_data_type
 
 logger = logging.getLogger(__name__)
 
-_DISTRIBUTIONS = {'discrete': DiscreteJointDistribution,
-                  'continuous': GaussianJointDistribution}
+_DISTRIBUTIONS = {'discrete': DiscreteJPD,
+                  'continuous': GaussianJPD}
 
 
 class BayesianNetwork:
@@ -83,7 +81,7 @@ class BayesianNetwork:
 
         If `graph` is not set, this argument is ignored.
 
-    joint_dist : JointDistribution, optional
+    joint_dist : JPD, optional
         Joint probability distribution of the variables in the network. It must
         have two keys: 'distribution' and 'nodes_order'. If `parameters` is set
         or `graph` is not set, this argument is ignored.
@@ -120,7 +118,7 @@ class BayesianNetwork:
             self._check_parameters(parameters)
             self.parameters = parameters
 
-            if parameters is not None:
+            if parameters is not None and self.data_type:
                 # Topological order is only important in the continuous case.
                 # In the discrete one, it just represents the IDs of the nodes.
                 self.joint_dist = _DISTRIBUTIONS[self.data_type](
@@ -129,7 +127,7 @@ class BayesianNetwork:
             elif self._check_dist(joint_dist):
                 self.joint_dist = joint_dist
 
-        else:
+        elif self.data_type:
             self.joint_dist = _DISTRIBUTIONS[self.data_type]([])
 
         self.evidence = {}
@@ -253,7 +251,7 @@ class BayesianNetwork:
 
     def _check_dist(self, dist):
         if dist is not None and (not isinstance(
-                dist, JointDistribution) or dist.size() != self.num_nodes or
+                dist, JPD) or dist.size() != self.num_nodes or
                                  set(dist.order()) != set(self.graph.nodes())):
             raise ValueError(
                 'Wrong Joint Probability Distribution.')
@@ -420,6 +418,7 @@ class BayesianNetwork:
             The IDs of the chosen node's direct neighbors.
         """
 
+        self._check_node(node)
         return self.parents(node) + self.children(node)
 
     # TODO: Check what to return with the important nodes.
@@ -500,19 +499,25 @@ class BayesianNetwork:
         dict
             Known evidence elements.
         """
+
         return self.evidence
 
     def condition(self):
         """
-        Retrieves the conditional probability distributions of the unobserved
-        nodes given the evidence already set.
+        Retrieves the marginal distribution for each unobserved node in the
+        network given the evidence already set, i.e., the distributions of the
+        form f(U|E=e) where 'U' represents unobserved variables and 'E=e', the
+        evidence.
 
         Returns
         -------
         dict
             CPDs of the unobserved nodes.
         """
-        return self.joint_dist.condition(self.evidence)
+
+        kwargs = {'graph': self.graph} if self.data_type == 'discrete' else {}
+
+        return self.joint_dist.condition(self.evidence, **kwargs)
 
     def set_evidence(self, nodes_values, evidence_scale='scalar'):
         """
@@ -532,6 +537,7 @@ class BayesianNetwork:
         ValueError
             If `evidence_scale` is not supported.
         """
+
         self._check_is_fitted()
         wrong = self._check_nodes_warn(list(nodes_values.keys()))
 
@@ -577,31 +583,6 @@ class BayesianNetwork:
                     self.evidence.pop(node)
                 except KeyError:
                     pass
-
-    def marginal(self, nodes, initial=False):
-        """
-        Retrieves the marginal distribution for a set of nodes.
-
-        Parameters
-        ----------
-        nodes : list
-            The set of nodes for which the marginal distribution has to be
-            retrieved.
-
-        initial : bool, default=False
-            Whether the distribution used for marginalization is the initial
-            one (without evidence) or the current one.
-
-        Returns
-        -------
-            The desired marginal distribution.
-        """
-
-        self._check_params_fitted()
-        wrong_nodes = self._check_nodes_warn(nodes)
-
-        nodes = [node for node in nodes if node not in wrong_nodes]
-        return self.joint_dist.marginal(nodes, initial=initial)
 
     def has_evidence(self, node):
         """
@@ -711,20 +692,66 @@ class BayesianNetwork:
         """
         return list(self.evidence.keys())
 
-    def all_cpds(self):
+    def get_cpds(self, nodes):
         """
-        Retrieves the initial conditional probability distributions of the
-        nodes.
+        Returns the Conditional Probability Distributions of the desired set
+        of nodes.
+
+        Parameters
+        ----------
+        nodes : list
+            A set of nodes in the network.
 
         Returns
         -------
         dict
-            Initial CPDs of the nodes
+            CPDs of the nodes.
+        """
+
+        self._check_params_fitted()
+        wrong_nodes = self._check_nodes_warn(nodes)
+
+        nodes = [node for node in nodes if node not in wrong_nodes]
+
+        return {node: self.joint_dist.get_cpd(node) for node in nodes}
+
+    def marginal(self, nodes):
+        """
+        Retrieves the initial marginal probability distribution of each node in
+        the provided set.
+
+        Parameters
+        ----------
+        nodes : list
+            Set of nodes.
+
+        Returns
+        -------
+        dict
+            Marginal distribution of each node.
+        """
+
+        self._check_params_fitted()
+        wrong_nodes = self._check_nodes_warn(nodes)
+
+        nodes = [node for node in nodes if node not in wrong_nodes]
+
+        return {node: self.joint_dist.marginal(node) for node in nodes}
+
+    def all_marginals(self):
+        """
+        Retrieves the initial marginal probability distributions of each node
+        in the network.
+
+        Returns
+        -------
+        dict
+            Initial marginal distributions of the nodes.
         """
 
         self._check_params_fitted()
 
-        return self.joint_dist.all_cpds()
+        return self.joint_dist.all_marginals()
 
     def is_dseparated(self, start, end, observed):
         """
@@ -917,7 +944,11 @@ class BayesianNetwork:
                 The maximum number of parents for a node in some structure
                 learning algorithms.
 
-            features_classes : list
+            class_variable : str
+                Name of the class variable for unidimensional classifiers.
+
+            class_variables : list
+                Names of the class variables for multidimensional classifiers.
 
             n_jobs : int, default=1
                 Number of threads used for running an algorithm. It is only
@@ -967,8 +998,8 @@ class BayesianNetwork:
 
         self.data_type = data_type if data_type else get_data_type(df)
 
-        if self.data_type == 'discrete':
-            df = df.apply(lambda x: x.astype('category'))
+        type_conv = 'category' if self.data_type == 'discrete' else 'float'
+        df = df.apply(lambda x: x.astype(type_conv))
 
         estimators = {'bayesian_discrete': DiscreteBE,
                       'mle_discrete': DiscreteMLE,
@@ -998,6 +1029,7 @@ class BayesianNetwork:
             else:
                 raise ValueError('Structure learning is only available for the'
                                  f' following methods: {*algorithms.keys(),}.')
+            logger.info(f'Learnt graph structure: {self.graph}')
             self.num_nodes = len(self.graph)
 
         if self.graph is None:
@@ -1011,14 +1043,14 @@ class BayesianNetwork:
                 est = estimators[f'{estimation}_{self.data_type}']
                 est_params = {k: v for k, v in kwargs.items() if
                               k in inspect.getfullargspec(est).kwonlyargs}
-                self.parameters, order = est(df, self.graph,
-                                             **est_params).run()
+                self.parameters = est(df, graph=self.graph, **est_params).run()
 
-                self.joint_dist = _DISTRIBUTIONS[data_type](order).from_params(
-                    self.parameters)
+                self.joint_dist = _DISTRIBUTIONS[data_type](
+                    self._topological_order()).from_parameters(self.parameters)
             except KeyError:
                 raise ValueError('Parameter learning is only available for the'
                                  f' following methods: {*estimators.keys(),}.')
+        logger.info(f'Learnt parameters: {self.parameters}')
 
         return self
 
@@ -1092,7 +1124,7 @@ class BayesianNetwork:
         elif file_path.endswith('.bif'):
             BIF(self).write_file(file_path)
         elif file_path.endswith('.json'):
-            JSON(self).write_file(file_path)
+            JSON_BN(self).write_file(file_path)
         else:
             raise ValueError('File extension not supported.')
 
@@ -1154,7 +1186,7 @@ class BayesianNetwork:
             self.graph, self.parameters = BIF().read_file(file_path)
             # TODO: Check if BIF works in the continuous case
             self.data_type = 'discrete'
-            self.joint_dist = DiscreteJointDistribution(
+            self.joint_dist = DiscreteJPD(
                 self.graph.nodes()).from_parameters(self.parameters)
         else:
             raise ValueError('File extension not supported.')
