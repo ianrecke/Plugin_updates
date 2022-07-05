@@ -26,13 +26,13 @@ class DiscreteMLE(LearnParameters):
 
         Parameters
         ----------
-        env : {'pgmpy2'}, default='pgmpy2'
+        env : {'pgmpy'}, default='pgmpy'
             Environment used to learn the parameters.
 
         Returns
         -------
-        list
-            List of TabularCPDs.
+        dict
+            Nodes as keys and TabularCPDs as values.
 
         Raises
         ------
