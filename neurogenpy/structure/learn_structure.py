@@ -10,8 +10,6 @@ Structure learning base module.
 
 from abc import abstractmethod, ABCMeta
 
-from rpy2.robjects.packages import importr
-
 from ..util.data_structures import pd2r, bnlearn2nx
 
 
@@ -70,6 +68,7 @@ class LearnStructure(metaclass=ABCMeta):
         networkx.DiGraph
             Learnt graph structure.
         """
+        from rpy2.robjects.packages import importr
 
         dataframe = pd2r(self.df)
         nodes = list(self.df.columns.values)
