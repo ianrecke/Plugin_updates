@@ -23,7 +23,7 @@ class FGES(FGESBase):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete', 'hybrid'}
+    data_type : {'continuous'}
         Type of the data introduced.
 
     penalty : int, default=45
@@ -31,6 +31,10 @@ class FGES(FGESBase):
     """
 
     def __init__(self, df, data_type, *, penalty=45):
+        if self.data_type != 'continuous':
+            raise ValueError(
+                'This algorithm is only available for continuous data.')
+
         super().__init__(df, data_type, penalty=penalty)
 
     def run(self, env='neurogenpy'):
@@ -40,7 +44,7 @@ class FGES(FGESBase):
         Parameters
         ----------
         env : str, default='neurogenpy'
-            Environment used to run the algorithm. Supported environments:
+            Environment used to run the algorithm. Currently supported:
 
                 - 'neurogenpy'
 

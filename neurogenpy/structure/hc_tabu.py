@@ -22,7 +22,7 @@ class HcTabu(LearnStructure):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous', 'discrete'}
         Type of the data introduced.
 
     maxp : int, default=100

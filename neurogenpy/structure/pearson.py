@@ -17,7 +17,18 @@ from ..util.data_structures import matrix2nx
 class Pearson(LearnStructure):
     """
     Pearson correlation structure learning class.
+
+    Raises
+    ------
+    ValueError
+        If the data is not continuous.
     """
+
+    def __init__(self, df, data_type):
+        if data_type != 'continuous':
+            raise Exception(
+                'Algorithm only supported for continuous datasets.')
+        super().__init__(df, data_type)
 
     def run(self, env='neurogenpy'):
         """
@@ -39,13 +50,7 @@ class Pearson(LearnStructure):
         ------
         ValueError
             If the environment is not supported.
-        Exception
-            If the data is not continuous.
         """
-
-        if self.data_type != 'continuous':
-            raise Exception(
-                'Algorithm only supported for continuous datasets ')
 
         if env == 'neurogenpy':
             return self._run_neurogenpy()
@@ -53,14 +58,14 @@ class Pearson(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_neurogenpy(self):
-        nodes_names = list(self.data.columns.values)
-        corr_matrix = self.data.corr()
+        nodes = list(self.df.columns.values)
+        corr_matrix = self.df.corr()
 
         adj_matrix = np.array(corr_matrix)
         np.fill_diagonal(adj_matrix, 0)
         adj_matrix = np.triu(adj_matrix)
         adj_matrix = np.square(adj_matrix)
 
-        graph = matrix2nx(adj_matrix, nodes_names)
+        graph = matrix2nx(adj_matrix, nodes)
 
         return graph

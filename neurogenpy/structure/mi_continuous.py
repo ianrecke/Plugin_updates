@@ -15,11 +15,29 @@ from .learn_structure import LearnStructure
 from ..util.data_structures import matrix2nx
 
 
-# TODO: Check discrete case.
 class MiContinuous(LearnStructure):
     """
     Mutual information structure learning class.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Data set with the learning sample from which to infer the network.
+
+    data_type : {'continuous', 'discrete'}
+        Type of the data introduced.
+
+    Raises
+    ------
+    ValueError
+        If the data is not discrete
     """
+
+    def __init__(self, df, data_type):
+        if data_type != 'continuous':
+            raise Exception(
+                'Algorithm only supported for continuous datasets.')
+        super().__init__(df, data_type)
 
     def run(self, env='scikit-learn'):
         """
@@ -41,13 +59,7 @@ class MiContinuous(LearnStructure):
         ------
         ValueError
             If the environment is not supported.
-        Exception
-            If the data is not continuous.
         """
-
-        if self.data_type != 'continuous':
-            raise Exception(
-                'Algorithm only supported for continuous datasets ')
 
         if env == 'scikit-learn':
             return self._run_sklearn()
@@ -55,13 +67,13 @@ class MiContinuous(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_sklearn(self):
-        nodes_names = list(self.data.columns.values)
+        nodes = list(self.df.columns.values)
         mi_matrix = []
-        data_np = np.array(self.data)
+        data = np.array(self.df)
 
-        for i in range(self.data.shape[1]):
-            y = data_np[:, i]
-            mi_y = mutual_info_regression(data_np, y)
+        for i in range(self.df.shape[1]):
+            y = data[:, i]
+            mi_y = mutual_info_regression(data, y, discrete_features=False)
             mi_matrix.append(mi_y)
 
         mi_matrix = np.array(mi_matrix)
@@ -69,6 +81,6 @@ class MiContinuous(LearnStructure):
         np.fill_diagonal(adj_matrix, 0)
         adj_matrix = np.triu(adj_matrix)
 
-        graph = matrix2nx(adj_matrix, nodes_names)
+        graph = matrix2nx(adj_matrix, nodes)
 
         return graph

@@ -18,7 +18,26 @@ from ..util.data_structures import matrix2nx
 class Lr(LearnStructure):
     """
     Linear regression structure learning class.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Data set with the learning sample from which to infer the network.
+
+    data_type : {'continuous', 'discrete'}
+        Type of the data introduced.
+
+    Raises
+    ------
+    ValueError
+        If data is not continuous.
     """
+
+    def __init__(self, df, data_type):
+        if data_type != 'continuous':
+            raise Exception(
+                'Algorithm only supported for continuous datasets.')
+        super().__init__(df, data_type)
 
     def run(self, env='scikit-learn'):
         """
@@ -38,15 +57,9 @@ class Lr(LearnStructure):
 
         Raises
         ------
-        Exception
-            If variables are not all continuous.
         ValueError
             If the environment is not supported.
         """
-
-        if self.data_type != 'continuous':
-            raise Exception(
-                'Algorithm only supported for continuous datasets ')
 
         if env == 'scikit-learn':
             return self._run_sklearn()
@@ -54,15 +67,14 @@ class Lr(LearnStructure):
             raise ValueError(f'{env} environment is not supported.')
 
     def _run_sklearn(self):
+        nodes = list(self.df.columns.values)
+        data = np.array(self.df)
 
-        nodes_names = list(self.data.columns.values)
-        data_np = np.array(self.data)
-
-        n, g = data_np.shape
+        n, g = data.shape
         adj_matrix = np.zeros((g, g))
         for i in range(g):
-            x = data_np[:, np.array([j != i for j in range(g)])]
-            y = data_np[:, i]
+            x = data[:, np.array([j != i for j in range(g)])]
+            y = data[:, i]
             regression = LinearRegression().fit(x, y)
             adj_matrix[i] = np.concatenate(
                 (regression.coef_[:i], [0], regression.coef_[i:]))
@@ -71,6 +83,6 @@ class Lr(LearnStructure):
         adj_matrix = np.triu(adj_matrix)
         adj_matrix = np.square(adj_matrix)
 
-        graph = matrix2nx(adj_matrix, nodes_names)
+        graph = matrix2nx(adj_matrix, nodes)
 
         return graph

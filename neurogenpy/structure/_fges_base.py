@@ -578,7 +578,7 @@ class FGESBase(LearnStructure, metaclass=ABCMeta):
 
     def __init__(self, df, data_type, *, penalty=45, n_jobs=1):
         super().__init__(df, data_type)
-        self.data = np.array(self.data, dtype=np.float64)
+        self.data = np.array(self.df, dtype=np.float64)
         self.penalty = penalty
         self.num_nodes = self.data.shape[1]
         self.nodes_ids = list(df.columns.values)

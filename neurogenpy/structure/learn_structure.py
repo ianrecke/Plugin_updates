@@ -26,13 +26,13 @@ class LearnStructure(metaclass=ABCMeta):
     df : pandas.DataFrame
         Data set with the learning sample from which to infer the network.
 
-    data_type : {'continuous', 'discrete' or 'hybrid'}
+    data_type : {'continuous', 'discrete'}
         Type of the data introduced.
 
     """
 
     def __init__(self, df, data_type):
-        self.data = df
+        self.df = df
         self.data_type = data_type
 
     @abstractmethod
@@ -65,24 +65,14 @@ class LearnStructure(metaclass=ABCMeta):
         kwargs:
             Additional parameters for the learning function.
 
-
         Returns
         -------
         networkx.DiGraph
             Learnt graph structure.
-
-        Raises
-        ------
-        ValueError
-            If the `data_type` is not supported.
         """
 
-        if self.data_type == 'hybrid':
-            raise ValueError(
-                'This algorithm does not support hybrid Bayesian networks')
-        dataframe = pd2r(self.data)
-
-        nodes = list(self.data.columns.values)
+        dataframe = pd2r(self.df)
+        nodes = list(self.df.columns.values)
 
         output_raw_r = importr('bnlearn').cextend(
             bnlearn_function(dataframe, **kwargs))
