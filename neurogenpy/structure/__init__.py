@@ -30,9 +30,11 @@ __all__ = [
 ]
 
 try:
+    # TODO: Check R installation in another way. It does not work for Windows.
     check_call(['which', 'R'])
 except CalledProcessError:
-    logger.error('R installation is needed because multiple methods use it.')
+    logger.warning('R installation is needed. Multiple structure learning '
+                   'methods methods use it.')
 else:
     from rpy2.robjects.packages import isinstalled
 
