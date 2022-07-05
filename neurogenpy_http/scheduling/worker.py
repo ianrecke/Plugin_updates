@@ -47,8 +47,10 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
         df = pd.DataFrame(rng.integers(0, 100, size=(100, 4)),
                           columns=list('ABCD'))
         if data_type == 'discrete':
-            df = df.apply(pd.cut, bins=3,
-                          labels=['Underexcited', 'Normal', 'Excited'])
+            df = df.apply(lambda col: pd.cut(
+                col, bins=[-float('inf'), 2 ** (-0.5) * col.mean(),
+                           2 ** 0.5 * col.mean(), float('inf')],
+                labels=['Inhibition', 'No-change', 'Activation']))
 
         bn = BayesianNetwork().fit(df=df, data_type=data_type,
                                    estimation=estimation, algorithm=algorithm)
