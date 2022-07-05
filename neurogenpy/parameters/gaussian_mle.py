@@ -70,7 +70,7 @@ class GaussianMLE(LearnParameters):
             parameters[node] = GaussianNode(mean, variance, node_parents,
                                             parents_coeffs)
 
-        return parameters, nodes
+        return parameters
 
 
 GaussianNode = namedtuple('GaussianNode',
