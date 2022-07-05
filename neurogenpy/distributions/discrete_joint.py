@@ -10,14 +10,17 @@ implementations.
 # https://www.gnu.org/licenses/gpl-3.0.html
 
 import copy
+import logging
 
 from pgmpy.inference import VariableElimination, BeliefPropagation
 from pgmpy.models import BayesianNetwork as PGMPY_BN
 
-from .joint_distribution import JointDistribution
+from .joint_distribution import JPD
+
+logger = logging.getLogger(__name__)
 
 
-class DiscreteJointDistribution(JointDistribution):
+class DiscreteJPD(JPD):
     """
     Discrete joint probability distribution class. Conditional probability
     distributions are stored rather than the full joint distribution. Inference
@@ -34,12 +37,14 @@ class DiscreteJointDistribution(JointDistribution):
 
     def __init__(self, order, cpds=None):
         super().__init__(order)
-        self.cpds = {cpd.variable: cpd for cpd in cpds}
+        self.cpds = cpds
 
     def condition(self, evidence, *, graph=None,
                   algorithm='variable_elimination'):
         """
-        Conditions a discrete joint probability distribution on some evidence.
+        Conditions a discrete joint probability distribution on some evidence
+        and retrieves the distributions P(U|E=e) where 'U' represents
+        unobserved variables and 'E=e', the evidence.
 
         Parameters
         ----------
@@ -57,7 +62,7 @@ class DiscreteJointDistribution(JointDistribution):
         Returns
         -------
         dict
-            CPDs of the unobserved nodes.
+            Distributions P(U|E=e).
 
         Raises
         ------
@@ -65,7 +70,8 @@ class DiscreteJointDistribution(JointDistribution):
             If the algorithm is not supported.
         """
 
-        model = PGMPY_BN(graph).add_cpds(list(self.cpds.values()))
+        model = PGMPY_BN(graph)
+        model.add_cpds(*list(self.cpds.values()))
 
         if algorithm == 'variable_elimination':
             inference = VariableElimination(model)
@@ -76,36 +82,33 @@ class DiscreteJointDistribution(JointDistribution):
 
         unobserved = list(set(self.order) - set(evidence.keys()))
 
-        factors = {node: inference.query(node, evidence) for node in
+        factors = {node: inference.query([node], evidence) for node in
                    unobserved}
 
-        return {k: {v['state_names'][k][i]: value} for k, v in factors.items()
-                for i, value in enumerate(v['values'])}
+        return {
+            k: {v.state_names[k][i]: value for i, value in enumerate(v.values)}
+            for k, v in factors.items()}
 
-    def marginal(self, nodes):
+    def marginal(self, node):
         """
-        Retrieves the marginal distribution for a set of nodes.
+        Retrieves the marginal distribution for a node.
 
         Parameters
         ----------
-        nodes : list
-            Nodes whose marginal cpds will be computed.
+        node : list
+            Nodes used to compute the marginal distribution.
 
         Returns
         -------
-        dict[pgmpy.factors.discrete.TabularCPD]
-            The new CPDs.
+        dict
+            The marginal distribution for each node.
         """
 
-        result = {}
-
-        for node in nodes:
-            cpd = self.cpds[node]
+        try:
+            cpd = self.cpds[node].copy()
             if len(cpd.variables) > 1:
                 list_vars = copy.deepcopy(cpd.variables)
-                for keep_node in nodes:
-                    if keep_node in list_vars:
-                        list_vars.remove(node)
+                list_vars.remove(node)
                 cpd.marginalize(list_vars)
 
             values = list(cpd.get_values().flat)
@@ -113,9 +116,10 @@ class DiscreteJointDistribution(JointDistribution):
                 states = cpd.state_names[node]
             else:
                 states = [f'State {i}' for i in range(values)]
-            result[node] = {states[i]: value for i, value in enumerate(values)}
 
-        return result
+            return {states[i]: value for i, value in enumerate(values)}
+        except KeyError:
+            logger.error(f'{node} is not present in the distribution.')
 
     def get_cpd(self, node):
         """
@@ -125,7 +129,7 @@ class DiscreteJointDistribution(JointDistribution):
         Parameters
         ----------
         node :
-            Node whose cpd will be computed.
+            Node whose CPDs will be retrieved.
 
         Returns
         -------
@@ -133,21 +137,10 @@ class DiscreteJointDistribution(JointDistribution):
             Conditional probability distribution of the node given by its
             TabularCPD.
         """
-
-        return self.cpds[node]
-
-    def all_cpds(self):
-        """
-        Retrieves all the conditional distributions, represented by
-        `pgmpy.TabularCPD` objects.
-
-        Returns
-        -------
-        dict[pgmpy.factors.discrete.TabularCPD]
-            Dictionary with the nodes IDs as keys and distributions as values.
-        """
-
-        return self.cpds
+        try:
+            return self.cpds[node]
+        except KeyError:
+            logger.error(f'{node} is not present in the distribution.')
 
     def from_parameters(self, parameters):
         """
@@ -160,7 +153,7 @@ class DiscreteJointDistribution(JointDistribution):
 
         Returns
         -------
-        self : JointDistribution
+        self : JPD
             The joint probability distribution.
         """
 

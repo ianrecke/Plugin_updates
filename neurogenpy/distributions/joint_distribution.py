@@ -11,7 +11,7 @@ Joint probability distribution base module.
 from abc import ABCMeta, abstractmethod
 
 
-class JointDistribution(metaclass=ABCMeta):
+class JPD(metaclass=ABCMeta):
     """
     Abstract class for joint probability distributions.
 
@@ -37,14 +37,26 @@ class JointDistribution(metaclass=ABCMeta):
 
         Returns
         -------
-        self : JointDistribution
+        self : JPD
             The joint probability distribution.
         """
 
-    @abstractmethod
-    def marginal(self, nodes):
+    def all_marginals(self):
         """
-        Retrieves the marginal distribution parameters for set of nodes.
+        Retrieves the marginal distribution for each node in the distribution.
+
+        Returns
+        -------
+        dict
+            Marginal distribution for each node.
+        """
+
+        return {node: self.marginal(node) for node in self.order}
+
+    @abstractmethod
+    def marginal(self, node):
+        """
+        Retrieves the marginal distribution parameters for a node
 
         Returns
         -------
@@ -54,7 +66,9 @@ class JointDistribution(metaclass=ABCMeta):
     @abstractmethod
     def condition(self, evidence):
         """
-        Conditions a joint probability distribution on some evidence.
+        Conditions a joint probability distribution on some evidence and
+        retrieves the distributions f(U|E=e) where 'U' represents unobserved
+        variables and 'E=e', the evidence.
 
         Parameters
         ----------
@@ -65,17 +79,8 @@ class JointDistribution(metaclass=ABCMeta):
         Returns
         -------
         dict
-            CPDs of the unobserved nodes.
+            Distributions f(U|E=e).
         """
-
-    def clear(self):
-        """
-        Clears the distribution.
-        """
-
-        keys = self.__dict__.keys()
-        for k in keys:
-            setattr(self, k, None)
 
     @abstractmethod
     def get_cpd(self, node):
@@ -92,15 +97,6 @@ class JointDistribution(metaclass=ABCMeta):
         -------
         dict
             Conditional probability distribution of the node.
-        """
-
-    @abstractmethod
-    def all_cpds(self):
-        """
-
-        Returns
-        -------
-
         """
 
     def relabel_nodes(self, mapping):
@@ -139,7 +135,7 @@ class JointDistribution(metaclass=ABCMeta):
             Number of nodes in the distribution.
         """
 
-    def order(self):
+    def get_order(self):
         """
         Retrieves the order of the nodes in the distribution.
 
@@ -148,4 +144,4 @@ class JointDistribution(metaclass=ABCMeta):
             Order of the nodes in the distribution.
         """
 
-        return self.order()
+        return self.order
