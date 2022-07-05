@@ -8,7 +8,7 @@ RUN pip install -r /neurogenpy/neurogenpy_http/requirements-worker.txt
 
 COPY ./requirements.txt /neurogenpy/requirements.txt
 RUN Rscript -e "install.packages('bnlearn');"
-#RUN Rscript -e "devtools::install_github('itsrainingdata/sparsebn')"
+RUN Rscript -e "install.packages('sparsebn', repos='https://mran.microsoft.com/snapshot/2020-09-13')"
 RUN pip install -r /neurogenpy/requirements.txt
 
 COPY . /neurogenpy
