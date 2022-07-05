@@ -1,7 +1,7 @@
 import unittest
 
 
-class TestModifiableJointDistribution(unittest.TestCase):
+class TestJSON(unittest.TestCase):
     pass
 
 
