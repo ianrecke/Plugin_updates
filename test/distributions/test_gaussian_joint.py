@@ -1,7 +1,7 @@
 import unittest
 
 
-class TestGaussianJointDistribution(unittest.TestCase):
+class TestGaussianJPD(unittest.TestCase):
     def test_from_parameters(self):
         pass
 
