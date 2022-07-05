@@ -42,6 +42,7 @@
     "@stdlib/stats-base-dists-normal-quantile": "^0.0.6",
     "@yomguithereal/helpers": "^1.1.1",
     "chart.js": "^3.8.0",
+    "chartjs-plugin-annotation": "^1.4.0",
     "events": "^3.3.0",
     "graphology-communities-louvain": "^2.0.1",
     "graphology-layout": "^0.6.0",

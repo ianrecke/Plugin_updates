@@ -1,92 +1,92 @@
 {
-  "algorithms": [
-    {
-      "name": "Chow Liu",
-      "id": "cl"
+  "algorithms": {
+    "Chow Liu": {
+      "id": "cl",
+      "available": "both"
     },
-    {
-      "name": "Fast-IAMB",
-      "id": "fast_iamb"
+    "Fast-IAMB": {
+      "id": "fast_iamb",
+      "available": "both"
     },
-    {
-      "name": "FGES",
-      "id": "fges"
+    "FGES": {
+      "id": "fges",
+      "available": "continuous"
     },
-    {
-      "name": "FGES-Merge",
-      "id": "fges_merge"
+    "FGES-Merge": {
+      "id": "fges_merge",
+      "available": "continuous"
     },
-    {
-      "name": "GENIE3",
-      "id": "genie3"
+    "GENIE3": {
+      "id": "genie3",
+      "available": "continuous"
     },
-    {
-      "name": "Graphical lasso",
-      "id": "graphical_lasso"
+    "Graphical lasso": {
+      "id": "graphical_lasso",
+      "available": "continuous"
     },
-    {
-      "name": "Grow shrink",
-      "id": "grow_shrink"
+    "Grow shrink": {
+      "id": "grow_shrink",
+      "available": "both"
     },
-    {
-      "name": "Hill climbing",
-      "id": "hc"
+    "Hill climbing": {
+      "id": "hc",
+      "available": "both"
     },
-    {
-      "name": "Hill climbing with tabu search",
-      "idd": "hc_tabu"
+    "Hill climbing with tabu search": {
+      "id": "hc_tabu",
+      "available": "both"
     },
-    {
-      "name": "Hiton Parents and Children",
-      "id": "hiton_pc"
+    "Hiton Parents and Children": {
+      "id": "hiton_pc",
+      "available": "both"
     },
-    {
-      "name": "IAMB",
-      "id": "iamb"
+    "IAMB": {
+      "id": "iamb",
+      "available": "both"
     },
-    {
-      "name": "Inter-IAMB",
-      "id": "inter_iamb"
+    "Inter-IAMB": {
+      "id": "inter_iamb",
+      "available": "both"
     },
-    {
-      "name": "Linear regression",
-      "id": "Lr"
+    "Linear regression": {
+      "id": "Lr",
+      "available": "continuous"
     },
-    {
-      "name": "Multidimensional Bayesian classifier",
-      "id": "mbc"
+    "Multidimensional Bayesian classifier": {
+      "id": "mbc",
+      "available": "both"
     },
-    {
-      "name": "Mutual information",
-      "id": "mutual_information"
+    "Mutual information": {
+      "id": "mutual_information",
+      "available": "continuous"
     },
-    {
-      "name": "MMHC",
-      "id": "mmhc"
+    "MMHC": {
+      "id": "mmhc",
+      "available": "both"
     },
-    {
-      "name": "MMPC",
-      "id": "mmpc"
+    "MMPC": {
+      "id": "mmpc",
+      "available": "both"
     },
-    {
-      "name": "Naive Bayes",
-      "id": "nb"
+    "Naive Bayes": {
+      "id": "nb",
+      "available": "discrete"
     },
-    {
-      "name": "PC",
-      "id": "pc"
+    "PC": {
+      "id": "pc",
+      "available": "both"
     },
-    {
-      "name": "Pearson correlation",
-      "id": "pearson_correlation"
+    "Pearson correlation": {
+      "id": "pearson_correlation",
+      "available": "continuous"
     },
-    {
-      "name": "sparsebn",
-      "id": "sparsebn"
+    "sparsebn": {
+      "id": "sparsebn",
+      "available": "both"
     },
-    {
-      "name": "Tree augmented naive Bayes",
-      "id": "tan"
+    "Tree augmented naive Bayes": {
+      "id": "tan",
+      "available": "discrete"
     }
-  ]
+  }
 }

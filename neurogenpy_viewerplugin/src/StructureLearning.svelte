@@ -4,13 +4,30 @@
     import { algorithms } from "./algorithms.json";
     import Textfield from "@smui/textfield";
 
-    const algs = Object.assign(
-        {},
-        ...algorithms.map((x) => ({ [x.name]: x.id }))
-    );
+    export let dataType;
+
+    let algsNames = Object.keys(algorithms);
+
     let autocmplText = "";
-    let selected = undefined;
+    let counter = 0;
+
     const dispatcher = createEventDispatcher();
+
+    async function search(input) {
+        const myCounter = ++counter;
+
+        // Pretend to be loading something...
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        if (myCounter !== counter) return false;
+
+        return algsNames.filter(
+            (item) =>
+                (algorithms[item].available === dataType ||
+                    algorithms[item].available === "both") &&
+                item.toLowerCase().includes(input.toLowerCase())
+        );
+    }
 
     function algorithmSelected(alg) {
         dispatcher("AlgorithmSelected", alg);
@@ -20,11 +37,10 @@
 <div>
     <Autocomplete
         combobox
-        options={Object.keys(algs)}
-        bind:value={selected}
+        {search}
         bind:text={autocmplText}
         on:SMUIAutocomplete:selected={(ev) =>
-            algorithmSelected(algs[ev.detail])}
+            algorithmSelected(algorithms[ev.detail].id)}
     >
         <Textfield
             label="Structure learning"

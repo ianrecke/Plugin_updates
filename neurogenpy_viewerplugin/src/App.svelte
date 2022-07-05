@@ -25,7 +25,7 @@
     let errorText = undefined;
     let genes = [];
     let result = {};
-    let variablesType;
+    let dataType = "continuous";
 
     let param = {
         parcellation_id: parcellationId,
@@ -164,7 +164,7 @@
             setTimeout(() => {
                 let promise = new ShowGraph({
                     target: win.document.body,
-                    props: { result: result },
+                    props: { result: result, dataType: dataType },
                 });
                 resolve(promise);
             }, 500);
@@ -177,6 +177,7 @@
     }
 
     async function learnGRN() {
+        handleUpdateParam({ data_type: dataType });
         if (runningFlag) {
             console.warn(
                 `GRN learning already running, do not start a new one.`
@@ -196,7 +197,7 @@
     }
 </script>
 
-<svelte:window height="100%" width="100%" on:message={handleMessage} />
+<svelte:window height="100%" width="100%" on:message={handleMessage}/>
 
 {#if !destroyFlag}
     <Description />
@@ -214,21 +215,23 @@
                 {genes}
             />
             <Select
-                bind:value={variablesType}
-                label="Variables type"
+                bind:value={dataType}
+                label="Data type"
             >
                 <Option value={"continuous"}>
-                    {"continuous"}
+                    {"Continuous"}
                 </Option>
                 <Option value={"discrete"}>
-                    {"discrete"}
+                    {"Discrete"}
                 </Option>
             </Select>
             <StructureLearning
+                {dataType}
                 on:AlgorithmSelected={(ev) =>
                     handleUpdateParam({ algorithm: ev.detail })}
             />
             <ParametersEstimation
+                {dataType}
                 on:EstimationSelected={(ev) =>
                     handleUpdateParam({ estimation: ev.detail })}
             />

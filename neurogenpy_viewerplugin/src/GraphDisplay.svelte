@@ -115,7 +115,7 @@
         });
 
         // Sigma assigns some events to the parent window, so we have to reassign them.
-        // Events forwarding should be the best solution. Svelte Material UI also deals with
+        // Events forwarding should be the best solution. Svelte Material UI also presents
         // this issue.
         let mouseCaptor = renderer.getMouseCaptor();
         document.removeEventListener("mousemove", mouseCaptor.handleMove);
@@ -242,6 +242,14 @@
                 x: graph.getNodeAttribute(node, "x"),
                 y: graph.getNodeAttribute(node, "y"),
             };
+        });
+        return positions;
+    }
+
+    export function getColors() {
+        let colors = {};
+        graph.forEachNode((node) => {
+            colors[node] = graph.getNodeAttribute(node, "color");
         });
         return positions;
     }

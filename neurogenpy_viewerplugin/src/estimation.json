@@ -1,12 +1,12 @@
 {
-  "estimation": [
-    {
-      "name": "Bayesian estimation",
-      "id": "bayesian"
+  "estimation": {
+    "Bayesian estimation": {
+      "id": "bayesian",
+      "available": "discrete"
     },
-    {
-      "name": "Maximum likelihood estimation",
-      "id": "mle"
+    "Maximum likelihood estimation": {
+      "id": "mle",
+      "available": "both"
     }
-  ]
+  }
 }

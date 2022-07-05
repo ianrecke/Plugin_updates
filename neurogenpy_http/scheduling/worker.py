@@ -16,46 +16,49 @@ default_config = 'neurogenpy_http.conf.celeryconfig'
 app = Celery(CHANNEL)
 app.config_from_object(default_config)
 
-BN = None
-
 
 @app.task
 def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
-              estimation: str):
-    import siibra
-    import statistics
+              estimation: str, data_type: str):
+    # import siibra
+    # import statistics
     import pandas as pd
-    from neurogenpy import BayesianNetwork, GEXF
+    import numpy as np
+    from neurogenpy import BayesianNetwork, GEXF, JSON
 
-    global BN
-
-    hostname = log_rec(parcellation_id, roi, genes, algorithm, estimation)
+    hostname = log_rec(parcellation_id, roi, genes, algorithm, estimation,
+                       data_type)
 
     try:
-        parcellation = siibra.parcellations[parcellation_id]
-        region = parcellation.decode_region(roi)
-        if region is None:
-            logger.warning(
-                f'Region definition {roi} could not be matched in atlas.')
-
+        # parcellation = siibra.parcellations[parcellation_id]
+        # region = parcellation.decode_region(roi)
+        # if region is None:
+        #     logger.warning(
+        #         f'Region definition {roi} could not be matched in atlas.')
+        #
         # FIXME: Too many requests raise an exception.
-        samples = {gene_name: [statistics.mean(f.expression_levels) for f in
-                               siibra.get_features(region, 'gene',
-                                                   gene=gene_name)] for
-                   gene_name in genes}
+        # samples = {gene_name: [statistics.mean(f.expression_levels) for f in
+        #                        siibra.get_features(region, 'gene',
+        #                                            gene=gene_name)] for
+        #            gene_name in genes}
+        #
+        # df = pd.DataFrame(samples)
+        rng = np.random.default_rng()
+        df = pd.DataFrame(rng.integers(0, 100, size=(100, 4)),
+                          columns=list('ABCD'))
+        if data_type == 'discrete':
+            df = df.apply(pd.cut, bins=3,
+                          labels=['Underexcited', 'Normal', 'Excited'])
 
-        df = pd.DataFrame(samples)
-        # df = pd.read_csv('df.csv')
+        bn = BayesianNetwork().fit(df=df, data_type=data_type,
+                                   estimation=estimation, algorithm=algorithm)
 
-        BN = BayesianNetwork().fit(df, algorithm=algorithm,
-                                   estimation=estimation)
-
-        gexf = GEXF(BN).generate(layout_name='circular', communities=True)
-        marginals = BN.all_cpds()
-        # marginals = {node: BN.marginal([node]) for node in BN.nodes()}
+        gexf = GEXF(bn).generate(layout_name='circular')
+        marginals = bn.all_marginals()
 
         log_success(hostname, gexf, marginals)
-        return {'gexf': gexf, 'marginals': marginals}
+        return {'json_bn': JSON(bn).generate(), 'gexf': gexf,
+                'marginals': marginals}
 
     except Exception as exc:
         log_fail(hostname, str(exc))
@@ -63,17 +66,20 @@ def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
 
 
 @app.task
-def get_related(node, method):
-    global BN
+def get_related(json_bn: str, node: str, method: str):
+    from neurogenpy import JSON
 
     hostname = log_rec(node, method)
 
     try:
+
+        bn = JSON().convert(json_bn)
+
         result = []
         if method == 'mb':
-            result = BN.markov_blanket(node)
+            result = bn.markov_blanket(node)
         elif method == 'reachable':
-            result = list(BN.reachable_nodes([node]))
+            result = list(bn.reachable_nodes([node]))
 
         log_success(hostname, result)
         return {'result': result}
@@ -84,15 +90,18 @@ def get_related(node, method):
 
 
 @app.task
-def get_layout(layout):
+def get_layout(json_bn: str, layout: str):
     from neurogenpy.io.layout import DotLayout, IgraphLayout
+    from neurogenpy import JSON
 
     hostname = log_rec(layout)
 
     try:
+        bn = JSON().convert(json_bn)
+
         lo = IgraphLayout(
-            BN.graph, layout_name=layout) if layout != "Dot" else DotLayout(
-            BN.graph)
+            bn.graph, layout_name=layout) if layout != "Dot" else DotLayout(
+            bn.graph)
         layout_pos = lo.run()
 
         log_success(hostname, layout_pos)
@@ -104,12 +113,15 @@ def get_layout(layout):
 
 
 @app.task
-def check_dseparation(X, Y, Z):
+def check_dseparation(json_bn: str, X: list, Y: list, Z: list):
+    from neurogenpy import JSON
+
     hostname = log_rec(X, Y, Z)
 
     try:
+        bn = JSON().convert(json_bn)
 
-        result = BN.is_dseparated(X, Y, Z)
+        result = bn.is_dseparated(X, Y, Z)
 
         log_success(hostname, result)
         return {'result': result}
@@ -120,18 +132,17 @@ def check_dseparation(X, Y, Z):
 
 
 @app.task
-def perform_inference(evidence, marginals):
-    hostname = log_rec(evidence, marginals)
+def perform_inference(json_bn: str, evidence: dict):
+    from neurogenpy import JSON
+
+    hostname = log_rec(evidence)
 
     try:
-        BN.set_evidence(evidence)
-        non_evidence = [node for node in BN.nodes() if
-                        node not in evidence.keys()]
-        new_marginals = {node: BN.marginal([node], initial=False) for node in
-                         non_evidence}
+        bn = JSON().convert(json_bn)
 
-        for node in evidence.keys():
-            new_marginals[node] = {"mu": evidence[node], "sigma": 0}
+        bn.clear_evidence()
+        bn.set_evidence(evidence)
+        new_marginals = bn.condition()
 
         log_success(hostname, new_marginals)
 
@@ -143,19 +154,23 @@ def perform_inference(evidence, marginals):
 
 
 @app.task
-def downloadable_file(file_type, positions):
+def downloadable_file(json_bn: str, file_type: str, positions: dict,
+                      colors: dict):
+    from neurogenpy import JSON, GEXF, AdjacencyMatrix, BIF
+
     hostname = log_rec(file_type)
 
     try:
-        from neurogenpy import JSON, GEXF, AdjacencyMatrix, BIF
+        bn = JSON().convert(json_bn)
 
         writers = {'json': JSON, 'gexf': GEXF, 'csv': AdjacencyMatrix,
                    'bif': BIF}
 
-        writer = writers[file_type](BN)
+        writer = writers[file_type](bn)
 
         positions = {k: (v['x'], v['y']) for k, v in positions.items()}
-        args = {'layout': positions} if file_type == 'gexf' else {}
+        args = {'layout': positions,
+                'colors': colors} if file_type == 'gexf' else {}
         result = writer.generate(**args)
 
         log_success(hostname, result)

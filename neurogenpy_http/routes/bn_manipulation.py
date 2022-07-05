@@ -23,31 +23,37 @@ class LearnPostReqModel(BModel):
     genes: List[str]
     algorithm: str
     estimation: str
+    data_type: str
 
 
 class LayoutPostReqModel(BModel):
+    json_bn: str
     layout: str
 
 
 class IOPostReqModel(BModel):
+    json_bn: str
     file_type: str
     positions: dict
+    colors: dict
 
 
 class RelatedNodesPostReqModel(BModel):
+    json_bn: str
     node: str
     method: str
 
 
 class DSepPostReqModel(BModel):
+    json_bn: str
     X: list
     Y: list
     Z: list
 
 
 class InferencePostReqModel(BModel):
+    json_bn: str
     evidence: dict
-    marginals: dict
 
 
 class PostRespModel(BModel):
@@ -61,6 +67,7 @@ class ResultStatus(str, Enum):
 
 
 class LearnResult(BModel):
+    json_bn: str
     gexf: str
     marginals: dict
 

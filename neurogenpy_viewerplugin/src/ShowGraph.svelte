@@ -5,12 +5,16 @@
     import { saveTextFile } from "./saveFile";
     import { getFromNeurogenpy } from "./request";
     import CircularProgress from "@smui/circular-progress";
+    import Help from "./Help.svelte";
+    import Button, { Label } from "@smui/button";
 
     export let result;
+    export let dataType;
     const nodes = Object.keys(result["marginals"]);
     const initialMarginals = result["marginals"];
     const gexf_graph = result["gexf"];
     let evidenceMarginals;
+    let openHelp = false;
 
     let nodeLabel = undefined;
     let gd;
@@ -18,16 +22,19 @@
 
     async function downloadFile(fileType) {
         let positions = {};
+        let colors = {};
         switch (fileType) {
             case "png":
                 gd.savePNG();
                 break;
             case "gexf":
                 positions = gd.getPositions();
+                colors = gd.getColors();
             default:
                 const json_object = JSON.stringify({
                     file_type: fileType,
                     positions: positions,
+                    colors: colors,
                 });
 
                 const result = await callNeurogenpy(
@@ -44,7 +51,6 @@
 
     async function performInference(evidence) {
         const json_object = JSON.stringify({
-            marginals: initialMarginals,
             evidence: evidence,
         });
 
@@ -109,8 +115,6 @@
     }
 </script>
 
-<window on:mouseup on:resize />
-
 <div id="container">
     <div class="column left" disabled={runningFlag}>
         <GraphDisplay
@@ -137,6 +141,7 @@
                     {nodeLabel}
                     {initialMarginals}
                     {evidenceMarginals}
+                    {dataType}
                     on:GetRelated={(ev) => getRelated(ev.detail)}
                     on:PerformInference={(ev) => {
                         performInference(ev.detail);
@@ -150,6 +155,12 @@
             <CircularProgress style="width:3rem;height:3rem;" indeterminate />
         </div>
     {/if}
+    <Button class="help-button" on:click={() => (openHelp = true)}>
+        <Label>
+            <span class="material-icons">help</span>
+        </Label>
+    </Button>
+    <Help open={openHelp} />
 </div>
 
 <style>
@@ -200,5 +211,11 @@
         position: absolute;
         width: 100%;
         bottom: 0;
+    }
+
+    * :global(.help-button) {
+        position: absolute;
+        top: 20px;
+        right: 10px;
     }
 </style>
