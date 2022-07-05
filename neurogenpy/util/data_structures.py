@@ -36,7 +36,7 @@ def get_data_type(df):
 
     Raises
     ------
-    Exception
+    ValueError
         If the data is hybrid.
     """
 
@@ -97,7 +97,7 @@ def matrix2nx(graph, nodes):
 def nx2pgmpy(graph, parameters):
     """
     Converts a networkx graph and some distribution parameters into a pgmpy
-    Bayesian model.
+    Bayesian network.
 
     Parameters
     ----------
@@ -107,12 +107,12 @@ def nx2pgmpy(graph, parameters):
 
     Returns
     -------
-    pgmpy.BayesianModel
+    pgmpy.BayesianNetwork
     """
 
-    pgmpy_model = PGMPY_BN()
-    pgmpy_model.add_nodes_from(graph.nodes())
-    pgmpy_model.add_edges_from(graph.edges())
+    pgmpy_model = PGMPY_BN(graph)
+    # pgmpy_model.add_nodes_from(graph.nodes())
+    # pgmpy_model.add_edges_from(graph.edges())
     if parameters:
         pgmpy_model.add_cpds(*parameters)
 
@@ -121,12 +121,12 @@ def nx2pgmpy(graph, parameters):
 
 def pgmpy2nx(bn):
     """
-    Converts a pgmpy Bayesian model into an adjacency matrix and distribution
+    Converts a pgmpy Bayesian Network into an adjacency matrix and distribution
     parameters.
 
     Parameters
     ----------
-    bn : pgmpy.BayesianModel
+    bn : pgmpy.BayesianNetwork
 
     Returns
     -------
@@ -185,10 +185,12 @@ def bnlearn2nx(nodes, r_output):
 
     logger.info(f'bnlearn output: {r_output}')
     arcs_r = r_output.rx2('arcs')
-    edges_from = np.array(arcs_r.rx(True, 1))
-    edges_to = np.array(arcs_r.rx(True, 2))
-    edges = zip(edges_from, edges_to)
+
     graph = nx.DiGraph()
     graph.add_nodes_from(nodes)
-    graph.add_edges_from(edges)
+    if len(arcs_r) > 0:
+        edges_from = np.array(arcs_r.rx(True, 1))
+        edges_to = np.array(arcs_r.rx(True, 2))
+        edges = zip(edges_from, edges_to)
+        graph.add_edges_from(edges)
     return graph
