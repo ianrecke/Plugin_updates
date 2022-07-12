@@ -16,9 +16,9 @@ import numpy as np
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from neurogenpy.util.data_structures import matrix2nx
 from .fges import FGESStructure, FGESBase
 from ..io.adjacency_matrix import save_tmp
+from ..util.data_structures import matrix2nx
 from ..util.fges_adjacency import get_hubs, force_directions, union, \
     remove_unrelated, remove_children_edges, intersect, remove_local_unrelated
 from ..util.statistics import hypothesis_test_related_genes
