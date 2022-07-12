@@ -9,7 +9,6 @@ User guide
     examples/create_bn
     examples/io
     examples/bn_information
-    examples/inference
     examples/distributions
     examples/visualization
     examples/performance
