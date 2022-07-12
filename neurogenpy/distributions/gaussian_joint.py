@@ -238,7 +238,7 @@ class GaussianJPD(JPD):
         """Calculates the conditional variance of a node given the covariance
         matrix."""
 
-        not_node_mask = np.array([True for _ in range(len(self.order()))])
+        not_node_mask = np.array([True for _ in range(len(self.order))])
         not_node_mask[node_pos] = False
         sigma_yy = self.sigma[node_pos, node_pos]
         sigma_xy = self.sigma[not_node_mask, :][:, node_pos]
