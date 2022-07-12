@@ -10,7 +10,6 @@ Bayesian network module.
 
 import inspect
 import logging
-import warnings
 from operator import itemgetter
 
 import networkx
@@ -251,8 +250,8 @@ class BayesianNetwork:
     def _check_nodes_warn(self, nodes):
         wrong_nodes = [k for k in nodes if k not in self.graph]
         if wrong_nodes:
-            warnings.warn(f'Nodes {*wrong_nodes,} are not in the network '
-                          'and they have been ignored.')
+            logger.warning(f'Nodes {*wrong_nodes,} are not in the network '
+                           'and they have been ignored.')
 
         return wrong_nodes
 

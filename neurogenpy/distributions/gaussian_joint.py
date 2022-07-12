@@ -178,8 +178,8 @@ class GaussianJPD(JPD):
         try:
             i = self.order.index(node)
 
-            print(self.sigma)
-            parents = self.sigma[:, i] > 0
+            logger.info(self.sigma)
+            parents = self.sigma[:, i] != 0
             parents[i] = False
             sigma_xy = self.sigma[parents, i]
             sigma_xx = self.sigma[parents, :][:, parents]
