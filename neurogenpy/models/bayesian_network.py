@@ -692,8 +692,8 @@ class BayesianNetwork:
 
         nodes = [node for node in nodes if node not in wrong_nodes]
 
-        return {node: self.joint_dist.get_cpd(node, self.graph) for node in
-                nodes}
+        return {node: self.joint_dist.get_cpd(node, graph=self.graph) for node
+                in nodes}
 
     def marginal(self, nodes):
         """
