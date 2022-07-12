@@ -155,7 +155,7 @@ class GaussianJPD(JPD):
         self._save()
         return result
 
-    def get_cpd(self, node):
+    def get_cpd(self, node, *, graph=None):
         """
         Retrieves the conditional probability distribution of a particular
         node.
@@ -164,6 +164,9 @@ class GaussianJPD(JPD):
         ----------
         node :
             Node whose cpd will be computed.
+
+        graph : networkx.DiGraph
+            Graph structure of the Bayesian network.
 
         Returns
         -------
@@ -178,13 +181,10 @@ class GaussianJPD(JPD):
         try:
             i = self.order.index(node)
 
-            logger.info(self.sigma)
-            parents = self.sigma[:, i] != 0
-            parents[i] = False
+            parents = [pred for pred in graph.predecessors(node)]
             sigma_xy = self.sigma[parents, i]
             sigma_xx = self.sigma[parents, :][:, parents]
             betas = np.linalg.solve(sigma_xx, sigma_xy).tolist()
-            parents = [self.order[j] for j, elem in enumerate(parents) if elem]
 
             result = {'uncond_mean': self.mu[i], 'cond_var': self._cond_var(i),
                       'betas': betas, 'parents': parents}
