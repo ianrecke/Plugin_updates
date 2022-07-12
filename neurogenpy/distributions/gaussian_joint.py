@@ -178,12 +178,13 @@ class GaussianJPD(JPD):
         try:
             i = self.order.index(node)
 
+            print(self.sigma)
             parents = self.sigma[:, i] > 0
             parents[i] = False
             sigma_xy = self.sigma[parents, i]
             sigma_xx = self.sigma[parents, :][:, parents]
             betas = np.linalg.solve(sigma_xx, sigma_xy).tolist()
-            parents = [self.order[i] for i, elem in enumerate(parents) if elem]
+            parents = [self.order[j] for j, elem in enumerate(parents) if elem]
 
             result = {'uncond_mean': self.mu[i], 'cond_var': self._cond_var(i),
                       'betas': betas, 'parents': parents}
