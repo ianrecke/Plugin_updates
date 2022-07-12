@@ -14,7 +14,6 @@ from tempfile import NamedTemporaryFile
 import numpy as np
 
 from .joint_distribution import JPD
-from ..parameters.gaussian_mle import GaussianNode
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,7 @@ class GaussianJPD(JPD):
 
         Parameters
         ----------
-        parameters : dict[Any, GaussianNode]
+        parameters : dict[Any, dict]
             Parameters of the nodes.
 
         Returns
@@ -70,10 +69,10 @@ class GaussianJPD(JPD):
 
         for i, node in enumerate(self.order):
             node_params = parameters[node]
-            uncond_mean = node_params.uncond_mean
-            cond_var = node_params.cond_var
-            betas = node_params.parents_coeffs
-            parents = [self.order.index(p) for p in node_params.parents]
+            uncond_mean = node_params['uncond_mean']
+            cond_var = node_params['cond_var']
+            betas = node_params['parents_coeffs']
+            parents = [self.order.index(p) for p in node_params['parents']]
             self.mu[i] = uncond_mean
             if parents:
                 cov_parents_involved = self.sigma[:, parents]

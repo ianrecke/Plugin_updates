@@ -12,7 +12,7 @@ NeurogenPy
   :target: https://neurogenpy.readthedocs.io/en/latest/?badge=latest
   :alt: Documentation Status
 
-**NeurogenPy** is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the continuous case is the only one that is fully provided. However, discrete inference will be implemented in the near future.
+**NeurogenPy** is a Python package for working with Bayesian networks. It is focused on the analysis of gene expression data and learning of gene regulatory networks, modeled as Bayesian networks. For that reason, at the moment, the Gaussian and fully discrete cases are the only supported.
 
 The package provides different structure learning algorithms, parameters estimation and input/output formats. For some of them, already existing implementations have been used, being `bnlearn <https://www.bnlearn.com/>`_, `pgmpy <https://pgmpy.org/>`_, `networkx <https://networkx.org/>`_ and `igraph <https://igraph.org/python/>`_ the most relevant used packages. Particularly, we provide an implementation of the **FGES-Merge** algorithm :cite:`fges_merge`.
 

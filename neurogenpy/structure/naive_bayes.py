@@ -36,7 +36,7 @@ class NB(LearnStructure):
     """
 
     def __init__(self, df, data_type, *, class_variable):
-        if self.data_type != 'discrete':
+        if data_type != 'discrete':
             raise ValueError(
                 'This algorithm is only available for discrete data.')
         if not class_variable:
