@@ -11,7 +11,7 @@ structure learning methods.
 
 import numpy as np
 
-from ..util.fges_adjacency import undirect, get_hubs
+from ..util.adjacency import undirect, get_hubs
 
 
 # TODO: Decide what to do with the threshold.
@@ -45,9 +45,9 @@ def _conf_matrix_directed(m_pred, m_true):
     not_diagonal = ~np.eye(n, dtype=bool)
     score_matrix = np.equal(m_pred, m_true)
 
-    tp = np.sum(score_matrix[m_true == 1 & not_diagonal])
-    tn = np.sum(score_matrix[m_pred == 0 & not_diagonal])
-    fp = np.sum(~score_matrix[m_pred == 1 & not_diagonal])
+    tp = np.sum(score_matrix[np.logical_and(m_true == 1, not_diagonal)])
+    tn = np.sum(score_matrix[np.logical_and(m_pred == 0, not_diagonal)])
+    fp = np.sum(~score_matrix[np.logical_and(m_pred == 1, not_diagonal)])
     fn = n * (n - 1) - tp - fp - tn
 
     confusion = np.array([[tp, fn], [fp, tn]])

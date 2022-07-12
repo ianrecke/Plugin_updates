@@ -5,7 +5,7 @@
 # https://www.gnu.org/licenses/gpl-3.0.html
 
 import logging
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call, CalledProcessError, DEVNULL
 
 from .fges import FGES
 from .fges_merge import FGESMerge
@@ -31,7 +31,7 @@ __all__ = [
 
 try:
     # TODO: Check R installation in another way. It does not work for Windows.
-    check_call(['which', 'R'])
+    check_call(['which', 'R'], stdout=DEVNULL)
 except CalledProcessError:
     logger.warning('R installation is needed. Multiple structure learning '
                    'methods methods use it.')

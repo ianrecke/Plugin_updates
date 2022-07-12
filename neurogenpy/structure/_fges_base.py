@@ -17,7 +17,7 @@ import numpy as np
 from numba import typed
 
 from .learn_structure import LearnStructure
-from ..util.fges_adjacency import add_edge, adjacencies, remove_undirected, \
+from ..util.adjacency import add_edge, adjacencies, remove_undirected, \
     parents, children, undirected_neighbors, add_undirected, exists_sd_path, \
     is_undirected, remove_edge, has_edge
 from ..util.fges_arrows import create_arrow, get_nodes, get_dest, get_vals, \

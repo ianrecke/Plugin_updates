@@ -182,13 +182,14 @@ class GaussianJPD(JPD):
             i = self.order.index(node)
 
             parents = [pred for pred in graph.predecessors(node)]
-            parents_ids = [j for j, n in self.order if n in parents]
+            parents_ids = [j for j, n in enumerate(self.order) if n in parents]
             sigma_xy = self.sigma[parents_ids, i]
             sigma_xx = self.sigma[parents_ids, :][:, parents_ids]
             betas = np.linalg.solve(sigma_xx, sigma_xy).tolist()
 
-            result = {'uncond_mean': self.mu[i], 'cond_var': self._cond_var(i),
-                      'betas': betas, 'parents': parents}
+            result = {'uncond_mean': self.mu[i],
+                      'cond_var': self._cond_var(i, parents_ids),
+                      'parents_coeffs': betas, 'parents': parents}
         except KeyError:
             logger.error(f'{node} is not present in the distribution.')
         self._save()
@@ -236,15 +237,13 @@ class GaussianJPD(JPD):
             for k, v in config.items():
                 setattr(self, k, v)
 
-    def _cond_var(self, node_pos):
+    def _cond_var(self, node_pos, parents):
         """Calculates the conditional variance of a node given the covariance
         matrix."""
 
-        not_node_mask = np.array([True for _ in range(len(self.order))])
-        not_node_mask[node_pos] = False
         sigma_yy = self.sigma[node_pos, node_pos]
-        sigma_xy = self.sigma[not_node_mask, :][:, node_pos]
-        sigma_xx = self.sigma[not_node_mask, :][:, not_node_mask]
+        sigma_xy = self.sigma[parents, :][:, node_pos]
+        sigma_xx = self.sigma[parents, :][:, parents]
         sigma_inv = np.linalg.solve(sigma_xx, sigma_xy)
 
         return sigma_yy - np.dot(sigma_xy.T, sigma_inv)

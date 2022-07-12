@@ -121,7 +121,7 @@ class DiscreteJPD(JPD):
         except KeyError:
             logger.error(f'{node} is not present in the distribution.')
 
-    def get_cpd(self, node):
+    def get_cpd(self, node, **kwargs):
         """
         Retrieves the conditional probability distribution of a particular
         node.

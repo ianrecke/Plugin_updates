@@ -83,7 +83,7 @@ class JPD(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def get_cpd(self, node):
+    def get_cpd(self, node, **kwargs):
         """
         Retrieves the conditional probability distribution of a particular
         node.

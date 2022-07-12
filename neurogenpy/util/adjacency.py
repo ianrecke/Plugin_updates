@@ -811,7 +811,7 @@ def _hubs_by_out_degree(matrix, percentile=None, threshold=None):
     """
 
     n = matrix.shape[0]
-    children_counter = [children(matrix, node) for node in range(n)]
+    children_counter = [len(children(matrix, node)) for node in range(n)]
 
     if threshold is None:
         sorted_counter = np.sort(np.array(children_counter, dtype=np.int64))
