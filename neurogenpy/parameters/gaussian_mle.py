@@ -8,8 +8,6 @@ Gaussian maximum likelihood estimation module.
 # Licensed under GNU General Public License v3.0:
 # https://www.gnu.org/licenses/gpl-3.0.html
 
-from collections import namedtuple
-
 import numba
 import numpy as np
 
@@ -67,15 +65,11 @@ class GaussianMLE(LearnParameters):
                 variance, coeffs = _linear_gaussian(x, y)
                 parents_coeffs = coeffs[:-1]
 
-            parameters[node] = GaussianNode(mean, variance, node_parents,
-                                            parents_coeffs)
+            parameters[node] = {'uncond_mean': mean, 'cond_var': variance,
+                                'parents': node_parents,
+                                'parents_coeffs': parents_coeffs}
 
         return parameters
-
-
-GaussianNode = namedtuple('GaussianNode',
-                          ('uncond_mean', 'cond_var', 'parents',
-                           'parents_coeffs'))
 
 
 @numba.jit(nopython=True, fastmath=True)

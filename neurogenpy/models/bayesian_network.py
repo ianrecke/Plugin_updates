@@ -26,7 +26,7 @@ from ..io.gexf import GEXF
 from ..io.json import JSON as JSON_BN
 from ..parameters.discrete_be import DiscreteBE
 from ..parameters.discrete_mle import DiscreteMLE
-from ..parameters.gaussian_mle import GaussianNode, GaussianMLE
+from ..parameters.gaussian_mle import GaussianMLE
 from ..parameters.learn_parameters import LearnParameters
 from ..score.base import confusion_matrix, accuracy, f1_score, mcc_score, \
     confusion_hubs
@@ -74,7 +74,9 @@ class BayesianNetwork:
         Parameters of the nodes in the graph structure (variables). The nodes
         IDs are the keys and the values depend on the `data_type`.
 
-            - Continuous case: the value of a node is a GaussianNode object.
+            - Continuous case: the value of a node is a dictionary with
+                unconditional mean, conditional variance, parents and parents
+                coefficients as explained in GaussianMLE.
 
             - Discrete case: the value of a node is a
                 :class:`~pgmpy.TabularCPD` object.
@@ -98,12 +100,12 @@ class BayesianNetwork:
     :func:`~neurogenpy.models.bayesian_network.BayesianNetwork.load`
     methods for other ways of creating Bayesian networks.
 
-    >>> from neurogenpy import BayesianNetwork, GaussianNode
+    >>> from neurogenpy import BayesianNetwork
     >>> from networkx import DiGraph
     >>> graph = DiGraph()
     >>> graph.add_nodes_from([1, 2])
     >>> graph.add_edges_from([(1, 2)])
-    >>> ps = {1: GaussianNode(0, 1, [], []), 2: GaussianNode(0, 1, [1], [0.8])}
+    >>> ps = {1: {0, 1, [], []} 2: {0, 1, [1], [0.8]}}
     >>> bn = BayesianNetwork(graph=graph, parameters=ps)
     """
 
@@ -143,30 +145,6 @@ class BayesianNetwork:
             return list(self.graph.nodes())
         except AttributeError:
             return []
-
-    def _get_random_cont_params(self):
-        """
-        Obtains some continuous random parameters for the current graph
-        structure.
-
-        Returns
-        -------
-        dict[GaussianNode]
-            The parameters associated with each node.
-        """
-        model_parameters = {}
-        for node in list(self.graph.nodes()):
-            node_parents = list(self.graph.predecessors(node))
-
-            mean = np.random.randint(-10, 10)
-            variance = np.random.randint(1, 10)
-
-            parents_coeffs = np.random.rand(len(node_parents))
-
-            model_parameters[node] = GaussianNode(mean, variance, node_parents,
-                                                  parents_coeffs)
-
-        return model_parameters
 
     def _important_nodes_degrees(self, min_degree, full_list):
         important = {node: adjacencies for node in list(self.graph.nodes()) if
@@ -342,8 +320,9 @@ class BayesianNetwork:
 
     def markov_blanket(self, node):
         """
-        Returns the Markov blanket of a node. The Markov blanket of a node is
-        formed by its parents, children and the parents of its children.
+        Returns the Markov blanket of a node. Under faithfulness, the Markov
+        blanket of a node is formed by its parents, children and the parents of
+        its children.
 
         Parameters
         ----------
@@ -354,6 +333,7 @@ class BayesianNetwork:
         -------
             The IDs of the nodes that form the chosen node's Markov blanket.
         """
+
         self._check_graph()
         self._check_node(node)
 
@@ -870,7 +850,6 @@ class BayesianNetwork:
                 - Discrete Bayesian estimation
                 - Discrete maximum likelihood estimation
                 - Gaussian maximum likelihood estimation
-                - Random parameters for the continuous case.
 
         algorithm : str or LearnStructure, default='FGESMerge'
             Algorithm to be used for learning the structure of the network.
@@ -1066,6 +1045,7 @@ class BayesianNetwork:
                 2. '.csv'
                 3. '.gzip'
                 4. '.bif'
+                5. '.json'
 
         **kwargs :
             Additional arguments for the layout. If the extension is no '.gexf'
@@ -1252,13 +1232,12 @@ class BayesianNetwork:
         --------
 
         >>> from numpy import array
-        >>> from networkx import DiGraph, GaussianNode
+        >>> from networkx import DiGraph
         >>> matrix = array([[0,0], [1,0]])
         >>> graph = DiGraph()
         >>> graph.add_nodes_from([1, 2])
         >>> graph.add_edges_from([(1, 2)])
-        >>> parameters = {1: GaussianNode(0, 1, [], []),
-        ...                 2: GaussianNode(0, 1, [1], [0.8])}
+        >>> parameters = {1: {0, 1, [], []}, 2: {0, 1, [1], [0.8]}}
         >>> bn = BayesianNetwork(graph=graph, parameters=parameters)
         >>> res = bn.compare(matrix, nodes_order=[1, 2], metric='all')
         >>> acc = res['accuracy']
