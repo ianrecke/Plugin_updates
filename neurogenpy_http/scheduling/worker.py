@@ -20,40 +20,44 @@ app.config_from_object(default_config)
 @app.task
 def learn_grn(parcellation_id: str, roi: str, genes: List[str], algorithm: str,
               estimation: str, data_type: str):
-    # import siibra
-    # import statistics
+    import siibra
+    import statistics
     import pandas as pd
-    import numpy as np
+    # import numpy as np
     from neurogenpy import BayesianNetwork, GEXF, JSON
 
     hostname = log_rec(parcellation_id, roi, genes, algorithm, estimation,
                        data_type)
 
     try:
-        # parcellation = siibra.parcellations[parcellation_id]
-        # region = parcellation.decode_region(roi)
-        # if region is None:
-        #     logger.warning(
-        #         f'Region definition {roi} could not be matched in atlas.')
-        #
+        parcellation = siibra.parcellations[parcellation_id]
+        region = parcellation.decode_region(roi)
+        if region is None:
+            logger.warning(
+                f'Region definition {roi} could not be matched in atlas.')
+
         # FIXME: Too many requests raise an exception.
-        # samples = {gene_name: [statistics.mean(f.expression_levels) for f in
-        #                        siibra.get_features(region, 'gene',
-        #                                            gene=gene_name)] for
-        #            gene_name in genes}
-        #
-        # df = pd.DataFrame(samples)
-        rng = np.random.default_rng()
-        df = pd.DataFrame(rng.integers(0, 100, size=(100, 4)),
-                          columns=list('ABCD'))
+        samples = {gene_name: [statistics.mean(f.expression_levels) for f in
+                               siibra.get_features(region, 'gene',
+                                                   gene=gene_name)] for
+                   gene_name in genes}
+
+        df = pd.DataFrame(samples)
+        # rng = np.random.default_rng()
+        # df = pd.DataFrame(rng.integers(0, 100, size=(100, 4)),
+        #                   columns=list('ABCD'))
         if data_type == 'discrete':
             df = df.apply(lambda col: pd.cut(
                 col, bins=[-float('inf'), 2 ** (-0.5) * col.mean(),
                            2 ** 0.5 * col.mean(), float('inf')],
                 labels=['Inhibition', 'No-change', 'Activation']))
 
+        class_gene = genes[0] if algorithm in ['nb, tan, mc'] else None
+
         bn = BayesianNetwork().fit(df=df, data_type=data_type,
-                                   estimation=estimation, algorithm=algorithm)
+                                   estimation=estimation, algorithm=algorithm,
+                                   class_variable=class_gene,
+                                   class_variables=[class_gene])
 
         gexf = GEXF(bn).generate(layout_name='circular')
         marginals = bn.all_marginals()

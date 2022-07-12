@@ -15,6 +15,7 @@
     const gexf_graph = result["gexf"];
     let evidenceMarginals;
     let openHelp = false;
+    let json_bn = result['json_bn']
 
     let nodeLabel = undefined;
     let gd;
@@ -32,6 +33,7 @@
                 colors = gd.getColors();
             default:
                 const json_object = JSON.stringify({
+                    json_bn: json_bn,
                     file_type: fileType,
                     positions: positions,
                     colors: colors,
@@ -51,6 +53,7 @@
 
     async function performInference(evidence) {
         const json_object = JSON.stringify({
+            json_bn: json_bn,
             evidence: evidence,
         });
 
@@ -65,6 +68,7 @@
 
     async function getRelated(method) {
         const json_object = JSON.stringify({
+            json_bn,
             node: nodeLabel,
             method: method,
         });
@@ -94,6 +98,7 @@
 
     async function neurogenpyLayout(layoutName) {
         const json_object = JSON.stringify({
+            json_bn: json_bn,
             layout: layoutName,
         });
         const result = await callNeurogenpy(

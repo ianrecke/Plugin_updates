@@ -22,7 +22,9 @@
     let initialDist = initialMarginals[nodeLabel];
     let evidenceDist = undefined;
 
-    $: {
+    $: nodeLabel, labelChange();
+
+    function labelChange() {
         if (previousNode && currentValue !== undefined)
             evidence[previousNode] = currentValue;
         else if (previousNode && previousNode in evidence)

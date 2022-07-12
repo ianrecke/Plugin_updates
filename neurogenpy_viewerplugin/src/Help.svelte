@@ -19,12 +19,12 @@
     </Header>
     <Content id="fullscreen-content">
         <p>
-            The learnt network shown can be easiliy manipulated and some results
+            The learned network shown can be easiliy manipulated and some results
             can be obtained from it. Some of them are specific for Bayesian
-            Network models. Their meanings can be found in and their
-            implementations in
+            Network models. Their meanings can be easily found in any basic
+            reference about Bayesian networks. The functionality is provided by
             <a href="https://neurogenpy.readthedocs.io/en/latest/"
-                >https://neurogenpy.readthedocs.io/en/latest/</a
+                >NeurogenPy</a
             >.
         </p>
 
