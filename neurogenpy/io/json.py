@@ -41,7 +41,13 @@ class JSON(BNIO):
 
         with open(file_path, 'r') as f:
             json_str = f.read()
-            return self.convert(json_str)
+
+            data = json.loads(json_str)
+            graph = json_graph.node_link_graph(data['graph'], directed=True,
+                                               multigraph=False)
+            parameters = data['parameters']
+            data_type = data['data_type']
+            return graph, parameters, data_type
 
     def write_file(self, file_path):
         """

@@ -1122,6 +1122,7 @@ class BayesianNetwork:
                 2. '.csv'
                 3. '.gzip'
                 4. '.bif'
+                5. '.json'
 
         Returns
         -------
@@ -1164,10 +1165,20 @@ class BayesianNetwork:
             self.graph = AdjacencyMatrix().read_file(file_path)
         elif file_path.endswith('.bif'):
             self.graph, self.parameters = BIF().read_file(file_path)
-            # TODO: Check if BIF works in the continuous case
             self.data_type = 'discrete'
             self.joint_dist = DiscreteJPD(
                 self.graph.nodes()).from_parameters(self.parameters)
+        elif file_path.endswith('.json'):
+            self.graph, self.parameters, self.data_type = JSON_BN().read_file(
+                file_path)
+            if self.data_type == 'continuous':
+                self.joint_dist = GaussianJPD(
+                    self._topological_order()).from_parameters(self.parameters)
+            elif self.data_type == 'discrete':
+                self.joint_dist = DiscreteJPD(
+                    self.graph.nodes()).from_parameters(self.parameters)
+            else:
+                raise ValueError('Data type not supported.')
         else:
             raise ValueError('File extension not supported.')
         self.num_nodes = len(self.graph)
@@ -1250,8 +1261,9 @@ class BayesianNetwork:
         self._check_graph()
 
         available_metrics = {'confusion': confusion_matrix,
-                             'confusion_hubs': confusion_hubs, 'acc': accuracy,
-                             'f1': f1_score, 'roc_auc': roc_auc_score,
+                             'confusion_hubs': confusion_hubs,
+                             'accuracy': accuracy, 'f1': f1_score,
+                             'roc_auc': roc_auc_score,
                              'avg_precision': average_precision_score,
                              'mcc': mcc_score}
 
@@ -1267,7 +1279,8 @@ class BayesianNetwork:
             raise ValueError('\'nodes_order\' and the nodes in the Bayesian '
                              'network are not the same.')
 
-        adj_matrix = networkx.to_numpy_matrix(self.graph, nodelist=nodes_order)
+        adj_matrix = networkx.to_numpy_array(self.graph,
+                                             nodelist=nodes_order).astype(int)
 
         if {'roc_auc', 'avg_precision'}.intersection(metric):
             flat_pred, flat_true = adj_matrix.flatten(), real_graph.flatten()
@@ -1277,7 +1290,7 @@ class BayesianNetwork:
         available_params = {'m_pred': adj_matrix, 'm_true': real_graph,
                             'undirected': undirected, 'threshold': threshold,
                             'method': h_method, 'y_true': flat_true,
-                            'y_pred': flat_pred,
+                            'y_score': flat_pred,
                             'hubs_threshold': hubs_threshold}
 
         if set(metric) - {'roc_auc', 'avg_precision', 'confusion_hubs'}:
@@ -1296,7 +1309,8 @@ class BayesianNetwork:
             func = available_metrics[m]
             argspec = inspect.getfullargspec(func)
             params = {p: available_params[p] for p in
-                      argspec.args + argspec.kwonlyargs}
+                      argspec.args + argspec.kwonlyargs if
+                      p in available_params.keys()}
             result = {**result, m: func(**params)}
 
         return result
