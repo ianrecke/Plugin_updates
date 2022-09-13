@@ -3,6 +3,7 @@
     import { Chart } from "chart.js/dist/chart";
     import { onMount, afterUpdate } from "svelte";
     import quantile from "@stdlib/stats-base-dists-normal-quantile";
+    import { toRgba } from "./color";
 
     let chartRef;
     let chart;
@@ -11,6 +12,12 @@
     export let initialDist;
     export let evidenceDist;
     export let evidenceSet;
+
+    const style = getComputedStyle(document.body);
+    const evidenceColor = style.getPropertyValue("--primary");
+    const evidenceColorT = toRgba(evidenceColor, 0.2);
+    const initColor = style.getPropertyValue("color");
+    const initColorT = toRgba(initColor, 0.2);
 
     let initialValues;
     let evidenceValues;
@@ -29,16 +36,16 @@
                         label: "Initial",
                         data: [0, 1, 0],
                         fill: true,
-                        borderColor: "#fff",
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
+                        borderColor: initColor,
+                        backgroundColor: initColorT,
                     },
                     {
                         label: "Evidence",
                         hidden: !evidenceValues,
                         data: [0, 1, 0],
                         fill: true,
-                        borderColor: "rgb(255, 62, 0)",
-                        backgroundColor: "rgba(255, 62, 0, 0.2)",
+                        borderColor: evidenceColor,
+                        backgroundColor: evidenceColorT,
                     },
                 ],
             },
@@ -136,16 +143,13 @@
 <div>
     <canvas id="myChart" bind:this={chartRef} style="width: 100%" />
 </div>
+<pre class="status" style="width: 50%; float: left;">Mean: {initialDist[
+        "mu"
+    ].toFixed(3)} - Variance: {initialDist["sigma"].toFixed(3)}</pre>
+
 <pre
-    class="status"
-    style="color: white; width: {evidenceDist
-        ? '50%'
-        : '100%'}; float: left;">Mean: {initialDist["mu"].toFixed(
-        3
-    )} - Variance: {initialDist["sigma"].toFixed(3)}</pre>
-{#if evidenceDist}
-    <pre
-        class="status"
-        style="color: rgb(255, 62, 0); width: 50%">Mean: {evidenceDist[
-            "mu"
-        ].toFixed(3)} - Variance: {evidenceDist["sigma"].toFixed(3)}</pre>{/if}
+    class="status primaryText"
+    style="width: 50%"> {#if evidenceDist}Mean: {evidenceDist["mu"].toFixed(
+            3
+        )} - Variance: {evidenceDist["sigma"].toFixed(3)}
+    {/if}</pre>

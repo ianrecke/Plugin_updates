@@ -12,6 +12,7 @@ implementations.
 import copy
 import logging
 
+from pgmpy.factors.discrete import TabularCPD
 from pgmpy.inference import VariableElimination, BeliefPropagation
 from pgmpy.models import BayesianNetwork as PGMPY_BN
 
@@ -71,6 +72,7 @@ class DiscreteJPD(JPD):
         """
 
         model = PGMPY_BN(graph)
+
         model.add_cpds(*list(self.cpds.values()))
 
         if algorithm == 'variable_elimination':
@@ -183,3 +185,49 @@ class DiscreteJPD(JPD):
         """
 
         return len(self.cpds)
+
+    def to_serializable(self, **kwargs):
+        """
+        Retrieves a serializable dictionary with the parameters of the
+        distribution. It converts `pgmpy.TabularCPD` objects to get this
+        serializable representation.
+
+        Returns
+        -------
+        dict
+            Dictionary with serializable objects that represent the parameters
+            of the distribution as values.
+        """
+
+        str_cpds = {}
+        for node in self.order:
+            cpd = self.cpds[node]
+            values = cpd.get_values().tolist()
+            evidence = cpd.get_evidence()
+            variable = cpd.variable
+            state_names = cpd.state_names
+            card = int(cpd.get_cardinality([variable])[variable])
+            evidence_dict = {k: int(v) for k, v in
+                             cpd.get_cardinality(evidence).items()}
+            str_cpds[node] = {'variable': variable, 'card': card,
+                              'values': values, 'evidence_dict': evidence_dict,
+                              'state_names': state_names}
+
+        return str_cpds
+
+
+def parse_discrete(parameters):
+    """Converts dict representation of pgmpy.TabularCPD objects to TabularCPD
+    objects."""
+
+    cpds = {}
+
+    for node, dict_cpd in parameters.items():
+        evidence_dict = dict_cpd['evidence_dict']
+        cpds[node] = TabularCPD(dict_cpd['variable'], dict_cpd['card'],
+                                dict_cpd['values'],
+                                evidence=list(evidence_dict.keys()),
+                                evidence_card=list(evidence_dict.values()),
+                                state_names=dict_cpd['state_names'])
+
+    return cpds

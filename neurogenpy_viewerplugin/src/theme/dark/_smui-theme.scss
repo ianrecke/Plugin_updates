@@ -6,23 +6,57 @@
 $darkmode-bg-color: #424242;
 
 // Svelte Colors! (Dark Theme)
-@use '@material/theme/index' as theme with (
-  $primary: #ff3e00,
+@use '@material/theme/index' as theme with ($primary: #ff3e00,
   $secondary: color.scale(#676778, $whiteness: -10%),
   $surface: color.adjust(color-palette.$grey-900, $blue: +4),
   $background: $darkmode-bg-color,
-  $error: color-palette.$red-700
-);
+  $error: color-palette.$red-700);
 
 html,
 body {
   background-color: $darkmode-bg-color;
   color: theme.$on-surface;
+  --primary: #{theme.$primary};
+  --secondary: #{theme.$secondary};
+  --background: #{theme.$background};
+  --surface: #{theme.$surface};
 }
 
 a {
   color: #40b3ff;
 }
+
 a:visited {
   color: color.scale(#40b3ff, $lightness: -35%);
+}
+
+.primaryDiv {
+  background-color: rgba(theme.$primary, .2);
+}
+
+.surfaceDiv {
+  background-color: theme.$surface;
+  color: theme.$on-surface
+}
+
+.borderSurfaceDiv {
+  background-color: theme.$surface;
+  border: 1px solid theme.$secondary;
+}
+
+.primaryText {
+  color: theme.$primary;
+}
+
+.lightButton {
+  background-color: transparent;
+  color: rgba(theme.$on-surface, .6);
+}
+
+.lightButton:hover {
+  color: theme.$on-surface;
+}
+
+.lightButton:active {
+  background-color: transparent;
 }

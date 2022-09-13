@@ -59,8 +59,10 @@ class GrowShrink(LearnStructure):
         if env == "neurogenpy":
             return self._run_neurogenpy()
         elif env == "bnlearn":
-            return self._run_bnlearn(importr("bnlearn").gs,
-                                     alpha=self.alpha)
+            kwargs = {'alpha': self.alpha}
+            if self.data_type == 'discrete':
+                kwargs['test'] = 'mi'
+            return self._run_bnlearn(importr("bnlearn").gs, **kwargs)
         else:
             raise ValueError(f"{env} environment is not supported.")
 

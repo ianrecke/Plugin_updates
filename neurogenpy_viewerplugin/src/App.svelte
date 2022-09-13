@@ -29,6 +29,7 @@
 
     let param = {
         parcellation_id: parcellationId,
+        own: false,
     };
     let sg = undefined;
 
@@ -197,7 +198,12 @@
     }
 </script>
 
-<svelte:window height="100%" width="100%" on:message={handleMessage}/>
+<svelte:window
+    height="100%"
+    width="100%"
+    on:message={handleMessage}
+    on:mouseup
+/>
 
 {#if !destroyFlag}
     <Description />
@@ -210,14 +216,12 @@
                 {postMessage}
             />
             <GeneSelection
+                on:Own={() => handleUpdateParam({ own: true })}
                 on:GeneSelected={(ev) =>
                     handleUpdateParam({ genes: ev.detail })}
                 {genes}
             />
-            <Select
-                bind:value={dataType}
-                label="Data type"
-            >
+            <Select bind:value={dataType} label="Data type">
                 <Option value={"continuous"}>
                     {"Continuous"}
                 </Option>

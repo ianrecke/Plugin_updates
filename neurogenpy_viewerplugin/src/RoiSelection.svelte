@@ -58,7 +58,8 @@
         }
         searchId += 1;
         const thisSearchId = searchId;
-        const returnArr = await searchRegion(input);
+        let returnArr = await searchRegion(input);
+        returnArr.push("frontal lobe");
         if (thisSearchId !== searchId) return [];
         currentAutocompleteList = returnArr.map((r) => r.name);
         return currentAutocompleteList;

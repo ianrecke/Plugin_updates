@@ -17,6 +17,7 @@
     import { getFromNeurogenpy } from "./request";
 
     export let nodes = [];
+    export let json_bn;
     let active = "X";
     let selectedNodes = { X: [], Y: [], Z: [] };
     let showedNodes = selectedNodes[active];
@@ -34,6 +35,7 @@
             let result = await getFromNeurogenpy(
                 "/grn/dseparated",
                 JSON.stringify({
+                    json_bn: json_bn,
                     X: selectedNodes["X"],
                     Y: selectedNodes["Y"],
                     Z: selectedNodes["Z"],
@@ -61,19 +63,19 @@
                     on:click={() => setActive("X")}
                     activated={active === "X"}
                 >
-                    <Text>X nodes</Text>
+                    <Text>X genes</Text>
                 </Item>
                 <Item
                     on:click={() => setActive("Y")}
                     activated={active === "Y"}
                 >
-                    <Text>Y nodes</Text>
+                    <Text>Y genes</Text>
                 </Item>
                 <Item
                     on:click={() => setActive("Z")}
                     activated={active === "Z"}
                 >
-                    <Text>Z nodes</Text>
+                    <Text>Z genes</Text>
                 </Item>
             </List>
         </Content>
@@ -84,7 +86,7 @@
             <br />
 
             <NodeSelection
-                label="Select nodes"
+                label="Select genes"
                 bind:selectedNodes={showedNodes}
                 {nodes}
             />
@@ -120,6 +122,7 @@
         border: 1px solid
             var(--mdc-theme-text-hint-on-background, rgba(0, 0, 0, 0.1));
         overflow: hidden;
+        height: 70%;
         z-index: 0;
     }
     * :global(.app-content) {
@@ -133,11 +136,5 @@
         padding: 16px;
         height: 100%;
         box-sizing: border-box;
-    }
-
-    * :global(.material-icons) {
-        position: "absolute";
-        left: "95%";
-        top: "5%";
     }
 </style>

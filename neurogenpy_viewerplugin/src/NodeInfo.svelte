@@ -1,5 +1,5 @@
 <script>
-    import Card, { Media, Content } from "@smui/card";
+    import { Media, Content } from "@smui/card";
     import Button, { Label } from "@smui/button";
     import { createEventDispatcher } from "svelte";
     import Textfield from "@smui/textfield";
@@ -74,7 +74,6 @@
     }
 </script>
 
-<Card style="padding: 10px">
     <Media style="padding: 10px 10px 0 10px">
         <div>
             {#if dataType === "continuous"}
@@ -84,16 +83,16 @@
                     {evidenceDist}
                 />
             {:else}
-                <DiscreteChart {initialDist} {evidenceDist} />
+                <DiscreteChart {initialDist} {evidenceDist} evidence={currentValue} />
             {/if}
-            <h2 class="mdc-typography--headline6" style="margin-left: 5px">
+            <h2 style="margin-left: 5px">
                 {nodeLabel}
             </h2>
         </div>
     </Media>
 
     <Content style="padding: 0 16px">
-        <div class="mdc-typography--body2">
+        <div>
             {#if dataType === "continuous"}
                 <Textfield
                     class="textfieldClass"
@@ -134,18 +133,15 @@
                 on:click={() => {
                     currentValue = undefined;
                     evidence = {};
+                    evidenceDist = undefined;
+                    evidenceMarginals = undefined;
                 }}
             >
                 <Label>Reset</Label>
             </Button>
-            <pre class="status" style="color: white">Value: {currentValue}</pre>
+            <pre class="status">Value: {currentValue}</pre>
         </div>
         <Button on:click={() => getRelated("mb")}>
             <Label>Markov blanket</Label>
         </Button>
-
-        <Button on:click={() => getRelated("reachable")}>
-            <Label>Reachable nodes</Label>
-        </Button>
     </Content>
-</Card>

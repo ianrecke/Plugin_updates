@@ -3,23 +3,57 @@
 @use '@material/theme/color-palette';
 
 // Svelte Colors!
-@use '@material/theme/index' as theme with (
-  $primary: #ff3e00,
+@use '@material/theme/index' as theme with ($primary: #ff3e00,
   $secondary: #676778,
   $surface: #fff,
   $background: #fff,
-  $error: color-palette.$red-900
-);
+  $error: color-palette.$red-900);
 
 html,
 body {
   background-color: theme.$surface;
   color: theme.$on-surface;
+  --primary: #{theme.$primary};
+  --secondary: #{theme.$secondary};
+  --background: #{theme.$background};
+  --surface: #{theme.$surface};
 }
 
 a {
   color: #40b3ff;
 }
+
 a:visited {
   color: color.scale(#40b3ff, $lightness: -35%);
+}
+
+.primaryDiv {
+  background-color: rgba(theme.$primary, .2);
+}
+
+.surfaceDiv {
+  background-color: theme.$surface;
+  color: theme.$on-surface
+}
+
+.borderSurfaceDiv {
+  background-color: theme.$surface;
+  border: 1px solid theme.$secondary;
+}
+
+.primaryText {
+  color: theme.$primary;
+}
+
+.lightButton {
+  background-color: transparent;
+  color: rgba(theme.$on-surface, .6);
+}
+
+.lightButton:hover {
+  color: theme.$on-surface;
+}
+
+.lightButton:active {
+  background-color: transparent;
 }

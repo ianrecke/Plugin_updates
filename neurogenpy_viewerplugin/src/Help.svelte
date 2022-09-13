@@ -1,17 +1,22 @@
 <script>
     import Dialog, { Header, Title, Content } from "@smui/dialog";
     import IconButton from "@smui/icon-button";
-    export let open = false;
+    import Button, { Label } from "@smui/button";
+
+    let open = false;
 </script>
+
+<Button on:click={() => (open = true)}>
+    <Label>
+        <span class="material-icons">help</span>
+    </Label>
+</Button>
 
 <Dialog
     bind:open
     fullscreen
     aria-labelledby="fullscreen-title"
     aria-describedby="fullscreen-content"
-    on:SMUIDialog:closed={() => {
-        open = false;
-    }}
 >
     <Header>
         <Title id="fullscreen-title">How to use</Title>
@@ -19,12 +24,11 @@
     </Header>
     <Content id="fullscreen-content">
         <p>
-            The learned network shown can be easiliy manipulated and some results
+            The learned network shown can be easily manipulated and some results
             can be obtained from it. Some of them are specific for Bayesian
             Network models. Their meanings can be easily found in any basic
             reference about Bayesian networks. The functionality is provided by
-            <a href="https://neurogenpy.readthedocs.io/en/latest/"
-                >NeurogenPy</a
+            <a href="https://neurogenpy.readthedocs.io/en/latest/">NeurogenPy</a
             >.
         </p>
 
@@ -59,16 +63,12 @@
             criterion that implies probabilistic conditional independence.
         </p>
         <p>
-            - <b>Reachable nodes</b>: Returns the reachable nodes from `start`
-            given the current evidence via active trails.
-        </p>
-        <p>
             - <b>Markov Blanket</b>: Find the Markov blanket of the selected
             node.
         </p>
         <p>
             - <b>Inference</b>: Set the evidence for some nodes and select
-            "Infer". The new distribution according to the current evidencefor
+            "Infer". The new distribution according to the current evidence for
             the selected node will be shown in the same chart as the initial
             one.
         </p>

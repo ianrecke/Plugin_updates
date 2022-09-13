@@ -41,7 +41,7 @@ class FGESMerge(FGESBase):
     """
 
     def __init__(self, df, data_type, *, penalty=45, n_jobs=1):
-        if self.data_type != 'continuous':
+        if data_type != 'continuous':
             raise ValueError(
                 'This algorithm is only available for continuous data.')
 

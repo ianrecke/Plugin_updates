@@ -1,7 +1,6 @@
 """
 JSON input/output module. It uses `networkx` functionality, but tries to adapt
-to other similar formats such as
-`Graphology <https://graphology.github.io/>`_.
+to other similar formats such as `Graphology <https://graphology.github.io/>`_.
 """
 
 # Computational Intelligence Group (CIG). Universidad Politécnica de Madrid.
@@ -15,6 +14,7 @@ import json
 from networkx.readwrite import json_graph
 
 from .bnio import BNIO
+from ..distributions.discrete_joint import parse_discrete
 
 
 class JSON(BNIO):
@@ -86,8 +86,11 @@ class JSON(BNIO):
         if keys:
             graph_data = {k: graph_data[k] for k in keys}
 
-        data = {'graph': graph_data, 'parameters': self.bn.parameters,
+        data = {'graph': graph_data,
+                'parameters': self.bn.joint_dist.to_serializable(
+                    graph=self.bn.graph),
                 'data_type': self.bn.data_type}
+        print(data)
 
         return json.dumps(data)
 
@@ -112,7 +115,11 @@ class JSON(BNIO):
         data = json.loads(io_object)
         graph = json_graph.node_link_graph(data['graph'], directed=True,
                                            multigraph=False, attrs=options)
-        parameters = data['parameters']
         data_type = data['data_type']
+        if data_type == 'discrete':
+            parameters = parse_discrete(data['parameters'])
+        else:
+            parameters = data['parameters']
+
         return BayesianNetwork(graph=graph, parameters=parameters,
                                data_type=data_type)

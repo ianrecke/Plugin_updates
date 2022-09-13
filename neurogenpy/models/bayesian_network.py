@@ -116,12 +116,15 @@ class BayesianNetwork:
         self.data_type = data_type
 
         if self.graph is not None:
+            logger.info(graph)
             self._check_parameters(parameters)
             self.parameters = parameters
 
             if parameters is not None and self.data_type:
                 # Topological order is only important in the continuous case.
                 # In the discrete one, it just represents the IDs of the nodes.
+                logger.info(parameters)
+                logger.info(self.data_type)
                 self.joint_dist = _DISTRIBUTIONS[self.data_type](
                     self._topological_order()).from_parameters(self.parameters)
 
@@ -129,6 +132,7 @@ class BayesianNetwork:
                 self.joint_dist = joint_dist
 
         elif self.data_type:
+            logger.info(self.data_type)
             self.joint_dist = _DISTRIBUTIONS[self.data_type]([])
 
         self.evidence = {}
@@ -400,7 +404,6 @@ class BayesianNetwork:
         self._check_node(node)
         return self.parents(node) + self.children(node)
 
-    # TODO: Check what to return with the important nodes.
     def important_nodes(self, criteria='degrees', min_degree=0,
                         full_list=False):
         """
@@ -422,6 +425,8 @@ class BayesianNetwork:
         Returns
         -------
         dict
+            Important nodes and their values according to the selected
+            `criteria`.
 
         Raises
         ------
@@ -432,8 +437,7 @@ class BayesianNetwork:
         self._check_graph()
 
         if criteria == 'degrees':
-            return self._important_nodes_degrees(min_degree,
-                                                 full_list)
+            return self._important_nodes_degrees(min_degree, full_list)
         elif criteria == 'betweenness-centrality':
             nodes_importance = betweenness.betweenness_centrality(self.graph)
 

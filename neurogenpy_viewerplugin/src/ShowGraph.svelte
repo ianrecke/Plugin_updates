@@ -6,7 +6,7 @@
     import { getFromNeurogenpy } from "./request";
     import CircularProgress from "@smui/circular-progress";
     import Help from "./Help.svelte";
-    import Button, { Label } from "@smui/button";
+    import Card from "@smui/card";
 
     export let result;
     export let dataType;
@@ -14,8 +14,11 @@
     const initialMarginals = result["marginals"];
     const gexf_graph = result["gexf"];
     let evidenceMarginals;
-    let openHelp = false;
-    let json_bn = result['json_bn']
+    let json_bn = result["json_bn"];
+    let fileTypes = {
+        discrete: ["json", "gexf", "png", "csv", "bif"],
+        continuous: ["json", "gexf", "png", "csv"],
+    };
 
     let nodeLabel = undefined;
     let gd;
@@ -52,9 +55,12 @@
     }
 
     async function performInference(evidence) {
+        let own = false;
+        if (Object.keys(evidence).includes("ZSCAN1")) own = true;
         const json_object = JSON.stringify({
             json_bn: json_bn,
             evidence: evidence,
+            own: own,
         });
 
         const result = await callNeurogenpy(
@@ -121,7 +127,7 @@
 </script>
 
 <div id="container">
-    <div class="column left" disabled={runningFlag}>
+    <div class="column borderSurfaceDiv" id="left" disabled={runningFlag}>
         <GraphDisplay
             bind:this={gd}
             {nodes}
@@ -130,42 +136,43 @@
             on:NeurogenpyLayout={(ev) => neurogenpyLayout(ev.detail)}
         />
     </div>
-    <div class="column right" disabled={runningFlag}>
+    <div class="column" id="right" disabled={runningFlag}>
         <div id="manipulations">
             <BnManipulations
+                fileTypes={fileTypes[dataType]}
                 {nodes}
+                {json_bn}
                 on:SaveFile={(ev) => downloadFile(ev.detail)}
                 on:CommunitiesSelected={(ev) =>
                     gd.communitiesLouvain(ev.detail)}
             />
         </div>
 
-        {#if nodeLabel}
-            <div id="nodeInfo">
-                <NodeInfo
-                    {nodeLabel}
-                    {initialMarginals}
-                    {evidenceMarginals}
-                    {dataType}
-                    on:GetRelated={(ev) => getRelated(ev.detail)}
-                    on:PerformInference={(ev) => {
-                        performInference(ev.detail);
-                    }}
-                />
-            </div>
-        {/if}
+        <div id="nodeInfo">
+            <Card style="padding: 10px; height:100%">
+                {#if nodeLabel}
+                    <NodeInfo
+                        {nodeLabel}
+                        {initialMarginals}
+                        {evidenceMarginals}
+                        {dataType}
+                        on:GetRelated={(ev) => getRelated(ev.detail)}
+                        on:PerformInference={(ev) => {
+                            performInference(ev.detail);
+                        }}
+                    />
+                {:else}
+                    <h2 style="margin: auto">No gene selected.</h2>
+                {/if}
+            </Card>
+        </div>
     </div>
     {#if runningFlag}
         <div id="progress">
             <CircularProgress style="width:3rem;height:3rem;" indeterminate />
         </div>
     {/if}
-    <Button class="help-button" on:click={() => (openHelp = true)}>
-        <Label>
-            <span class="material-icons">help</span>
-        </Label>
-    </Button>
-    <Help open={openHelp} />
+    <div id="help"><Help /></div>
 </div>
 
 <style>
@@ -180,18 +187,16 @@
         padding: 15px;
     }
 
-    .left {
+    #left {
         width: 70%;
         height: 100%;
         position: relative;
         overflow: hidden;
         float: left;
-        background-color: rgb(33, 33, 37);
-        border: 1px solid #907c7c;
         margin-right: 20px;
     }
 
-    .right {
+    #right {
         width: 30%;
         height: 100%;
         position: relative;
@@ -209,16 +214,19 @@
     }
 
     #manipulations {
-        position: absolute;
+        position: relative;
+        height: 45%;
+        top: 0;
     }
 
     #nodeInfo {
-        position: absolute;
+        position: relative;
+        height: 55%;
         width: 100%;
         bottom: 0;
     }
 
-    * :global(.help-button) {
+    #help {
         position: absolute;
         top: 20px;
         right: 10px;

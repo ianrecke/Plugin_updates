@@ -1,6 +1,7 @@
 <script>
     import { Chart } from "chart.js/dist/chart";
     import { onMount, afterUpdate } from "svelte";
+    import { toRgba } from "./color";
 
     let chartRef;
     let ctx;
@@ -8,10 +9,17 @@
 
     export let initialDist;
     export let evidenceDist;
+    export let evidence;
 
     let initialValues;
     let evidenceValues;
     let distLabels;
+
+    const style = getComputedStyle(document.body);
+    const evidenceColor = style.getPropertyValue("--primary");
+    const evidenceColorT = toRgba(evidenceColor, 0.2);
+    const initColor = style.getPropertyValue("color");
+    const initColorT = toRgba(initColor, 0.2);
 
     onMount(() => {
         ctx = chartRef.getContext("2d");
@@ -25,16 +33,16 @@
                         label: "Initial",
                         data: initialValues,
                         fill: true,
-                        borderColor: "#fff",
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
+                        borderColor: initColor,
+                        backgroundColor: initColorT,
                     },
                     {
                         label: "Evidence",
                         hidden: !evidenceValues,
                         data: evidenceValues,
                         fill: true,
-                        borderColor: "rgb(255, 62, 0)",
-                        backgroundColor: "rgba(255, 62, 0, 0.2)",
+                        borderColor: evidenceColor,
+                        backgroundColor: evidenceColorT,
                     },
                 ],
             },
@@ -54,7 +62,9 @@
         evidenceValues = undefined;
         distLabels = Object.keys(initialDist);
         initialValues = Object.values(initialDist);
-        if (evidenceDist)
+
+        if (evidence) evidenceValues = distLabels.map((i) => +(i === evidence));
+        else if (evidenceDist)
             evidenceValues = distLabels.map((i) => evidenceDist[i]);
 
         chart.data.labels = distLabels;

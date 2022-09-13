@@ -119,7 +119,6 @@ class FGESStructure:
         self._orient_graph()
         return self._get_final_graph()
 
-    # TODO: Check temperature and delta usage.
     def _fes(self, stochastic=True, temperature=None, delta=None):
         """Forward equivalence search."""
 
@@ -528,14 +527,11 @@ def _check_clique(graph, nodes):
 # Numba parallel=True not set due to multiprocessing usage in the caller
 # function.
 @numba.jit(nopython=True)
-def _caf_node(graph, data, penalty, node, positive_bics):
+def _caf_node(graph, data, penalty, node, positive_bics, max_size=3):
     """
     Calculates the arrows forward for a node given the positive BIC score
     differences for it.
     """
-
-    # TODO: Ask about max_size use.
-    max_size = 3
 
     arrows = []
     n = len(positive_bics)

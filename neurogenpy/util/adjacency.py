@@ -837,11 +837,4 @@ def undirect(matrix):
 
     # TODO: check if undirected edges can have different scores for matrix[i,j]
     #  and matrix[j,i]
-    n = matrix.shape[0]
-    for node in range(n):
-        node_children = children(matrix, node)
-        for child in node_children:
-            if matrix[child, node] == 0:
-                matrix[child, node] = matrix[node, child]
-
-    return matrix
+    return matrix | matrix.T

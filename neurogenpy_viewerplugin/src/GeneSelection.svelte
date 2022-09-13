@@ -58,6 +58,7 @@
     const genesJSON = JSON.parse(data);
     selectedGenes = genesJSON["genes"];
     dispatcher("GeneSelected", selectedGenes);
+    dispatcher("Own", undefined);
   }
 </script>
 
@@ -79,11 +80,7 @@
     style="display: none;"
     on:change={(ev) => readFile(ev)}
   />
-  <Button
-    on:click={() => browseInput.click()}
-    color="secondary"
-    class="fileButton"
-  >
+  <Button on:click={() => browseInput.click()} class="button">
     <Icon class="material-icons">file_upload</Icon>
   </Button>
 </div>
@@ -95,9 +92,3 @@
     </Chip>
   </ChipsSet>
 </div>
-
-<style>
-  * :global(.fileButton:hover) {
-    color: "primary";
-  }
-</style>

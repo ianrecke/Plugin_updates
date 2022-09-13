@@ -145,3 +145,16 @@ class JPD(metaclass=ABCMeta):
         """
 
         return self.order
+
+    @abstractmethod
+    def to_serializable(self, **kwargs):
+        """
+        Retrieves a serializable dictionary with the parameters of the
+        distribution.
+
+        Returns
+        -------
+        dict
+            Dictionary with serializable objects that represent the parameters
+            of the distribution.
+        """

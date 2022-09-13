@@ -18,6 +18,7 @@ from .joint_distribution import JPD
 logger = logging.getLogger(__name__)
 
 
+# TODO: Parameters may be saved as an argument too. Think about it.
 class GaussianJPD(JPD):
     """
     Gaussian Joint distribution class. If the size of the distribution is big
@@ -155,7 +156,7 @@ class GaussianJPD(JPD):
         self._save()
         return result
 
-    def get_cpd(self, node, *, graph=None):
+    def get_cpd(self, node, graph=None):
         """
         Retrieves the conditional probability distribution of a particular
         node.
@@ -221,6 +222,25 @@ class GaussianJPD(JPD):
         size = self.mu.shape[0]
         self._save()
         return size
+
+    def to_serializable(self, graph=None):
+        """
+        Retrieves a serializable dictionary with the parameters of the
+        distribution.
+
+        Parameters
+        ----------
+        graph : networkx.DiGraph
+            Graph structure of the Bayesian network.
+
+        Returns
+        -------
+        dict
+            Dictionary with serializable objects that represent the parameters
+            of the distribution.
+        """
+
+        return {node: self.get_cpd(node, graph=graph) for node in self.order}
 
     def _save(self):
         """Saves the joint probability distribution in a .npz file."""

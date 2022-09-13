@@ -14,8 +14,7 @@ https://networkx.org/documentation/stable/reference/readwrite/gexf.html.
 
 # Licensed under GNU General Public License v3.0:
 # https://www.gnu.org/licenses/gpl-3.0.html
-
-import inspect
+import logging
 import random
 
 import networkx.readwrite as networkx_io
@@ -27,11 +26,13 @@ from .layout.force_atlas2_layout import ForceAtlas2Layout
 from .layout.igraph_layout import IgraphLayout
 from .layout.image_layout import ImageLayout
 
+logger = logging.getLogger(__name__)
+
 _CONFIGS = {
     'small': {'maxNodeSize': 20, 'minNodeSize': 10, 'maxEdgeSize': 8,
               'minEdgeSize': 4, 'weight': 0.55, 'width': 1},
-    'medium': {'maxNodeSize': 5, 'minNodeSize': 1, 'maxEdgeSize': 1.5,
-               'minEdgeSize': .5, 'weight': 0.55, 'width': 1},
+    'medium': {'maxNodeSize': 20, 'minNodeSize': 7, 'maxEdgeSize': 6,
+               'minEdgeSize': 3, 'weight': 0.55, 'width': 1},
     'large': {'maxNodeSize': 3, 'minNodeSize': 1, 'maxEdgeSize': 0.5,
               'minEdgeSize': .1, 'weight': 1.1, 'width': 2},
     'default_color': '#FFFFFF'}
@@ -145,16 +146,19 @@ class GEXF(BNIO):
                    colors):
         """Add attributes related with the display of the graph."""
 
-        layouts = {'circular': IgraphLayout, 'Dot': DotLayout,
-                   'ForceAtlas2': ForceAtlas2Layout, 'Grid': IgraphLayout,
-                   'fruchterman_reingold': IgraphLayout,
-                   'Image': ImageLayout, 'Sugiyama': IgraphLayout}
+        layouts = {'Dot': DotLayout, 'ForceAtlas2': ForceAtlas2Layout,
+                   'Image': ImageLayout}
 
         if layout_name is not None:
-            layout = layouts[layout_name]
-            params = {} if 'layout_name' not in inspect.getfullargspec(
-                layout).kwonlyargs else {'layout_name': layout_name}
-            layout = layout(self.bn.graph, **params).run()
+            if layout_name in layouts.keys():
+                layout = layouts[layout_name](self.bn.graph)
+            else:
+                layout = IgraphLayout(self.bn.graph, layout_name=layout_name)
+            try:
+                layout = layout.run()
+            except KeyError:
+                logger.warning('Selected layout is not available. No positions'
+                               'included in GEXF string.')
 
         if layout is not None:
             if self.bn.num_nodes < 100:
@@ -186,25 +190,27 @@ class GEXF(BNIO):
                 self.bn.graph.nodes[node_id]["viz"] = {"size": node['size']}
                 self.bn.graph.nodes[node_id]['viz']['position'] = {
                     'x': node['x'], 'y': node['y'], 'z': 0}
-                self.bn.graph.nodes[node_id]['viz']['color'] = {
-                    'hex': node['color'], 'alpha': 0}
-                node_color = rgb_colors[node['color']]
-                self.bn.graph.nodes[node_id]['viz']['color'] = {
-                    'r': node_color[0],
-                    'g': node_color[1],
-                    'b': node_color[2],
-                    'a': 1.0}
+                if communities or colors:
+                    self.bn.graph.nodes[node_id]['viz']['color'] = {
+                        'hex': node['color'], 'alpha': 0}
+                    node_color = rgb_colors[node['color']]
+                    self.bn.graph.nodes[node_id]['viz']['color'] = {
+                        'r': node_color[0],
+                        'g': node_color[1],
+                        'b': node_color[2],
+                        'a': 1.0}
 
             for edge in edges:
                 x, y = edge['x'], edge['y']
                 # self.bn.graph.edges[x, y]['weight'] = edge['weight']
                 self.bn.graph.edges[x, y]['type'] = edge['type']
                 # self.bn.graph.edges[x, y]['label'] = edge['label']
-                edge_color = rgb_colors[edge['color']]
-                self.bn.graph.edges[x, y]['viz'] = {
-                    'color': {'r': edge_color[0], 'g': edge_color[1],
-                              'b': edge_color[2], 'a': 1.0}}
-                self.bn.graph.edges[x, y]['viz']['size'] = edge['size']
+                self.bn.graph.edges[x, y]['viz'] = {'size': edge['size']}
+                if communities or colors:
+                    edge_color = rgb_colors[edge['color']]
+                    self.bn.graph.edges[x, y]['viz']['color'] = {
+                        'r': edge_color[0], 'g': edge_color[1],
+                        'b': edge_color[2], 'a': 1.0}
 
     def _edges_sizes(self, network_size):
         """Retrieves the size of each edge in the network."""

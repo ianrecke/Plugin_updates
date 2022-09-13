@@ -20,15 +20,16 @@ def _conf_matrix_undirected(m_pred, m_true, threshold):
     the prediction matrix undirected."""
 
     m_pred = undirect(m_pred)
+    m_true = undirect(m_true)
 
     m_pred = m_pred > threshold
     score_matrix = np.equal(m_pred, m_true)
 
     pos = int(np.sum(m_pred == 1) / 2)
-    neg = np.sum(m_pred == 0)
+    neg = int(np.sum(m_pred == 0) / 2)
 
-    tp = np.sum(score_matrix[m_pred == 1])
-    tn = np.sum(score_matrix[m_pred == 0])
+    tp = int(np.sum(score_matrix[m_pred == 1] / 2))
+    tn = int(np.sum(score_matrix[m_pred == 0] / 2))
     fp = pos - tp
     fn = neg - tn
 

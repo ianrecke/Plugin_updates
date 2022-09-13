@@ -24,6 +24,7 @@ class LearnPostReqModel(BModel):
     algorithm: str
     estimation: str
     data_type: str
+    own: bool
 
 
 class LayoutPostReqModel(BModel):
@@ -54,6 +55,7 @@ class DSepPostReqModel(BModel):
 class InferencePostReqModel(BModel):
     json_bn: str
     evidence: dict
+    own: bool
 
 
 class PostRespModel(BModel):

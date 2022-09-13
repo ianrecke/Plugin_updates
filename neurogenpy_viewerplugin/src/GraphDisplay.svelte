@@ -15,6 +15,7 @@
     import { watchResize } from "svelte-watch-resize";
     import NodeSelection from "./NodeSelection.svelte";
     import { saveAsPNG } from "./saveFile";
+    import { generateRandomColor } from "./color.ts";
 
     export let gexf_graph = undefined;
     let graph = parse(Graph, gexf_graph);
@@ -54,6 +55,10 @@
     let draggedNode = undefined;
     let isDragging = false;
 
+    const style = getComputedStyle(document.body);
+    const containerColor = style.getPropertyValue("--surface");
+    const onContainerColor = style.getPropertyValue("color");
+
     export let nodes = [];
     onMount(() => createGraph());
 
@@ -65,8 +70,9 @@
             defaultEdgeType: "arrow",
             allowInvalidContainer: true,
             enableEdgeWheelEvents: true,
-            defaultNodeColor: "#ffffff",
-            labelColor: { color: "#fff" },
+            defaultNodeColor: onContainerColor,
+            defaultEdgeColor: onContainerColor,
+            labelColor: { color: onContainerColor },
             nodeReducer: nodeReducerFunction,
             edgeReducer: edgeReducerFunction,
         });
@@ -89,6 +95,9 @@
 
         renderer.getMouseCaptor().on("mousemovebody", (e) => {
             if (!isDragging || !draggedNode) return;
+
+            if (fa2Layout.isRunning()) stopFA2();
+
             const pos = renderer.viewportToGraph(e);
 
             graph.setNodeAttribute(draggedNode, "x", pos.x);
@@ -273,25 +282,17 @@
             graph.forEachNode((node) =>
                 graph.setNodeAttribute(node, "color", colors[communities[node]])
             );
-            graph.forEachEdge((edge, source, target) => {
+
+            graph.forEachEdge((edge, attributes, source, target) => {
                 const sourceCom = communities[source];
                 if (sourceCom === communities[target]) {
                     graph.setEdgeAttribute(edge, "color", colors[sourceCom]);
                 } else {
-                    graph.setEdgeAttribute(edge, "color", "#FFFFFF");
+                    graph.setEdgeAttribute(edge, "color", onContainerColor);
                 }
             });
             renderer.refresh();
         }
-    }
-
-    function generateRandomColor() {
-        const letters = "0123456789ABCDEF";
-        let color = "#";
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
     }
 
     export function savePNG() {
@@ -313,7 +314,7 @@
             !highlightedNeighbors.has(node)
         ) {
             res.label = "";
-            res.color = "rgb(33, 33, 37)";
+            res.color = containerColor;
         }
         res.highlighted = highlightedNodes && highlightedNodes.has(node);
 
@@ -345,27 +346,37 @@
 <div bind:this={display}>
     <div
         bind:this={container}
-        class="sigmaElement"
+        class="surfaceDiv"
+        id="sigmaElement"
         use:watchResize={() => renderer.refresh()}
     />
 
-    <div id="zoom">
-        <button on:click={() => camera.animatedZoom({ duration: 600 })}>
+    <div id="zoom" class="primaryDiv">
+        <button
+            class="lightButton"
+            on:click={() => camera.animatedZoom({ duration: 600 })}
+        >
             <i class="material-icons">add</i>
         </button>
-        <button on:click={() => camera.animatedUnzoom({ duration: 600 })}>
+        <button
+            class="lightButton"
+            on:click={() => camera.animatedUnzoom({ duration: 600 })}
+        >
             <i class="material-icons">remove</i>
         </button>
-        <button on:click={() => camera.animatedReset({ duration: 600 })}>
+        <button
+            class="lightButton"
+            on:click={() => camera.animatedReset({ duration: 600 })}
+        >
             <i class="material-icons">replay</i>
         </button>
-        <button on:click={changeFullScreen}>
+        <button class="lightButton" on:click={changeFullScreen}>
             <i class="material-icons"
                 >{fullScreen ? "fullscreen_exit" : "fullscreen"}</i
             >
         </button>
     </div>
-    <div id="controls1" class="controls">
+    <div id="controls1" class="controls primaryDiv">
         <NodeSelection
             on:NodeSelected={(ev) => {
                 setHighlightedNodes([ev.detail], true);
@@ -376,10 +387,10 @@
             }}
             {nodes}
             searchOne={true}
-            label="Search a node"
+            label="Search a gene"
         />
     </div>
-    <div id="controls2" class="controls">
+    <div id="controls2" class="controls primaryDiv">
         <Select
             bind:value={selectedLayout}
             label="Select layout"
@@ -396,12 +407,12 @@
                 bind:checked={showLabels}
                 on:SMUISwitch:change={changeLabels}
             />
-            <span slot="label" style="color: white">Labels</span>
+            <span slot="label">Labels</span>
         </FormField>
     </div>
 </div>
 
-<!-- TODO: Drag and drop node, filter edges, change pointer -->
+<!-- TODO: filter edges, change pointer -->
 <style>
     #zoom {
         position: absolute;
@@ -409,13 +420,11 @@
         bottom: 0;
         padding: 2px 5px 0 0;
         border-radius: 0 10px 0 0;
-        background-color: rgba(255, 62, 0, 0.2);
     }
 
     .controls {
         position: absolute;
         top: 0;
-        background-color: rgba(255, 62, 0, 0.2);
     }
 
     #controls1 {
@@ -430,30 +439,19 @@
         border-radius: 0 0 0 10px;
     }
 
-    button {
-        background-color: transparent;
-        background-repeat: no-repeat;
-        border: none;
-        outline: none;
-        margin: 0 0 0 0;
-        color: rgba(255, 255, 255, 0.6);
-    }
-
-    .sigmaElement {
+    #sigmaElement {
         position: absolute;
         top: 5px;
         bottom: 5px;
         left: 5px;
         right: 5px;
         overflow: hidden;
-        background-color: rgb(33, 33, 37);
     }
 
-    button:hover {
-        color: white;
-    }
-
-    button:active {
-        background-color: transparent;
+    button {
+        background-repeat: no-repeat;
+        border: none;
+        outline: none;
+        margin: 0 0 0 0;
     }
 </style>

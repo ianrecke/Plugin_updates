@@ -31,7 +31,7 @@ class FGES(FGESBase):
     """
 
     def __init__(self, df, data_type, *, penalty=45):
-        if self.data_type != 'continuous':
+        if data_type != 'continuous':
             raise ValueError(
                 'This algorithm is only available for continuous data.')
 

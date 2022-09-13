@@ -70,7 +70,11 @@
 </Autocomplete>
 {#if !searchOne}
     <div>
-        <ChipsSet chips={selectedNodes} let:chip selectedNodes>
+        <ChipsSet
+            chips={selectedNodes}
+            let:chip
+            selectedNodes
+        >
             <Chip {chip}>
                 <Text>{chip}</Text>
                 <TrailingAction icon$class="material-icons"

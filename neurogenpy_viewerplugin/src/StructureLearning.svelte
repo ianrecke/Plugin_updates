@@ -41,6 +41,7 @@
         bind:text={autocmplText}
         on:SMUIAutocomplete:selected={(ev) =>
             algorithmSelected(algorithms[ev.detail].id)}
+        style="overflow: visible"
     >
         <Textfield
             label="Structure learning"

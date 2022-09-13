@@ -8,11 +8,15 @@ Structure learning base module.
 # Licensed under GNU General Public License v3.0:
 # https://www.gnu.org/licenses/gpl-3.0.html
 
+import logging
 from abc import abstractmethod, ABCMeta
 
+from rpy2.rinterface_lib.embedded import RRuntimeError
 from rpy2.robjects.packages import importr
 
 from ..util.data_structures import pd2r, bnlearn2nx
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: Inherit parameters part of docstring in those subclasses that use
@@ -74,9 +78,12 @@ class LearnStructure(metaclass=ABCMeta):
         dataframe = pd2r(self.df)
         nodes = list(self.df.columns.values)
 
-        output_raw_r = importr('bnlearn').cextend(
-            bnlearn_function(dataframe, **kwargs))
+        try:
+            output_raw_r = importr('bnlearn').cextend(
+                bnlearn_function(dataframe, **kwargs))
 
-        graph = bnlearn2nx(nodes, output_raw_r)
-
-        return graph
+            graph = bnlearn2nx(nodes, output_raw_r)
+            return graph
+        except RRuntimeError:
+            logger.error('Error getting a correct network structure. There is '
+                         'no DAG available for this data and algorithm.')

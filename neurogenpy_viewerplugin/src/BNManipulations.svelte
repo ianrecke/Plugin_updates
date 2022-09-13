@@ -8,21 +8,22 @@
     export let nodes = [];
     const dispatcher = createEventDispatcher();
 
-    let fileTypes = ["json", "gexf", "png", "csv", "bif"];
+    export let fileTypes;
+    export let json_bn;
     let fileType = fileTypes[0];
 </script>
 
-<Card style="padding: 10px">
-    <Content>
-        <DSeparation {nodes} />
+<Card style="padding: 10px; height: 90%">
+    <Content style="height:100%">
+        <DSeparation {nodes} {json_bn} />
 
-        <div>
+        <div style="height: 10%">
             <Button on:click={() => dispatcher("CommunitiesSelected", true)}>
                 <Label>Communities Louvain</Label>
             </Button>
         </div>
 
-        <div>
+        <div style="height: 20%">
             <Select bind:value={fileType} label="Select file format" style="">
                 {#each fileTypes as ft}
                     <Option value={ft}>
