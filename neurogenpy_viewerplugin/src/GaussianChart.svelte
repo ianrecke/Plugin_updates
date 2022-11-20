@@ -11,7 +11,6 @@
 
     export let initialDist;
     export let evidenceDist;
-    export let evidenceSet;
 
     const style = getComputedStyle(document.body);
     const evidenceColor = style.getPropertyValue("--primary");
@@ -132,9 +131,6 @@
         chart.data.datasets[1].data = evidenceValues;
         chart.options.plugins.legend.display = !!evidenceValues;
         chart.data.datasets[1].hidden = !evidenceValues;
-        if (evidenceSet) {
-        }
-        // else
 
         chart.update();
     });

@@ -29,7 +29,6 @@
 
     let param = {
         parcellation_id: parcellationId,
-        own: false,
     };
     let sg = undefined;
 
@@ -216,7 +215,6 @@
                 {postMessage}
             />
             <GeneSelection
-                on:Own={() => handleUpdateParam({ own: true })}
                 on:GeneSelected={(ev) =>
                     handleUpdateParam({ genes: ev.detail })}
                 {genes}

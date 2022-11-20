@@ -25,21 +25,19 @@
     let runningFlag = false;
 
     async function downloadFile(fileType) {
-        let positions = {};
-        let colors = {};
+
         switch (fileType) {
             case "png":
                 gd.savePNG();
                 break;
             case "gexf":
-                positions = gd.getPositions();
-                colors = gd.getColors();
+                const downloadableGEXF = gd.getGEXF();
+                console.log(downloadableGEXF);
+                saveTextFile(downloadableGEXF, "result.gexf");
             default:
                 const json_object = JSON.stringify({
                     json_bn: json_bn,
                     file_type: fileType,
-                    positions: positions,
-                    colors: colors,
                 });
 
                 const result = await callNeurogenpy(
@@ -55,12 +53,9 @@
     }
 
     async function performInference(evidence) {
-        let own = false;
-        if (Object.keys(evidence).includes("ZSCAN1")) own = true;
         const json_object = JSON.stringify({
             json_bn: json_bn,
             evidence: evidence,
-            own: own,
         });
 
         const result = await callNeurogenpy(

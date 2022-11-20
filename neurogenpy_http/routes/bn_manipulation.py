@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from ..scheduling.worker import learn_grn, get_layout, get_related, \
-    check_dseparation, perform_inference, downloadable_file
+    check_dseparation, perform_inference, get_file
 
 
 class BModel(BaseModel):
@@ -24,7 +24,6 @@ class LearnPostReqModel(BModel):
     algorithm: str
     estimation: str
     data_type: str
-    own: bool
 
 
 class LayoutPostReqModel(BModel):
@@ -35,8 +34,6 @@ class LayoutPostReqModel(BModel):
 class IOPostReqModel(BModel):
     json_bn: str
     file_type: str
-    positions: dict
-    colors: dict
 
 
 class RelatedNodesPostReqModel(BModel):
@@ -55,7 +52,6 @@ class DSepPostReqModel(BModel):
 class InferencePostReqModel(BModel):
     json_bn: str
     evidence: dict
-    own: bool
 
 
 class PostRespModel(BModel):
@@ -226,13 +222,13 @@ def get_new_marginals_with_id(marginals_id: str):
 
 @router.post('/download', response_model=PostRespModel)
 def post_download(post_req: IOPostReqModel):
-    res = downloadable_file.delay(**post_req.dict())
+    res = get_file.delay(**post_req.dict())
     return PostRespModel(poll_url=res.id)
 
 
 @router.get('/download/{download_id}', response_model=IOResultModel)
-def get_downloadable_with_id(download_id: str):
-    res = downloadable_file.AsyncResult(download_id)
+def download_file_with_id(download_id: str):
+    res = get_file.AsyncResult(download_id)
     if res.state == "FAILURE":
         res.forget()
         return IOResultModel(status=ResultStatus.FAILURE)

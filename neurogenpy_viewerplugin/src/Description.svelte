@@ -18,8 +18,8 @@
             It models the network as a Bayesian Network using the structure
             learning algorithm and parameter estimation method selected by the
             user. The data can be considered to have a Gaussian distribution or
-            be discretized before the learning process in three levels: excited,
-            normal and.
+            be discretized before the learning process in three levels:
+            inhibition, activation and no-change.
         </p>
         <p>
             ¹For retrieving microarray data, brainscapes connects to the web API

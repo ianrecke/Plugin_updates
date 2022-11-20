@@ -58,7 +58,6 @@
     const genesJSON = JSON.parse(data);
     selectedGenes = genesJSON["genes"];
     dispatcher("GeneSelected", selectedGenes);
-    dispatcher("Own", undefined);
   }
 </script>
 

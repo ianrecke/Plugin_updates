@@ -7,7 +7,7 @@
     import { circular } from "graphology-layout";
     import { animateNodes } from "sigma/utils/animate";
     import Graph from "graphology";
-    import { parse } from "graphology-gexf/browser";
+    import { parse, write } from "graphology-gexf/browser";
     import Select, { Option } from "@smui/select";
     import FormField from "@smui/form-field";
     import Switch from "@smui/switch";
@@ -244,25 +244,6 @@
         });
     }
 
-    export function getPositions() {
-        let positions = {};
-        graph.forEachNode((node) => {
-            positions[node] = {
-                x: graph.getNodeAttribute(node, "x"),
-                y: graph.getNodeAttribute(node, "y"),
-            };
-        });
-        return positions;
-    }
-
-    export function getColors() {
-        let colors = {};
-        graph.forEachNode((node) => {
-            colors[node] = graph.getNodeAttribute(node, "color");
-        });
-        return positions;
-    }
-
     export function communitiesLouvain(printComs) {
         if (printComs) {
             const communities = louvain(graph);
@@ -297,6 +278,10 @@
 
     export function savePNG() {
         saveAsPNG(renderer);
+    }
+
+    export function getGEXF() {
+        return write(graph);
     }
 
     export function setLayout(layoutName, lp) {
