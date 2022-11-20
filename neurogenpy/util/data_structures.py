@@ -114,7 +114,7 @@ def nx2pgmpy(graph, parameters):
     # pgmpy_model.add_nodes_from(graph.nodes())
     # pgmpy_model.add_edges_from(graph.edges())
     if parameters:
-        pgmpy_model.add_cpds(*parameters)
+        pgmpy_model.add_cpds(*list(parameters.values()))
 
     return pgmpy_model
 

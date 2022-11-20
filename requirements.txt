@@ -1,5 +1,5 @@
-numpy==1.23.3
-pandas~=1.4.2
+numpy==1.23.4
+pandas~=1.4.3
 pgmpy~=0.1.18
 networkx==2.8.4
 requests==2.28.0
@@ -12,7 +12,6 @@ numba~=0.56.2
 igraph~=0.9.10
 rpy2~=3.5.2
 python-louvain~=0.16
-sklearn~=0.0
 scikit-learn~=1.1.1
 tqdm~=4.64.0
 setuptools~=59.8.0

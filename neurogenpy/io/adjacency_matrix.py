@@ -92,7 +92,7 @@ class AdjacencyMatrix(BNIO):
 
         pd_adj_matrix = self._get_df()
         if representation == 'csv':
-            return pd_adj_matrix.to_csv()
+            return pd_adj_matrix.to_csv(index=False)
 
     def read_file(self, file_path):
         """

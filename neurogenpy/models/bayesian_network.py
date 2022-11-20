@@ -1033,7 +1033,7 @@ class BayesianNetwork:
             except KeyError:
                 raise ValueError('Parameter learning is only available for the'
                                  f' following methods: {*estimators.keys(),}.')
-        logger.info(f'Learnt parameters: {self.parameters}')
+        logger.info(f'Learned parameters: {self.parameters}')
 
         return self
 
