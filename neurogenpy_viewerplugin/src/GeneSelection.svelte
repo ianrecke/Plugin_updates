@@ -4,6 +4,8 @@
   import Chip, { Set as ChipsSet, Text, TrailingAction } from "@smui/chips";
   import { createEventDispatcher } from "svelte";
   import Button, { Icon } from "@smui/button";
+  import {notifications} from './notifications.js'
+  import Toast from './Toast.svelte'
 
   export let genes = [];
   let selectedGenes = [];
@@ -56,6 +58,10 @@
     const data = await file.text();
 
     const genesJSON = JSON.parse(data);
+    if (!genesJSON || !genesJSON["genes"] || genesJSON["genes"].length === 0) {
+        console.error("El archivo seleccionado no contiene genes válidos.");
+        return;
+    }
     selectedGenes = genesJSON["genes"];
     dispatcher("GeneSelected", selectedGenes);
   }

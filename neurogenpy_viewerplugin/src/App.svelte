@@ -12,13 +12,14 @@
     import ShowGraph from "./ShowGraph.svelte";
     import { getFromNeurogenpy } from "./request";
     import Select, { Option } from "@smui/select";
-
+    import {notifications} from './notifications.js'
+    import Toast from './Toast.svelte'
     const getUuid = () =>
         crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
 
     let destroyFlag = false;
     let destroyCbObj = [];
-
+    let openDialog = false;
     let src = undefined;
     let runningFlag = false;
     let srcOrigin = undefined;
@@ -144,7 +145,7 @@
             "",
             "NeurogenPy - Learn GRNs",
             "toolbar=no,location=no,directories=no,status=no,menubar=no," +
-                "scrollbars=yes,resizable=yes,width=" +
+                "scrollbars=yes,width=" +
                 (9 * screen.width) / 10 +
                 ",height=" +
                 (9 * screen.height) / 10
@@ -239,13 +240,15 @@
             />
         </Content>
     </Card>
-
+   
+    
     <div class="spacer" />
 
     <Card>
         <Content>
             <Button
                 on:click={async function () {
+                    notifications.warning('Pending algorithm learning. Your device may not be able to handle the application in full screen, keep it minimized!', 7000);
                     await learnGRN();
                     if (result) {
                         showGraph();
@@ -255,16 +258,17 @@
             >
                 <Label>Learn GRN</Label>
             </Button>
+           
             {#if runningFlag}
                 <CircularProgress
                     style="width:1rem;height:1rem;"
                     indeterminate
                 />
             {/if}
-
             {#if errorText}
                 {errorText}
-            {/if}
+            {/if} 
+            <Toast />
         </Content>
     </Card>
 {/if}

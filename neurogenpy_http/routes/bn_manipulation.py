@@ -182,21 +182,27 @@ def get_related_with_id(related_id: str):
 
 @router.post('/dseparated', response_model=PostRespModel)
 def post_dseparation(post_req: DSepPostReqModel):
+    print("doing dseparation 1")
     res = check_dseparation.delay(**post_req.dict())
+    print("MODEL POST RESPONSE: ",PostRespModel(poll_url=res.id))
     return PostRespModel(poll_url=res.id)
 
 
 @router.get('/dseparated/{dseparated_id}', response_model=DSepResultModel)
 def get_dseparation_with_id(dseparated_id: str):
+    print("doing dseparation 2")
     res = check_dseparation.AsyncResult(dseparated_id)
     if res.state == "FAILURE":
+        print("fail")
         res.forget()
         return DSepResultModel(status=ResultStatus.FAILURE)
     if res.state == "SUCCESS":
+        print("success")
         result = res.get()
         res.forget()
         return DSepResultModel(status=ResultStatus.SUCCESS,
                                result=DSepResult(**result))
+    print("nada")
     return DSepResultModel(status=ResultStatus.PENDING)
 
 

@@ -218,6 +218,7 @@ class BayesianNetwork:
                     if node in obs_ancestors:
                         for parent in self.parents(node):
                             via_nodes.append((parent, 'up'))
+        print("fin de comprobación del camino")
         return result
 
     def _check_graph(self):

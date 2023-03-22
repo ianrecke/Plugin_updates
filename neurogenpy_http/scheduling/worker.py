@@ -119,7 +119,7 @@ def get_layout(json_bn: str, layout: str):
 @app.task
 def check_dseparation(json_bn: str, X: list, Y: list, Z: list):
     from neurogenpy import JSON
-
+    print("hello check_dseparation")
     hostname = log_rec(X, Y, Z)
 
     try:
